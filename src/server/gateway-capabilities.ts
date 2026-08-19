@@ -366,6 +366,14 @@ export async function dashboardFetch(
       for (const [key, value] of Object.entries(auth)) {
         headers.set(key, value)
       }
+      // FIX: allow static basic-auth for the dashboard (e.g. HERMES_DASHBOARD_BASIC_AUTH)
+      // via CLAUDE_DASHBOARD_TOKEN=user:pass so community Workspace can read /api/sessions
+      // behind a basic-auth gate without scraping an SSO token.
+      const dashBasic = process.env.CLAUDE_DASHBOARD_TOKEN?.trim()
+      if (dashBasic && !headers.has('Authorization')) {
+        const b64 = Buffer.from(dashBasic).toString('base64')
+        headers.set('Authorization', `Basic ${b64}`)
+      }
     }
 
     return fetch(requestPath, {
@@ -518,9 +526,12 @@ async function probeMcp(): Promise<boolean> {
   }
   // Use dashboardFetch so the probe goes through the same authenticated path
   // workspace routes use at runtime — otherwise an auth-protected dashboard
-  // /api/mcp would falsely report capability=false (Codex MAJOR finding).
+  // /api/mcp/servers would falsely report capability=false (Codex MAJOR
+  // finding). Note: the real Agent endpoint is /api/mcp/servers, not the
+  // bare /api/mcp — confirmed live (bare path 404s with "No such API
+  // endpoint", /api/mcp/servers returns the actual {servers:[...]} list).
   try {
-    const res = await dashboardFetch('/api/mcp', {
+    const res = await dashboardFetch('/api/mcp/servers', {
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
     })
     if (await validate(res)) return true
@@ -528,7 +539,7 @@ async function probeMcp(): Promise<boolean> {
     // fall through to gateway path
   }
   try {
-    const res = await fetch(`${CLAUDE_API}/api/mcp`, {
+    const res = await fetch(`${CLAUDE_API}/api/mcp/servers`, {
       headers: authHeaders(),
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
     })
