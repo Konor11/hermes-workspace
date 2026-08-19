@@ -19,15 +19,7 @@ export const Route = createFileRoute('/api/mcp/servers/$name')({
         // DELETE has no body, so requireJsonContentType allows it through.
         const csrfCheck = requireJsonContentType(request)
         if (csrfCheck) return csrfCheck
-        const capabilities = await ensureGatewayProbed()
-        if (!capabilities.mcp && !capabilities.mcpFallback) {
-          return json(
-            createCapabilityUnavailablePayload('mcp', {
-              error: `Gateway does not support /api/mcp. ${CLAUDE_UPGRADE_INSTRUCTIONS}`,
-            }),
-            { status: 503 },
-          )
-        }
+        // Stage4: delete config locally via `hermes config` CLI — no capability probe.
         const name = (params as { name?: string }).name?.trim() || ''
         if (!name) {
           return json({ ok: false, error: 'Missing server name' }, { status: 400 })
