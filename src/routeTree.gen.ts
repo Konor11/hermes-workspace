@@ -84,7 +84,6 @@ import { Route as ApiPathsRouteImport } from './routes/api/paths'
 import { Route as ApiModelsRouteImport } from './routes/api/models'
 import { Route as ApiMemoryRouteImport } from './routes/api/memory'
 import { Route as ApiMediaRouteImport } from './routes/api/media'
-import { Route as ApiMcpRouteImport } from './routes/api/mcp'
 import { Route as ApiLocalProvidersRouteImport } from './routes/api/local-providers'
 import { Route as ApiIntegrationsRouteImport } from './routes/api/integrations'
 import { Route as ApiHistoryRouteImport } from './routes/api/history'
@@ -141,6 +140,7 @@ import { Route as ApiMemorySearchRouteImport } from './routes/api/memory/search'
 import { Route as ApiMemoryReadRouteImport } from './routes/api/memory/read'
 import { Route as ApiMemoryListRouteImport } from './routes/api/memory/list'
 import { Route as ApiMcpTestRouteImport } from './routes/api/mcp/test'
+import { Route as ApiMcpServersRouteImport } from './routes/api/mcp/servers'
 import { Route as ApiMcpPresetsRouteImport } from './routes/api/mcp/presets'
 import { Route as ApiMcpHubSourcesRouteImport } from './routes/api/mcp/hub-sources'
 import { Route as ApiMcpHubSearchRouteImport } from './routes/api/mcp/hub-search'
@@ -547,11 +547,6 @@ const ApiMediaRoute = ApiMediaRouteImport.update({
   path: '/api/media',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiMcpRoute = ApiMcpRouteImport.update({
-  id: '/api/mcp',
-  path: '/api/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiLocalProvidersRoute = ApiLocalProvidersRouteImport.update({
   id: '/api/local-providers',
   path: '/api/local-providers',
@@ -828,39 +823,44 @@ const ApiMemoryListRoute = ApiMemoryListRouteImport.update({
   getParentRoute: () => ApiMemoryRoute,
 } as any)
 const ApiMcpTestRoute = ApiMcpTestRouteImport.update({
-  id: '/test',
-  path: '/test',
-  getParentRoute: () => ApiMcpRoute,
+  id: '/api/mcp/test',
+  path: '/api/mcp/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMcpServersRoute = ApiMcpServersRouteImport.update({
+  id: '/api/mcp/servers',
+  path: '/api/mcp/servers',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMcpPresetsRoute = ApiMcpPresetsRouteImport.update({
-  id: '/presets',
-  path: '/presets',
-  getParentRoute: () => ApiMcpRoute,
+  id: '/api/mcp/presets',
+  path: '/api/mcp/presets',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMcpHubSourcesRoute = ApiMcpHubSourcesRouteImport.update({
-  id: '/hub-sources',
-  path: '/hub-sources',
-  getParentRoute: () => ApiMcpRoute,
+  id: '/api/mcp/hub-sources',
+  path: '/api/mcp/hub-sources',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMcpHubSearchRoute = ApiMcpHubSearchRouteImport.update({
-  id: '/hub-search',
-  path: '/hub-search',
-  getParentRoute: () => ApiMcpRoute,
+  id: '/api/mcp/hub-search',
+  path: '/api/mcp/hub-search',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMcpDiscoverRoute = ApiMcpDiscoverRouteImport.update({
-  id: '/discover',
-  path: '/discover',
-  getParentRoute: () => ApiMcpRoute,
+  id: '/api/mcp/discover',
+  path: '/api/mcp/discover',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMcpConfigureRoute = ApiMcpConfigureRouteImport.update({
-  id: '/configure',
-  path: '/configure',
-  getParentRoute: () => ApiMcpRoute,
+  id: '/api/mcp/configure',
+  path: '/api/mcp/configure',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMcpNameRoute = ApiMcpNameRouteImport.update({
-  id: '/$name',
-  path: '/$name',
-  getParentRoute: () => ApiMcpRoute,
+  id: '/api/mcp/$name',
+  path: '/api/mcp/$name',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiKnowledgeSyncRoute = ApiKnowledgeSyncRouteImport.update({
   id: '/api/knowledge/sync',
@@ -1037,7 +1037,6 @@ export interface FileRoutesByFullPath {
   '/api/history': typeof ApiHistoryRoute
   '/api/integrations': typeof ApiIntegrationsRoute
   '/api/local-providers': typeof ApiLocalProvidersRoute
-  '/api/mcp': typeof ApiMcpRouteWithChildren
   '/api/media': typeof ApiMediaRoute
   '/api/memory': typeof ApiMemoryRouteWithChildren
   '/api/models': typeof ApiModelsRoute
@@ -1112,6 +1111,7 @@ export interface FileRoutesByFullPath {
   '/api/mcp/hub-search': typeof ApiMcpHubSearchRoute
   '/api/mcp/hub-sources': typeof ApiMcpHubSourcesRouteWithChildren
   '/api/mcp/presets': typeof ApiMcpPresetsRoute
+  '/api/mcp/servers': typeof ApiMcpServersRoute
   '/api/mcp/test': typeof ApiMcpTestRoute
   '/api/memory/list': typeof ApiMemoryListRoute
   '/api/memory/read': typeof ApiMemoryReadRoute
@@ -1199,7 +1199,6 @@ export interface FileRoutesByTo {
   '/api/history': typeof ApiHistoryRoute
   '/api/integrations': typeof ApiIntegrationsRoute
   '/api/local-providers': typeof ApiLocalProvidersRoute
-  '/api/mcp': typeof ApiMcpRouteWithChildren
   '/api/media': typeof ApiMediaRoute
   '/api/memory': typeof ApiMemoryRouteWithChildren
   '/api/models': typeof ApiModelsRoute
@@ -1274,6 +1273,7 @@ export interface FileRoutesByTo {
   '/api/mcp/hub-search': typeof ApiMcpHubSearchRoute
   '/api/mcp/hub-sources': typeof ApiMcpHubSourcesRouteWithChildren
   '/api/mcp/presets': typeof ApiMcpPresetsRoute
+  '/api/mcp/servers': typeof ApiMcpServersRoute
   '/api/mcp/test': typeof ApiMcpTestRoute
   '/api/memory/list': typeof ApiMemoryListRoute
   '/api/memory/read': typeof ApiMemoryReadRoute
@@ -1363,7 +1363,6 @@ export interface FileRoutesById {
   '/api/history': typeof ApiHistoryRoute
   '/api/integrations': typeof ApiIntegrationsRoute
   '/api/local-providers': typeof ApiLocalProvidersRoute
-  '/api/mcp': typeof ApiMcpRouteWithChildren
   '/api/media': typeof ApiMediaRoute
   '/api/memory': typeof ApiMemoryRouteWithChildren
   '/api/models': typeof ApiModelsRoute
@@ -1438,6 +1437,7 @@ export interface FileRoutesById {
   '/api/mcp/hub-search': typeof ApiMcpHubSearchRoute
   '/api/mcp/hub-sources': typeof ApiMcpHubSourcesRouteWithChildren
   '/api/mcp/presets': typeof ApiMcpPresetsRoute
+  '/api/mcp/servers': typeof ApiMcpServersRoute
   '/api/mcp/test': typeof ApiMcpTestRoute
   '/api/memory/list': typeof ApiMemoryListRoute
   '/api/memory/read': typeof ApiMemoryReadRoute
@@ -1528,7 +1528,6 @@ export interface FileRouteTypes {
     | '/api/history'
     | '/api/integrations'
     | '/api/local-providers'
-    | '/api/mcp'
     | '/api/media'
     | '/api/memory'
     | '/api/models'
@@ -1603,6 +1602,7 @@ export interface FileRouteTypes {
     | '/api/mcp/hub-search'
     | '/api/mcp/hub-sources'
     | '/api/mcp/presets'
+    | '/api/mcp/servers'
     | '/api/mcp/test'
     | '/api/memory/list'
     | '/api/memory/read'
@@ -1690,7 +1690,6 @@ export interface FileRouteTypes {
     | '/api/history'
     | '/api/integrations'
     | '/api/local-providers'
-    | '/api/mcp'
     | '/api/media'
     | '/api/memory'
     | '/api/models'
@@ -1765,6 +1764,7 @@ export interface FileRouteTypes {
     | '/api/mcp/hub-search'
     | '/api/mcp/hub-sources'
     | '/api/mcp/presets'
+    | '/api/mcp/servers'
     | '/api/mcp/test'
     | '/api/memory/list'
     | '/api/memory/read'
@@ -1853,7 +1853,6 @@ export interface FileRouteTypes {
     | '/api/history'
     | '/api/integrations'
     | '/api/local-providers'
-    | '/api/mcp'
     | '/api/media'
     | '/api/memory'
     | '/api/models'
@@ -1928,6 +1927,7 @@ export interface FileRouteTypes {
     | '/api/mcp/hub-search'
     | '/api/mcp/hub-sources'
     | '/api/mcp/presets'
+    | '/api/mcp/servers'
     | '/api/mcp/test'
     | '/api/memory/list'
     | '/api/memory/read'
@@ -2017,7 +2017,6 @@ export interface RootRouteChildren {
   ApiHistoryRoute: typeof ApiHistoryRoute
   ApiIntegrationsRoute: typeof ApiIntegrationsRoute
   ApiLocalProvidersRoute: typeof ApiLocalProvidersRoute
-  ApiMcpRoute: typeof ApiMcpRouteWithChildren
   ApiMediaRoute: typeof ApiMediaRoute
   ApiMemoryRoute: typeof ApiMemoryRouteWithChildren
   ApiModelsRoute: typeof ApiModelsRoute
@@ -2078,6 +2077,14 @@ export interface RootRouteChildren {
   ApiKnowledgeReadRoute: typeof ApiKnowledgeReadRoute
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
   ApiKnowledgeSyncRoute: typeof ApiKnowledgeSyncRoute
+  ApiMcpNameRoute: typeof ApiMcpNameRouteWithChildren
+  ApiMcpConfigureRoute: typeof ApiMcpConfigureRoute
+  ApiMcpDiscoverRoute: typeof ApiMcpDiscoverRoute
+  ApiMcpHubSearchRoute: typeof ApiMcpHubSearchRoute
+  ApiMcpHubSourcesRoute: typeof ApiMcpHubSourcesRouteWithChildren
+  ApiMcpPresetsRoute: typeof ApiMcpPresetsRoute
+  ApiMcpServersRoute: typeof ApiMcpServersRoute
+  ApiMcpTestRoute: typeof ApiMcpTestRoute
   ApiModelInfoRoute: typeof ApiModelInfoRoute
   ApiOauthDeviceCodeRoute: typeof ApiOauthDeviceCodeRoute
   ApiOauthPollTokenRoute: typeof ApiOauthPollTokenRoute
@@ -2624,13 +2631,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMediaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/mcp': {
-      id: '/api/mcp'
-      path: '/api/mcp'
-      fullPath: '/api/mcp'
-      preLoaderRoute: typeof ApiMcpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/local-providers': {
       id: '/api/local-providers'
       path: '/api/local-providers'
@@ -3018,52 +3018,59 @@ declare module '@tanstack/react-router' {
     }
     '/api/mcp/test': {
       id: '/api/mcp/test'
-      path: '/test'
+      path: '/api/mcp/test'
       fullPath: '/api/mcp/test'
       preLoaderRoute: typeof ApiMcpTestRouteImport
-      parentRoute: typeof ApiMcpRoute
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/mcp/servers': {
+      id: '/api/mcp/servers'
+      path: '/api/mcp/servers'
+      fullPath: '/api/mcp/servers'
+      preLoaderRoute: typeof ApiMcpServersRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/mcp/presets': {
       id: '/api/mcp/presets'
-      path: '/presets'
+      path: '/api/mcp/presets'
       fullPath: '/api/mcp/presets'
       preLoaderRoute: typeof ApiMcpPresetsRouteImport
-      parentRoute: typeof ApiMcpRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/mcp/hub-sources': {
       id: '/api/mcp/hub-sources'
-      path: '/hub-sources'
+      path: '/api/mcp/hub-sources'
       fullPath: '/api/mcp/hub-sources'
       preLoaderRoute: typeof ApiMcpHubSourcesRouteImport
-      parentRoute: typeof ApiMcpRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/mcp/hub-search': {
       id: '/api/mcp/hub-search'
-      path: '/hub-search'
+      path: '/api/mcp/hub-search'
       fullPath: '/api/mcp/hub-search'
       preLoaderRoute: typeof ApiMcpHubSearchRouteImport
-      parentRoute: typeof ApiMcpRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/mcp/discover': {
       id: '/api/mcp/discover'
-      path: '/discover'
+      path: '/api/mcp/discover'
       fullPath: '/api/mcp/discover'
       preLoaderRoute: typeof ApiMcpDiscoverRouteImport
-      parentRoute: typeof ApiMcpRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/mcp/configure': {
       id: '/api/mcp/configure'
-      path: '/configure'
+      path: '/api/mcp/configure'
       fullPath: '/api/mcp/configure'
       preLoaderRoute: typeof ApiMcpConfigureRouteImport
-      parentRoute: typeof ApiMcpRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/mcp/$name': {
       id: '/api/mcp/$name'
-      path: '/$name'
+      path: '/api/mcp/$name'
       fullPath: '/api/mcp/$name'
       preLoaderRoute: typeof ApiMcpNameRouteImport
-      parentRoute: typeof ApiMcpRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/knowledge/sync': {
       id: '/api/knowledge/sync'
@@ -3313,52 +3320,6 @@ const ApiHermesTasksRouteWithChildren = ApiHermesTasksRoute._addFileChildren(
   ApiHermesTasksRouteChildren,
 )
 
-interface ApiMcpNameRouteChildren {
-  ApiMcpNameLogsRoute: typeof ApiMcpNameLogsRoute
-}
-
-const ApiMcpNameRouteChildren: ApiMcpNameRouteChildren = {
-  ApiMcpNameLogsRoute: ApiMcpNameLogsRoute,
-}
-
-const ApiMcpNameRouteWithChildren = ApiMcpNameRoute._addFileChildren(
-  ApiMcpNameRouteChildren,
-)
-
-interface ApiMcpHubSourcesRouteChildren {
-  ApiMcpHubSourcesIdRoute: typeof ApiMcpHubSourcesIdRoute
-}
-
-const ApiMcpHubSourcesRouteChildren: ApiMcpHubSourcesRouteChildren = {
-  ApiMcpHubSourcesIdRoute: ApiMcpHubSourcesIdRoute,
-}
-
-const ApiMcpHubSourcesRouteWithChildren =
-  ApiMcpHubSourcesRoute._addFileChildren(ApiMcpHubSourcesRouteChildren)
-
-interface ApiMcpRouteChildren {
-  ApiMcpNameRoute: typeof ApiMcpNameRouteWithChildren
-  ApiMcpConfigureRoute: typeof ApiMcpConfigureRoute
-  ApiMcpDiscoverRoute: typeof ApiMcpDiscoverRoute
-  ApiMcpHubSearchRoute: typeof ApiMcpHubSearchRoute
-  ApiMcpHubSourcesRoute: typeof ApiMcpHubSourcesRouteWithChildren
-  ApiMcpPresetsRoute: typeof ApiMcpPresetsRoute
-  ApiMcpTestRoute: typeof ApiMcpTestRoute
-}
-
-const ApiMcpRouteChildren: ApiMcpRouteChildren = {
-  ApiMcpNameRoute: ApiMcpNameRouteWithChildren,
-  ApiMcpConfigureRoute: ApiMcpConfigureRoute,
-  ApiMcpDiscoverRoute: ApiMcpDiscoverRoute,
-  ApiMcpHubSearchRoute: ApiMcpHubSearchRoute,
-  ApiMcpHubSourcesRoute: ApiMcpHubSourcesRouteWithChildren,
-  ApiMcpPresetsRoute: ApiMcpPresetsRoute,
-  ApiMcpTestRoute: ApiMcpTestRoute,
-}
-
-const ApiMcpRouteWithChildren =
-  ApiMcpRoute._addFileChildren(ApiMcpRouteChildren)
-
 interface ApiMemoryRouteChildren {
   ApiMemoryListRoute: typeof ApiMemoryListRoute
   ApiMemoryReadRoute: typeof ApiMemoryReadRoute
@@ -3452,6 +3413,29 @@ const ApiHermesworldReservationsRouteWithChildren =
     ApiHermesworldReservationsRouteChildren,
   )
 
+interface ApiMcpNameRouteChildren {
+  ApiMcpNameLogsRoute: typeof ApiMcpNameLogsRoute
+}
+
+const ApiMcpNameRouteChildren: ApiMcpNameRouteChildren = {
+  ApiMcpNameLogsRoute: ApiMcpNameLogsRoute,
+}
+
+const ApiMcpNameRouteWithChildren = ApiMcpNameRoute._addFileChildren(
+  ApiMcpNameRouteChildren,
+)
+
+interface ApiMcpHubSourcesRouteChildren {
+  ApiMcpHubSourcesIdRoute: typeof ApiMcpHubSourcesIdRoute
+}
+
+const ApiMcpHubSourcesRouteChildren: ApiMcpHubSourcesRouteChildren = {
+  ApiMcpHubSourcesIdRoute: ApiMcpHubSourcesIdRoute,
+}
+
+const ApiMcpHubSourcesRouteWithChildren =
+  ApiMcpHubSourcesRoute._addFileChildren(ApiMcpHubSourcesRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
@@ -3504,7 +3488,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiHistoryRoute: ApiHistoryRoute,
   ApiIntegrationsRoute: ApiIntegrationsRoute,
   ApiLocalProvidersRoute: ApiLocalProvidersRoute,
-  ApiMcpRoute: ApiMcpRouteWithChildren,
   ApiMediaRoute: ApiMediaRoute,
   ApiMemoryRoute: ApiMemoryRouteWithChildren,
   ApiModelsRoute: ApiModelsRoute,
@@ -3565,6 +3548,14 @@ const rootRouteChildren: RootRouteChildren = {
   ApiKnowledgeReadRoute: ApiKnowledgeReadRoute,
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
   ApiKnowledgeSyncRoute: ApiKnowledgeSyncRoute,
+  ApiMcpNameRoute: ApiMcpNameRouteWithChildren,
+  ApiMcpConfigureRoute: ApiMcpConfigureRoute,
+  ApiMcpDiscoverRoute: ApiMcpDiscoverRoute,
+  ApiMcpHubSearchRoute: ApiMcpHubSearchRoute,
+  ApiMcpHubSourcesRoute: ApiMcpHubSourcesRouteWithChildren,
+  ApiMcpPresetsRoute: ApiMcpPresetsRoute,
+  ApiMcpServersRoute: ApiMcpServersRoute,
+  ApiMcpTestRoute: ApiMcpTestRoute,
   ApiModelInfoRoute: ApiModelInfoRoute,
   ApiOauthDeviceCodeRoute: ApiOauthDeviceCodeRoute,
   ApiOauthPollTokenRoute: ApiOauthPollTokenRoute,

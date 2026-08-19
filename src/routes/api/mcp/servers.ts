@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
-import { isAuthenticated } from '../../server/auth-middleware'
+import { isAuthenticated } from '../../../server/auth-middleware'
 import {
   BEARER_TOKEN,
   CLAUDE_API,
@@ -8,20 +8,21 @@ import {
   dashboardFetch,
   ensureGatewayProbed,
   getCapabilities,
-} from '../../server/gateway-capabilities'
-import { requireJsonContentType, safeErrorMessage } from '../../server/rate-limit'
+} from '../../../server/gateway-capabilities'
+import { requireJsonContentType, safeErrorMessage } from '../../../server/rate-limit'
 import {
   maskSecretsInPlace,
   normalizeMcpList,
   normalizeMcpListFromConfig,
   normalizeMcpServer,
   normalizeMcpServerFromConfig,
-} from '../../server/mcp-normalize'
-import { getConfig, saveConfig } from '../../server/claude-dashboard-api'
-import type { McpServerInput } from '../../types/mcp-input'
-import { parseMcpServerInput } from '../../server/mcp-input-validate'
+} from '../../../server/mcp-normalize'
+import { getConfig, saveConfig } from '../../../server/claude-dashboard-api'
+import type { McpServerInput } from '../../../types/mcp-input'
+import { parseMcpServerInput } from '../../../server/mcp-input-validate'
 import { createCapabilityUnavailablePayload } from '@/lib/feature-gates'
-import { getProbe } from '../../server/mcp-tools-cache'
+import { getProbe } from '../../../server/mcp-tools-cache'
+import { readMcpServersCli, writeMcpServersCli } from '../../../server/mcp-config-cli'
 
 const KNOWN_CATEGORIES = ['All', 'Connected', 'Failed', 'Disabled'] as const
 const REQUEST_TIMEOUT_MS = 30_000
@@ -105,7 +106,7 @@ async function readConfigServersMap(): Promise<{
 
 export { parseMcpServerInput, unavailableListPayload, toConfigEntry }
 
-export const Route = createFileRoute('/api/mcp')({
+export const Route = createFileRoute('/api/mcp/servers')({
   server: {
     handlers: {
       GET: async ({ request }) => {
@@ -122,41 +123,20 @@ export const Route = createFileRoute('/api/mcp')({
           const category = (url.searchParams.get('category') || 'All').trim()
 
           let servers: ReturnType<typeof normalizeMcpList>
-          if (capabilities.mcp) {
-            const response = await mcpFetch('/api/mcp/servers', {
-              signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+          // Stage4: read via `hermes config` CLI (no dashboard dependency)
+          const cfg = readMcpServersCli()
+          servers = normalizeMcpListFromConfig({ mcp_servers: cfg })
+            .map((s) => maskSecretsInPlace(s))
+            .map((s) => {
+              const probe = getProbe(s.name)
+              if (!probe) return s
+              return {
+                ...s,
+                status: probe.status,
+                discoveredToolsCount: probe.toolCount,
+                lastError: probe.error || s.lastError,
+              }
             })
-            if (!response.ok) {
-              return json(
-                {
-                  ...unavailableListPayload(),
-                  error: `MCP list failed (${response.status})`,
-                },
-                { status: 502 },
-              )
-            }
-            const body = (await response.json().catch(() => null)) as unknown
-            servers = normalizeMcpList(body).map((s) => maskSecretsInPlace(s))
-          } else {
-            // Phase 1.5 fallback — read config.mcp_servers, then hydrate
-            // status + discoveredToolsCount from the in-memory probe cache
-            // (populated by /api/mcp/test which shells out to the hermes
-            // CLI). Cards then show the last-known tool count + status
-            // without forcing a fresh probe on every list refresh.
-            const cfg = (await getConfig()) as unknown
-            servers = normalizeMcpListFromConfig(cfg)
-              .map((s) => maskSecretsInPlace(s))
-              .map((s) => {
-                const probe = getProbe(s.name)
-                if (!probe) return s
-                return {
-                  ...s,
-                  status: probe.status,
-                  discoveredToolsCount: probe.toolCount,
-                  lastError: probe.error || s.lastError,
-                }
-              })
-          }
 
           const filtered = servers.filter((s) => {
             if (search) {
@@ -208,34 +188,22 @@ export const Route = createFileRoute('/api/mcp')({
             )
           }
           const input = parsed.value
-          if (capabilities.mcp) {
-            const response = await mcpFetch('/api/mcp/servers', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(input),
-              signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-            })
-            const body = (await response.json().catch(() => ({}))) as unknown
-            const server = normalizeMcpServer(
-              (body as Record<string, unknown>).server ?? body,
-            )
-            if (!response.ok || !server) {
-              const errMsg =
-                ((body as Record<string, unknown>).error as string | undefined) ||
-                `MCP create failed (${response.status})`
-              return json({ ok: false, error: errMsg }, { status: response.status || 502 })
-            }
-            return json({ ok: true, server: maskSecretsInPlace(server) })
-          }
-          // Phase 1.5 fallback — write into config.mcp_servers and re-read.
-          const { servers } = await readConfigServersMap()
+          // Stage4: write via `hermes config` CLI
+          const cfg = readMcpServersCli()
+          const servers =
+            cfg && typeof cfg === 'object'
+              ? { ...(cfg as Record<string, unknown>) }
+              : {}
           servers[input.name] = toConfigEntry(input)
-          await saveConfig({ mcp_servers: servers })
-          const written = normalizeMcpServerFromConfig(input.name, servers[input.name])
+          writeMcpServersCli(servers)
+          const written = normalizeMcpServerFromConfig(
+            input.name,
+            servers[input.name],
+          )
           if (!written) {
             return json({ ok: false, error: 'MCP create failed (config write)' }, { status: 500 })
           }
-          return json({ ok: true, server: maskSecretsInPlace(written) })
+          return json({ ok: true, server: maskSecretsInPlace(written as NonNullable<typeof written>) })
         } catch (err) {
           return json({ ok: false, error: safeErrorMessage(err) }, { status: 500 })
         }
