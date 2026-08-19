@@ -208,6 +208,42 @@ export const Route = createFileRoute('/api/mcp/servers')({
           return json({ ok: false, error: safeErrorMessage(err) }, { status: 500 })
         }
       },
+      DELETE: async ({ request }) => {
+        if (!isAuthenticated(request)) {
+          return json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+        }
+        const csrfCheck = requireJsonContentType(request)
+        if (csrfCheck) return csrfCheck
+        const capabilities = await ensureGatewayProbed()
+        if (!capabilities.mcp && !capabilities.mcpFallback) {
+          return json(
+            createCapabilityUnavailablePayload('mcp', {
+              error: `Gateway does not support /api/mcp. ${CLAUDE_UPGRADE_INSTRUCTIONS}`,
+            }),
+            { status: 503 },
+          )
+        }
+        try {
+          const url = new URL(request.url)
+          const name = url.pathname.split('/').pop() || ''
+          if (!name) {
+            return json({ ok: false, error: 'Missing server name' }, { status: 400 })
+          }
+          const cfg = readMcpServersCli()
+          const servers =
+            cfg && typeof cfg === 'object'
+              ? { ...(cfg as Record<string, unknown>) }
+              : {}
+          if (!(name in servers)) {
+            return json({ ok: false, error: 'Server not found' }, { status: 404 })
+          }
+          delete servers[name]
+          writeMcpServersCli(servers)
+          return json({ ok: true, name })
+        } catch (err) {
+          return json({ ok: false, error: safeErrorMessage(err) }, { status: 500 })
+        }
+      },
     },
   },
 })
