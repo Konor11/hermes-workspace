@@ -111,6 +111,7 @@ import { Route as ApiAuthCheckRouteImport } from './routes/api/auth-check'
 import { Route as ApiAuthRouteImport } from './routes/api/auth'
 import { Route as ApiArtifactsRouteImport } from './routes/api/artifacts'
 import { Route as ApiAgentBusRouteImport } from './routes/api/agent-bus'
+import { Route as ApiMcpIndexRouteImport } from './routes/api/mcp/index'
 import { Route as ApiUpdateWorkspaceRouteImport } from './routes/api/update/workspace'
 import { Route as ApiUpdateStatusRouteImport } from './routes/api/update/status'
 import { Route as ApiUpdateAgentRouteImport } from './routes/api/update/agent'
@@ -140,7 +141,6 @@ import { Route as ApiMemorySearchRouteImport } from './routes/api/memory/search'
 import { Route as ApiMemoryReadRouteImport } from './routes/api/memory/read'
 import { Route as ApiMemoryListRouteImport } from './routes/api/memory/list'
 import { Route as ApiMcpTestRouteImport } from './routes/api/mcp/test'
-import { Route as ApiMcpServersRouteImport } from './routes/api/mcp/servers'
 import { Route as ApiMcpPresetsRouteImport } from './routes/api/mcp/presets'
 import { Route as ApiMcpHubSourcesRouteImport } from './routes/api/mcp/hub-sources'
 import { Route as ApiMcpHubSearchRouteImport } from './routes/api/mcp/hub-search'
@@ -166,7 +166,6 @@ import { Route as ApiAuthRefreshRouteImport } from './routes/api/auth.refresh'
 import { Route as ApiArtifactsArtifactIdRouteImport } from './routes/api/artifacts.$artifactId'
 import { Route as ApiSessionsSessionKeyStatusRouteImport } from './routes/api/sessions/$sessionKey.status'
 import { Route as ApiSessionsSessionKeyActiveRunRouteImport } from './routes/api/sessions/$sessionKey.active-run'
-import { Route as ApiMcpServersNameRouteImport } from './routes/api/mcp/servers/$name'
 import { Route as ApiMcpHubSourcesIdRouteImport } from './routes/api/mcp/hub-sources.$id'
 import { Route as ApiMcpNameLogsRouteImport } from './routes/api/mcp/$name.logs'
 import { Route as ApiHermesworldReservationsConfirmRouteImport } from './routes/api/hermesworld/reservations/confirm'
@@ -683,6 +682,11 @@ const ApiAgentBusRoute = ApiAgentBusRouteImport.update({
   path: '/api/agent-bus',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMcpIndexRoute = ApiMcpIndexRouteImport.update({
+  id: '/api/mcp/',
+  path: '/api/mcp/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUpdateWorkspaceRoute = ApiUpdateWorkspaceRouteImport.update({
   id: '/api/update/workspace',
   path: '/api/update/workspace',
@@ -828,11 +832,6 @@ const ApiMcpTestRoute = ApiMcpTestRouteImport.update({
   path: '/api/mcp/test',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiMcpServersRoute = ApiMcpServersRouteImport.update({
-  id: '/api/mcp/servers',
-  path: '/api/mcp/servers',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiMcpPresetsRoute = ApiMcpPresetsRouteImport.update({
   id: '/api/mcp/presets',
   path: '/api/mcp/presets',
@@ -963,11 +962,6 @@ const ApiSessionsSessionKeyActiveRunRoute =
     path: '/$sessionKey/active-run',
     getParentRoute: () => ApiSessionsRoute,
   } as any)
-const ApiMcpServersNameRoute = ApiMcpServersNameRouteImport.update({
-  id: '/$name',
-  path: '/$name',
-  getParentRoute: () => ApiMcpServersRoute,
-} as any)
 const ApiMcpHubSourcesIdRoute = ApiMcpHubSourcesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -1117,7 +1111,6 @@ export interface FileRoutesByFullPath {
   '/api/mcp/hub-search': typeof ApiMcpHubSearchRoute
   '/api/mcp/hub-sources': typeof ApiMcpHubSourcesRouteWithChildren
   '/api/mcp/presets': typeof ApiMcpPresetsRoute
-  '/api/mcp/servers': typeof ApiMcpServersRouteWithChildren
   '/api/mcp/test': typeof ApiMcpTestRoute
   '/api/memory/list': typeof ApiMemoryListRoute
   '/api/memory/read': typeof ApiMemoryReadRoute
@@ -1147,10 +1140,10 @@ export interface FileRoutesByFullPath {
   '/api/update/agent': typeof ApiUpdateAgentRoute
   '/api/update/status': typeof ApiUpdateStatusRoute
   '/api/update/workspace': typeof ApiUpdateWorkspaceRoute
+  '/api/mcp/': typeof ApiMcpIndexRoute
   '/api/hermesworld/reservations/confirm': typeof ApiHermesworldReservationsConfirmRoute
   '/api/mcp/$name/logs': typeof ApiMcpNameLogsRoute
   '/api/mcp/hub-sources/$id': typeof ApiMcpHubSourcesIdRoute
-  '/api/mcp/servers/$name': typeof ApiMcpServersNameRoute
   '/api/sessions/$sessionKey/active-run': typeof ApiSessionsSessionKeyActiveRunRoute
   '/api/sessions/$sessionKey/status': typeof ApiSessionsSessionKeyStatusRoute
   '/api/runs/$sessionKey/$runId/abandon': typeof ApiRunsSessionKeyRunIdAbandonRoute
@@ -1280,7 +1273,6 @@ export interface FileRoutesByTo {
   '/api/mcp/hub-search': typeof ApiMcpHubSearchRoute
   '/api/mcp/hub-sources': typeof ApiMcpHubSourcesRouteWithChildren
   '/api/mcp/presets': typeof ApiMcpPresetsRoute
-  '/api/mcp/servers': typeof ApiMcpServersRouteWithChildren
   '/api/mcp/test': typeof ApiMcpTestRoute
   '/api/memory/list': typeof ApiMemoryListRoute
   '/api/memory/read': typeof ApiMemoryReadRoute
@@ -1310,10 +1302,10 @@ export interface FileRoutesByTo {
   '/api/update/agent': typeof ApiUpdateAgentRoute
   '/api/update/status': typeof ApiUpdateStatusRoute
   '/api/update/workspace': typeof ApiUpdateWorkspaceRoute
+  '/api/mcp': typeof ApiMcpIndexRoute
   '/api/hermesworld/reservations/confirm': typeof ApiHermesworldReservationsConfirmRoute
   '/api/mcp/$name/logs': typeof ApiMcpNameLogsRoute
   '/api/mcp/hub-sources/$id': typeof ApiMcpHubSourcesIdRoute
-  '/api/mcp/servers/$name': typeof ApiMcpServersNameRoute
   '/api/sessions/$sessionKey/active-run': typeof ApiSessionsSessionKeyActiveRunRoute
   '/api/sessions/$sessionKey/status': typeof ApiSessionsSessionKeyStatusRoute
   '/api/runs/$sessionKey/$runId/abandon': typeof ApiRunsSessionKeyRunIdAbandonRoute
@@ -1445,7 +1437,6 @@ export interface FileRoutesById {
   '/api/mcp/hub-search': typeof ApiMcpHubSearchRoute
   '/api/mcp/hub-sources': typeof ApiMcpHubSourcesRouteWithChildren
   '/api/mcp/presets': typeof ApiMcpPresetsRoute
-  '/api/mcp/servers': typeof ApiMcpServersRouteWithChildren
   '/api/mcp/test': typeof ApiMcpTestRoute
   '/api/memory/list': typeof ApiMemoryListRoute
   '/api/memory/read': typeof ApiMemoryReadRoute
@@ -1475,10 +1466,10 @@ export interface FileRoutesById {
   '/api/update/agent': typeof ApiUpdateAgentRoute
   '/api/update/status': typeof ApiUpdateStatusRoute
   '/api/update/workspace': typeof ApiUpdateWorkspaceRoute
+  '/api/mcp/': typeof ApiMcpIndexRoute
   '/api/hermesworld/reservations/confirm': typeof ApiHermesworldReservationsConfirmRoute
   '/api/mcp/$name/logs': typeof ApiMcpNameLogsRoute
   '/api/mcp/hub-sources/$id': typeof ApiMcpHubSourcesIdRoute
-  '/api/mcp/servers/$name': typeof ApiMcpServersNameRoute
   '/api/sessions/$sessionKey/active-run': typeof ApiSessionsSessionKeyActiveRunRoute
   '/api/sessions/$sessionKey/status': typeof ApiSessionsSessionKeyStatusRoute
   '/api/runs/$sessionKey/$runId/abandon': typeof ApiRunsSessionKeyRunIdAbandonRoute
@@ -1611,7 +1602,6 @@ export interface FileRouteTypes {
     | '/api/mcp/hub-search'
     | '/api/mcp/hub-sources'
     | '/api/mcp/presets'
-    | '/api/mcp/servers'
     | '/api/mcp/test'
     | '/api/memory/list'
     | '/api/memory/read'
@@ -1641,10 +1631,10 @@ export interface FileRouteTypes {
     | '/api/update/agent'
     | '/api/update/status'
     | '/api/update/workspace'
+    | '/api/mcp/'
     | '/api/hermesworld/reservations/confirm'
     | '/api/mcp/$name/logs'
     | '/api/mcp/hub-sources/$id'
-    | '/api/mcp/servers/$name'
     | '/api/sessions/$sessionKey/active-run'
     | '/api/sessions/$sessionKey/status'
     | '/api/runs/$sessionKey/$runId/abandon'
@@ -1774,7 +1764,6 @@ export interface FileRouteTypes {
     | '/api/mcp/hub-search'
     | '/api/mcp/hub-sources'
     | '/api/mcp/presets'
-    | '/api/mcp/servers'
     | '/api/mcp/test'
     | '/api/memory/list'
     | '/api/memory/read'
@@ -1804,10 +1793,10 @@ export interface FileRouteTypes {
     | '/api/update/agent'
     | '/api/update/status'
     | '/api/update/workspace'
+    | '/api/mcp'
     | '/api/hermesworld/reservations/confirm'
     | '/api/mcp/$name/logs'
     | '/api/mcp/hub-sources/$id'
-    | '/api/mcp/servers/$name'
     | '/api/sessions/$sessionKey/active-run'
     | '/api/sessions/$sessionKey/status'
     | '/api/runs/$sessionKey/$runId/abandon'
@@ -1938,7 +1927,6 @@ export interface FileRouteTypes {
     | '/api/mcp/hub-search'
     | '/api/mcp/hub-sources'
     | '/api/mcp/presets'
-    | '/api/mcp/servers'
     | '/api/mcp/test'
     | '/api/memory/list'
     | '/api/memory/read'
@@ -1968,10 +1956,10 @@ export interface FileRouteTypes {
     | '/api/update/agent'
     | '/api/update/status'
     | '/api/update/workspace'
+    | '/api/mcp/'
     | '/api/hermesworld/reservations/confirm'
     | '/api/mcp/$name/logs'
     | '/api/mcp/hub-sources/$id'
-    | '/api/mcp/servers/$name'
     | '/api/sessions/$sessionKey/active-run'
     | '/api/sessions/$sessionKey/status'
     | '/api/runs/$sessionKey/$runId/abandon'
@@ -2095,7 +2083,6 @@ export interface RootRouteChildren {
   ApiMcpHubSearchRoute: typeof ApiMcpHubSearchRoute
   ApiMcpHubSourcesRoute: typeof ApiMcpHubSourcesRouteWithChildren
   ApiMcpPresetsRoute: typeof ApiMcpPresetsRoute
-  ApiMcpServersRoute: typeof ApiMcpServersRouteWithChildren
   ApiMcpTestRoute: typeof ApiMcpTestRoute
   ApiModelInfoRoute: typeof ApiModelInfoRoute
   ApiOauthDeviceCodeRoute: typeof ApiOauthDeviceCodeRoute
@@ -2113,6 +2100,7 @@ export interface RootRouteChildren {
   ApiUpdateAgentRoute: typeof ApiUpdateAgentRoute
   ApiUpdateStatusRoute: typeof ApiUpdateStatusRoute
   ApiUpdateWorkspaceRoute: typeof ApiUpdateWorkspaceRoute
+  ApiMcpIndexRoute: typeof ApiMcpIndexRoute
   ApiRunsSessionKeyRunIdAbandonRoute: typeof ApiRunsSessionKeyRunIdAbandonRoute
 }
 
@@ -2832,6 +2820,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAgentBusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/mcp/': {
+      id: '/api/mcp/'
+      path: '/api/mcp'
+      fullPath: '/api/mcp/'
+      preLoaderRoute: typeof ApiMcpIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/update/workspace': {
       id: '/api/update/workspace'
       path: '/api/update/workspace'
@@ -3035,13 +3030,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMcpTestRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/mcp/servers': {
-      id: '/api/mcp/servers'
-      path: '/api/mcp/servers'
-      fullPath: '/api/mcp/servers'
-      preLoaderRoute: typeof ApiMcpServersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/mcp/presets': {
       id: '/api/mcp/presets'
       path: '/api/mcp/presets'
@@ -3216,13 +3204,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/sessions/$sessionKey/active-run'
       preLoaderRoute: typeof ApiSessionsSessionKeyActiveRunRouteImport
       parentRoute: typeof ApiSessionsRoute
-    }
-    '/api/mcp/servers/$name': {
-      id: '/api/mcp/servers/$name'
-      path: '/$name'
-      fullPath: '/api/mcp/servers/$name'
-      preLoaderRoute: typeof ApiMcpServersNameRouteImport
-      parentRoute: typeof ApiMcpServersRoute
     }
     '/api/mcp/hub-sources/$id': {
       id: '/api/mcp/hub-sources/$id'
@@ -3455,18 +3436,6 @@ const ApiMcpHubSourcesRouteChildren: ApiMcpHubSourcesRouteChildren = {
 const ApiMcpHubSourcesRouteWithChildren =
   ApiMcpHubSourcesRoute._addFileChildren(ApiMcpHubSourcesRouteChildren)
 
-interface ApiMcpServersRouteChildren {
-  ApiMcpServersNameRoute: typeof ApiMcpServersNameRoute
-}
-
-const ApiMcpServersRouteChildren: ApiMcpServersRouteChildren = {
-  ApiMcpServersNameRoute: ApiMcpServersNameRoute,
-}
-
-const ApiMcpServersRouteWithChildren = ApiMcpServersRoute._addFileChildren(
-  ApiMcpServersRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SplatRoute: SplatRoute,
@@ -3585,7 +3554,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMcpHubSearchRoute: ApiMcpHubSearchRoute,
   ApiMcpHubSourcesRoute: ApiMcpHubSourcesRouteWithChildren,
   ApiMcpPresetsRoute: ApiMcpPresetsRoute,
-  ApiMcpServersRoute: ApiMcpServersRouteWithChildren,
   ApiMcpTestRoute: ApiMcpTestRoute,
   ApiModelInfoRoute: ApiModelInfoRoute,
   ApiOauthDeviceCodeRoute: ApiOauthDeviceCodeRoute,
@@ -3603,6 +3571,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUpdateAgentRoute: ApiUpdateAgentRoute,
   ApiUpdateStatusRoute: ApiUpdateStatusRoute,
   ApiUpdateWorkspaceRoute: ApiUpdateWorkspaceRoute,
+  ApiMcpIndexRoute: ApiMcpIndexRoute,
   ApiRunsSessionKeyRunIdAbandonRoute: ApiRunsSessionKeyRunIdAbandonRoute,
 }
 export const routeTree = rootRouteImport

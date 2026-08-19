@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@tanstack/react-start'
 import { isAuthenticated } from '../../../server/auth-middleware'
+import * as fs from 'node:fs'
 import {
   BEARER_TOKEN,
   CLAUDE_API,
@@ -106,10 +107,11 @@ async function readConfigServersMap(): Promise<{
 
 export { parseMcpServerInput, unavailableListPayload, toConfigEntry }
 
-export const Route = createFileRoute('/api/mcp/servers')({
+export const Route = createFileRoute('/api/mcp/')({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        fs.appendFileSync('/tmp/ws-mcp-debug.log', `[GET /api/mcp/servers] start url=${request.url}\n`)
         if (!isAuthenticated(request)) {
           return json({ ok: false, error: 'Unauthorized' }, { status: 401 })
         }
@@ -151,11 +153,13 @@ export const Route = createFileRoute('/api/mcp/servers')({
           })
 
           return json({
+            ok: true,
             servers: filtered,
             total: filtered.length,
             categories: [...KNOWN_CATEGORIES],
           })
         } catch (err) {
+          fs.appendFileSync('/tmp/ws-mcp-debug.log', `[GET /api/mcp/servers] ERROR: ${err instanceof Error ? err.stack || err.message : String(err)}\n`)
           return json(
             { ok: false, error: safeErrorMessage(err), servers: [], total: 0, categories: [...KNOWN_CATEGORIES] },
             { status: 500 },
