@@ -262,7 +262,7 @@ export function MobileTabBar() {
           'rounded-full',
           'border border-primary-200/40',
           // Inner padding
-          'px-3 py-2',
+          'px-2 py-2',
           // Hide/show animation
           'transition-all duration-300 ease-in-out',
           isChatRoute
@@ -275,12 +275,12 @@ export function MobileTabBar() {
         onTouchMove={handlePillTouchMove}
         onTouchEnd={handlePillTouchEnd}
       >
-        <div className="flex items-center gap-1 pointer-events-auto">
+        <div className="flex items-center gap-0.5 pointer-events-auto px-1">
           {MOBILE_NAV_TABS.map((tab, idx) => {
             const isActive = tab.match(pathname)
             const isCenter = tab.id === 'chat'
             const circleSize =
-              isCenter && isActive ? 'size-10' : isActive ? 'size-9' : 'size-10'
+              isCenter && isActive ? 'size-8' : isActive ? 'size-7' : 'size-8'
 
             return (
               <button
@@ -296,9 +296,9 @@ export function MobileTabBar() {
                 aria-current={isActive ? 'page' : undefined}
                 aria-label={tab.label}
                 className={cn(
-                  // 40x40 touch target (slightly smaller to fit 5 tabs)
+                  // 32x32 touch target (compact to fit all 9 tabs on mobile)
                   'flex items-center justify-center',
-                  'size-10 rounded-full',
+                  'size-8 rounded-full',
                   'transition-all duration-200 active:scale-90',
                   'select-none touch-manipulation',
                   'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0',
@@ -316,7 +316,7 @@ export function MobileTabBar() {
                 >
                   <HugeiconsIcon
                     icon={tab.icon}
-                    size={isCenter ? 20 : 18}
+                    size={isCenter ? 18 : 16}
                     strokeWidth={isActive ? 2 : 1.6}
                   />
                 </span>
