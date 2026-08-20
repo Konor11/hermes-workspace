@@ -351,7 +351,7 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
         )}
         <div
           className={cn(
-            'grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)] overflow-hidden',
+            'grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] overflow-hidden',
             hideChatSidebar || isChromeFreeSurface ? 'md:grid-cols-1' : 'md:grid-cols-[auto_1fr]',
           )}
         >
@@ -454,6 +454,8 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
               <ChatPanel />
             </Suspense>
           )}
+          {/* Mobile tab bar — flow row (always visible at bottom on mobile) */}
+          {!isChromeFreeSurface ? <MobileTabBar /> : null}
         </div>
 
         {/* Floating chat toggle — visible on non-chat routes (but not in HermesWorld) */}
@@ -474,7 +476,6 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
       </div>
 
       {!isChromeFreeSurface ? <MobileHamburgerMenu /> : null}
-      {!isChromeFreeSurface ? <MobileTabBar /> : null}
       {!isChromeFreeSurface && !isMobile && !isOnChatRoute && settings.showSystemMetricsFooter ? (
         <SystemMetricsFooter leftOffsetPx={sidebarCollapsed ? 48 : 300} />
       ) : null}
