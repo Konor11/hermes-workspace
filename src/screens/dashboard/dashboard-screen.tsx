@@ -50,6 +50,7 @@ import { getUnavailableReason } from '@/lib/feature-gates'
 import { cn } from '@/lib/utils'
 import { applyTheme, useSettingsStore } from '@/hooks/use-settings'
 import { openHamburgerMenu } from '@/components/mobile-hamburger-menu'
+import { t } from '@/lib/i18n'
 import { useFeatureAvailable } from '@/hooks/use-feature-available'
 
 // `IconSvgObject` isn't exported from @hugeicons/react; reuse the
@@ -287,7 +288,7 @@ function ActivityChart({
 
   return (
     <GlassCard
-      title="Activity"
+      title={t('dash.activity')}
       titleRight={<span className="text-[10px] text-muted">14 days</span>}
       accentColor={palette.accent}
       className="h-full"
@@ -405,7 +406,7 @@ function SkillsWidget({
   if (!skillsAvailable) {
     return (
       <UnavailableWidget
-        title="Skills"
+        title={t('dash.skills')}
         description={getUnavailableReason('skills')}
       />
     )
@@ -444,7 +445,7 @@ function SkillsWidget({
           className="text-[10px] font-semibold uppercase tracking-[0.18em]"
           style={{ color: 'var(--theme-muted)' }}
         >
-          Skills
+          {t('dash.skills')}
         </h3>
         <span
           className="font-mono text-[9px] uppercase tracking-[0.15em]"
@@ -959,12 +960,12 @@ export function DashboardScreen() {
             <span>New Chat</span>
           </button>
           <SecondaryAction
-            label="Terminal"
+            label={t('nav.terminal')}
             icon={ConsoleIcon}
             onClick={() => navigate({ to: '/terminal' })}
           />
           <SecondaryAction
-            label="Skills"
+            label={t('nav.skills')}
             icon={PuzzleIcon}
             onClick={() => navigate({ to: '/skills' })}
             disabled={!skillsAvailable}
@@ -974,8 +975,8 @@ export function DashboardScreen() {
               hidden widgets. Persisted to localStorage. */}
           <button
             type="button"
-            aria-label={layout.editMode ? 'Done editing layout' : 'Edit layout'}
-            title={layout.editMode ? 'Done editing layout' : 'Edit layout'}
+            aria-label={layout.editMode ? t('dash.doneEditing') : t('dash.editLayout')}
+            title={layout.editMode ? t('dash.doneEditing') : t('dash.editLayout')}
             onClick={layout.toggleEdit}
             className="inline-flex size-9 items-center justify-center rounded-lg border transition-all hover:scale-[1.05] hover:bg-[var(--theme-card)]/70"
             style={{
@@ -998,8 +999,8 @@ export function DashboardScreen() {
           </button>
           <button
             type="button"
-            aria-label="Settings"
-            title="Settings"
+            aria-label={t('nav.settings')}
+            title={t('nav.settings')}
             onClick={() => navigate({ to: '/settings', search: {} })}
             className="inline-flex size-9 items-center justify-center rounded-lg border transition-all hover:scale-[1.05] hover:bg-[var(--theme-card)]/70 hover:text-[var(--theme-text)]"
             style={{
@@ -1144,7 +1145,7 @@ export function DashboardScreen() {
               <WidgetShell id="sessions_intelligence" layout={layout}>
                 {sessionsQuery.isError || sessionsUnavailable ? (
                   <UnavailableWidget
-                    title="Recent Sessions"
+                    title={t('dash.recentSessions')}
                     description={
                       sessionsQuery.isError
                         ? getUnavailableReason('sessions')

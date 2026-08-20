@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { formatModelName } from '@/screens/dashboard/lib/formatters'
-import { t } from '@/lib/i18n'
+import { t, type TranslationKey } from '@/lib/i18n'
 
 export type SessionRowData = {
   key: string
@@ -55,11 +55,11 @@ function sessionGlyph(
 function relativeTime(ms: number | null): string {
   if (!ms) return '—'
   const diff = Date.now() - ms
-  if (diff < 0) return 'just now'
-  if (diff < 60_000) return '<1m ago'
-  if (diff < 3_600_000) return `${Math.round(diff / 60_000)}m ago`
-  if (diff < 86_400_000) return `${Math.round(diff / 3_600_000)}h ago`
-  return `${Math.round(diff / 86_400_000)}d ago`
+  if (diff < 0) return t('dash.justNow')
+  if (diff < 60_000) return t('dash.justNow')
+  if (diff < 3_600_000) return `${Math.round(diff / 60_000)} ${t('dash.mAgo')}`
+  if (diff < 86_400_000) return `${Math.round(diff / 3_600_000)} ${t('dash.hAgo')}`
+  return `${Math.round(diff / 86_400_000)} ${t('dash.dAgo')}`
 }
 
 function formatTokens(n: number): string {
@@ -78,6 +78,7 @@ function shortTitle(s: SessionRowData): string {
 
 type SessionBadge = {
   label: string
+  labelKey: TranslationKey
   tone: string
   title: string
 }
@@ -93,29 +94,33 @@ function buildBadges(s: SessionRowData): Array<SessionBadge> {
   ) {
     badges.push({
       label: 'hot',
+      labelKey: 'dash.hot',
       tone: 'var(--theme-success)',
-      title: 'Active in last 5 minutes',
+      title: t('dash.activeInLast5'),
     })
   }
   if (s.toolCallCount >= 20) {
     badges.push({
       label: 'tool-heavy',
+      labelKey: 'dash.toolHeavy',
       tone: 'var(--theme-accent)',
-      title: `${s.toolCallCount} tool calls`,
+      title: `${s.toolCallCount} ${t('dash.toolCallsN')}`,
     })
   }
   if (s.tokenCount >= 50_000) {
     badges.push({
       label: 'high-token',
+      labelKey: 'dash.highToken',
       tone: 'var(--theme-accent-secondary)',
-      title: `${formatTokens(s.tokenCount)} tokens`,
+      title: `${formatTokens(s.tokenCount)} ${t('dash.tokensN')}`,
     })
   }
   if (s.status?.toLowerCase() === 'error' || s.status?.toLowerCase() === 'failed') {
     badges.push({
       label: 'error',
+      labelKey: 'dash.errorState',
       tone: 'var(--theme-danger)',
-      title: 'Session ended in an error state',
+      title: t('dash.sessionEndedError'),
     })
   }
   if (
@@ -125,8 +130,9 @@ function buildBadges(s: SessionRowData): Array<SessionBadge> {
   ) {
     badges.push({
       label: 'stale',
+      labelKey: 'dash.stale',
       tone: 'var(--theme-muted)',
-      title: 'No activity in over 7 days',
+      title: t('dash.noActivity7d'),
     })
   }
   return badges
@@ -287,7 +293,7 @@ export function SessionsIntelligenceCard({
                           }}
                           title={b.title}
                         >
-                          {b.label}
+                          {t(b.labelKey)}
                         </span>
                       ))}
                     </div>
@@ -307,12 +313,12 @@ export function SessionsIntelligenceCard({
                           {formatModelName(s.model)}
                         </span>
                       ) : null}
-                      <span>{s.messageCount} msgs</span>
+                      <span>{s.messageCount} {t('dash.msgs')}</span>
                       {s.toolCallCount > 0 ? (
-                        <span>{s.toolCallCount} tools</span>
+                        <span>{s.toolCallCount} {t('dash.tools')}</span>
                       ) : null}
                       {s.tokenCount > 0 ? (
-                        <span>{formatTokens(s.tokenCount)} tok</span>
+                        <span>{formatTokens(s.tokenCount)} {t('dash.tok')}</span>
                       ) : null}
                       <span className="ml-auto">
                         {relativeTime(s.updatedAt ?? s.startedAt)}
