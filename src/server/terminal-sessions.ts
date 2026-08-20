@@ -61,6 +61,11 @@ export function createTerminalSession(params: {
   rows?: number
 }): TerminalSession {
   const emitter = new EventEmitter()
+  // Terminal sessions can accumulate many 'event' listeners (one per
+  // subscribed client/websocket); the default cap of 10 only emits a
+  // misleading MaxListenersExceededWarning. Memory is bounded by the
+  // session lifecycle, so uncapping is safe here.
+  emitter.setMaxListeners(0)
   const sessionId = randomUUID()
 
   const home = process.env.HOME || homedir() || '/tmp'
