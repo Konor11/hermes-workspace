@@ -199,12 +199,6 @@ async function tryServeStatic(req, res) {
 }
 
 async function requestHandler(req, res) {
-  // DEBUG (DKTunnel 2026-08-19): log all incoming requests to catch the real
-  // path the browser hits for MCP.
-  try {
-    require('node:fs').appendFileSync('/tmp/ws-all-req.log',
-      `${new Date().toISOString()} ${req.method} ${req.url} UA=${req.headers['user-agent'] || ''}\n`)
-  } catch {}
   // Try static files first (client assets)
   if (req.method === 'GET' || req.method === 'HEAD') {
     const served = await tryServeStatic(req, res)
