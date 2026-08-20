@@ -1,0 +1,38 @@
+[Unit]
+Description=Hermes Workspace
+# Start only after the co-located Hermes gateway is (at least) scheduled to run.
+# The actual readiness wait happens in ExecStartPre below.
+After=network-online.target hermes-gateway.service
+Wants=hermes-gateway.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/hermes-workspace
+Environment="HOME=/root"
+Environment="PORT=3001"
+# Host 0.0.0.0 is fine for a reverse-proxy (caddy/nginx) fronted deployment.
+# For a bare LAN expose, keep 127.0.0.1 + a tunnel/VPN instead.
+Environment="HOST=0.0.0.0"
+# Required when served over HTTPS (caddy/nginx TLS terminator in front).
+Environment="COOKIE_SECURE=1"
+Environment="HERMES_HOME=/root/.hermes"
+# Point workspace at the vanilla Hermes gateway + dashboard. No loopback
+# :9120 proxy needed — workspace self-heals the connection (see
+# src/server/gateway-capabilities.ts startGatewayWatchdog).
+Environment="HERMES_API_URL=http://127.0.0.1:8642"
+Environment="HERMES_DASHBOARD_URL=http://127.0.0.1:9119"
+# Secrets (HERMES_API_TOKEN, HERMES_PASSWORD, HERMES_DASHBOARD_BASIC_AUTH_*)
+# live in a file outside the repo so they are never committed.
+EnvironmentFile=/root/.hermes/workspace_env.conf
+
+# Wait (up to 30s) for the gateway to be reachable before booting. This is a
+# safety net only — workspace also retries + self-heals via the in-process
+# watchdog, so a slow gateway start will still converge to zero-fork mode.
+ExecStartPre=/bin/bash -c "for i in $(seq 1 30); do /usr/bin/curl -sf http://127.0.0.1:8642/health >/dev/null 2>&1 && break; sleep 1; done" || true
+ExecStart=/usr/local/bin/node server-entry.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

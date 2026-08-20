@@ -149,6 +149,11 @@ const PROBE_TIMEOUT_MS = 3_000
 // for two minutes. See #275.
 const PROBE_TTL_MS = 120_000
 const PROBE_TTL_DISCONNECTED_MS = 15_000
+// Dashboard boot race: retry /api/status a few times with linear backoff so a
+// co-located dashboard that hasn't finished starting when the workspace boots
+// still registers as `available` (→ zero-fork) instead of latching `portable`.
+const DASHBOARD_PROBE_RETRIES = 4
+const DASHBOARD_PROBE_BACKOFF_MS = 750
 
 function effectiveProbeTtl(caps: { health: boolean; chatCompletions: boolean }): number {
   if (caps.health || caps.chatCompletions) return PROBE_TTL_MS
@@ -689,18 +694,54 @@ async function probeMcpConfigKey(): Promise<boolean> {
 }
 
 async function probeDashboard(): Promise<{ available: boolean; url: string }> {
-  try {
-    const res = await fetch(`${CLAUDE_DASHBOARD_URL}/api/status`, {
-      signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
-    })
-    if (!res.ok) return { available: false, url: CLAUDE_DASHBOARD_URL }
-    const body = (await res.json()) as { version?: string }
-    if (!body.version) return { available: false, url: CLAUDE_DASHBOARD_URL }
-    await fetchDashboardToken().catch(() => '')
-    return { available: true, url: CLAUDE_DASHBOARD_URL }
-  } catch {
-    return { available: false, url: CLAUDE_DASHBOARD_URL }
+  // Retry with backoff: at workspace boot the co-located gateway/dashboard
+  // may still be starting up (race), and a single probe would otherwise
+  // latch `available=false` and stick the embedded gateway in `portable`
+  // mode forever (see #275 / field report 2026-08-20). A few retries absorb
+  // that transient unavailability so we converge on `zero-fork` on our own.
+  const attempt = async (): Promise<boolean> => {
+    try {
+      const res = await fetch(`${CLAUDE_DASHBOARD_URL}/api/status`, {
+        signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
+      })
+      if (res.ok) {
+        const body = (await res.json().catch(() => null)) as { version?: string } | null
+        if (body?.version) {
+          await fetchDashboardToken().catch(() => '')
+          return true
+        }
+      }
+    } catch {
+      // fall through to auth-gated attempt below
+    }
+    // Fallback: some dashboard builds answer /api/status only when the
+    // session cookie is present. Reuse the authenticated fetch path the
+    // runtime already uses, so a protected dashboard still reports
+    // `available` (mirrors probeMcp's dual-path strategy).
+    try {
+      const res = await dashboardFetch('/api/status', {
+        signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
+      })
+      if (res.ok) {
+        const body = (await res.json().catch(() => null)) as { version?: string } | null
+        if (body?.version) {
+          await fetchDashboardToken().catch(() => '')
+          return true
+        }
+      }
+    } catch {
+      // not available yet
+    }
+    return false
   }
+
+  for (let i = 0; i < DASHBOARD_PROBE_RETRIES; i++) {
+    if (await attempt()) return { available: true, url: CLAUDE_DASHBOARD_URL }
+    if (i < DASHBOARD_PROBE_RETRIES - 1) {
+      await new Promise((r) => setTimeout(r, DASHBOARD_PROBE_BACKOFF_MS * (i + 1)))
+    }
+  }
+  return { available: false, url: CLAUDE_DASHBOARD_URL }
 }
 
 /**
@@ -1003,6 +1044,10 @@ export async function probeGateway(options?: {
 }
 
 export async function ensureGatewayProbed(): Promise<GatewayCapabilities> {
+  // Lazily start the self-healing watcher on first capability check. This is
+  // the single choke point every API route hits, so the watchdog reliably
+  // boots without threading init calls through every entry file.
+  startGatewayWatchdog()
   const isStale =
     Date.now() - lastProbeAt > effectiveProbeTtl(capabilities)
   if (!capabilities.probed || isStale) {
@@ -1018,6 +1063,58 @@ export async function ensureGatewayProbed(): Promise<GatewayCapabilities> {
  */
 export async function forceReprobeGateway(): Promise<GatewayCapabilities> {
   return probeGateway({ force: true })
+}
+
+/**
+ * Background self-healing watcher.
+ *
+ * The embedded gateway can boot into `portable`/`disconnected` mode when the
+ * co-located Hermes gateway (:8642) and/or dashboard (:9119) are not yet
+ * reachable at workspace start (a boot race). Once latched, the mode does not
+ * automatically recover even after those services come up — the process keeps
+ * running and `Restart=always` never fires.
+ *
+ * This watcher periodically re-probes (respecting the same TTL logic as
+ * ensureGatewayProbed) and upgrades the capability summary to `zero-fork` the
+ * moment the backend is reachable again — no workspace restart and no manual
+ * intervention in Hermes Agent required. It stops itself once a full
+ * `zero-fork` connection is established, and is fully inert on healthy boots.
+ *
+ * Call startGatewayWatchdog() once at workspace startup (idempotent).
+ */
+let watchdogTimer: ReturnType<typeof setInterval> | null = null
+
+export function startGatewayWatchdog(): void {
+  if (watchdogTimer) return
+  const TICK_MS = 20_000
+  watchdogTimer = setInterval(async () => {
+    try {
+      const caps = await ensureGatewayProbed()
+      const mode = getGatewayMode()
+      if (mode === 'zero-fork' && caps.health && caps.chatCompletions) {
+        // Fully connected — nothing left to heal. Stop ticking.
+        if (watchdogTimer) {
+          clearInterval(watchdogTimer)
+          watchdogTimer = null
+        }
+        return
+      }
+      // Still degraded (portable/disconnected or dashboard missing): force a
+      // fresh probe so we pick up the backend as soon as it becomes reachable.
+      await forceReprobeGateway()
+    } catch {
+      // ignore — next tick retries
+    }
+  }, TICK_MS)
+  // Don't keep the event loop alive solely for the watcher.
+  if (typeof watchdogTimer.unref === 'function') watchdogTimer.unref()
+}
+
+export function stopGatewayWatchdog(): void {
+  if (watchdogTimer) {
+    clearInterval(watchdogTimer)
+    watchdogTimer = null
+  }
 }
 
 // ── Accessors ─────────────────────────────────────────────────────
