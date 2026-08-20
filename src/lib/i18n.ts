@@ -223,7 +223,7 @@ const RU: LocaleTranslations = {
   'nav.tasks': 'Задачи',
   'nav.memory': 'Память',
   'nav.skills': 'Навыки',
-  'nav.swarm': 'Рой',
+  'nav.swarm': 'Swarm',
   'nav.mcp': 'MCP',
   'nav.hermesworld': 'HermesWorld',
   'nav.echostudio': 'Echo Studio',
