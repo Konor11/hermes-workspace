@@ -252,7 +252,7 @@ export function MobileTabBar() {
     <>
       <nav
         ref={navRef}
-        style={{ bottom: 'max(env(safe-area-inset-bottom, 8px), 16px)' }}
+        style={{ bottom: 'max(env(safe-area-inset-bottom, 0px), 32px)' }}
         className={cn(
           // Pill: fixed bottom center, shrink to content width
           'fixed left-0 right-0 mx-auto w-fit z-[80] md:hidden',
