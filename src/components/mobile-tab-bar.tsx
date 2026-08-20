@@ -252,11 +252,13 @@ export function MobileTabBar() {
     <>
       <nav
         ref={navRef}
+        style={{ bottom: 'max(env(safe-area-inset-bottom, 8px), 16px)' }}
         className={cn(
           // Pill: fixed bottom center, shrink to content width
-          'fixed bottom-0 left-0 right-0 mx-auto w-fit z-[80] md:hidden',
-          // Vertical position: above home indicator
-          'mb-[max(env(safe-area-inset-bottom,8px),16px)]',
+          'fixed left-0 right-0 mx-auto w-fit z-[80] md:hidden',
+          // Vertical offset handled via inline style (Tailwind can't parse
+          // the nested max() with commas in an arbitrary bottom-[] value).
+          // Inline style clears the system gesture bar / safe area correctly.
           // Keep the pill visually isolated from page and error-state backgrounds
           'bg-surface/95 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-surface/90',
           'rounded-full',
