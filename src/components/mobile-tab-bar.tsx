@@ -275,7 +275,7 @@ export function MobileTabBar() {
         onTouchMove={handlePillTouchMove}
         onTouchEnd={handlePillTouchEnd}
       >
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 pointer-events-auto">
           {MOBILE_NAV_TABS.map((tab, idx) => {
             const isActive = tab.match(pathname)
             const isCenter = tab.id === 'chat'
