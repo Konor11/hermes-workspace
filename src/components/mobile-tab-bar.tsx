@@ -25,6 +25,7 @@ import type { TouchEvent } from 'react'
 import { cn } from '@/lib/utils'
 import { hapticTap } from '@/lib/haptics'
 import { useSettings } from '@/hooks/use-settings'
+import { t, type TranslationKey, type LocaleId, getLocale } from '@/lib/i18n'
 
 /** Height constant for consistent bottom insets on mobile routes with tab bar */
 export const MOBILE_TAB_BAR_OFFSET = 'var(--tabbar-h, 80px)'
@@ -39,7 +40,7 @@ export const MOBILE_TAB_BAR_OFFSET = 'var(--tabbar-h, 80px)'
 
 type TabItem = {
   id: string
-  label: string
+  labelKey: TranslationKey
   icon: typeof Chat01Icon
   to: string
   match: (path: string) => boolean
@@ -48,49 +49,49 @@ type TabItem = {
 export const MOBILE_NAV_TABS: Array<TabItem> = [
   {
     id: 'dashboard',
-    label: 'Home',
+    labelKey: 'nav.home',
     icon: DashboardSquare01Icon,
     to: '/dashboard',
     match: (p) => p === '/dashboard',
   },
   {
     id: 'chat',
-    label: 'Chat',
+    labelKey: 'nav.chat',
     icon: Chat01Icon,
     to: '/chat/main',
     match: (p) => p.startsWith('/chat') || p === '/new',
   },
   {
     id: 'playground',
-    label: 'Play',
+    labelKey: 'nav.playground',
     icon: Rocket01Icon,
     to: '/playground',
     match: (p) => p.startsWith('/playground'),
   },
   {
     id: 'files',
-    label: 'Files',
+    labelKey: 'nav.files',
     icon: File01Icon,
     to: '/files',
     match: (p) => p.startsWith('/files'),
   },
   {
     id: 'terminal',
-    label: 'Terminal',
+    labelKey: 'nav.terminal',
     icon: CommandLineIcon,
     to: '/terminal',
     match: (p) => p.startsWith('/terminal'),
   },
   {
     id: 'jobs',
-    label: 'Jobs',
+    labelKey: 'nav.jobs',
     icon: Clock01Icon,
     to: '/jobs',
     match: (p) => p.startsWith('/jobs'),
   },
   {
     id: 'swarm',
-    label: 'Swarm',
+    labelKey: 'nav.swarm',
     icon: UserGroupIcon,
     to: '/swarm',
     match: (p) => p === '/swarm' || p.startsWith('/swarm2'),
@@ -98,35 +99,35 @@ export const MOBILE_NAV_TABS: Array<TabItem> = [
 
   {
     id: 'memory',
-    label: 'Memory',
+    labelKey: 'nav.memory',
     icon: BrainIcon,
     to: '/memory',
     match: (p) => p.startsWith('/memory'),
   },
   {
     id: 'skills',
-    label: 'Skills',
+    labelKey: 'nav.skills',
     icon: PuzzleIcon,
     to: '/skills',
     match: (p) => p.startsWith('/skills'),
   },
   {
     id: 'mcp',
-    label: 'MCP',
+    labelKey: 'nav.mcp',
     icon: McpServerIcon,
     to: '/mcp',
     match: (p) => p.startsWith('/mcp'),
   },
   {
     id: 'profiles',
-    label: 'Profiles',
+    labelKey: 'nav.profiles',
     icon: UserGroupIcon,
     to: '/profiles',
     match: (p) => p.startsWith('/profiles'),
   },
   {
     id: 'settings',
-    label: 'Settings',
+    labelKey: 'nav.settings',
     icon: Settings01Icon,
     to: '/settings',
     match: (p) => p.startsWith('/settings'),
@@ -248,6 +249,17 @@ export function MobileTabBar() {
     }
   }, [isChatRoute])
 
+  // Re-render tab labels when the UI language changes at runtime
+  const [locale, setLocaleState] = useState<LocaleId>(getLocale())
+  useEffect(() => {
+    const onLocaleChange = (e: Event) => {
+      const detail = (e as CustomEvent<LocaleId>).detail
+      setLocaleState(detail ?? getLocale())
+    }
+    window.addEventListener('locale-change', onLocaleChange)
+    return () => window.removeEventListener('locale-change', onLocaleChange)
+  }, [])
+
   return (
     <>
       <nav
@@ -294,7 +306,7 @@ export function MobileTabBar() {
                   }
                 }}
                 aria-current={isActive ? 'page' : undefined}
-                aria-label={tab.label}
+                aria-label={t(tab.labelKey)}
                 className={cn(
                   // 32x32 touch target (compact to fit all 9 tabs on mobile)
                   'flex items-center justify-center',
