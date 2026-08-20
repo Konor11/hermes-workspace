@@ -20,6 +20,8 @@ export const Route = createFileRoute('/api/logs')({
         }
         const url = new URL(request.url)
         const lines = Math.min(Math.max(parseInt(url.searchParams.get('lines') || '200', 10) || 200, 10), 2000)
+        const minutes = Math.min(Math.max(parseInt(url.searchParams.get('minutes') || '60', 10) || 60, 1), 1440)
+        const cutoff = Date.now() - minutes * 60_000
         let raw = ''
         try {
           raw = execSync(
@@ -37,6 +39,14 @@ export const Route = createFileRoute('/api/logs')({
           // not on the word "error" appearing inside an INFO/WARNING message.
           .filter((l) => /\b(ERROR|FATAL|CRITICAL|TRACEBACK)\b\s/.test(l) ||
                           /\b(ERROR|FATAL|CRITICAL|TRACEBACK)\b$/.test(l))
+          // Keep only entries within the time window (parse the embedded
+          // YYYY-MM-DD HH:MM:SS,mmm timestamp right after "hermes[PID]: ").
+          .filter((l) => {
+            const m = l.match(/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}),(\d{3})/)
+            if (!m) return true // can't parse -> keep (don't hide unknown-format lines)
+            const ts = new Date(`${m[1]}.${m[2]}Z`).getTime()
+            return !Number.isNaN(ts) && ts >= cutoff
+          })
           .slice(-lines)
         return json({
           file: 'hermes-gateway (journald)',
