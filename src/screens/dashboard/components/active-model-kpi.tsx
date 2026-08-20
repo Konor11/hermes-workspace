@@ -1,5 +1,6 @@
 import { formatModelName } from '@/screens/dashboard/lib/formatters'
 import type { DashboardOverview } from '@/server/dashboard-aggregator'
+import { t } from '@/lib/i18n'
 
 function formatCount(n: number): string {
   if (!n || n <= 0) return '0'
@@ -75,7 +76,7 @@ export function ActiveModelKpi({
           className="text-[10px] font-semibold uppercase tracking-[0.18em]"
           style={{ color: 'var(--theme-muted)' }}
         >
-          Active Model
+          {t('dash.activeModel')}
         </span>
         <span
           className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold"
@@ -87,7 +88,7 @@ export function ActiveModelKpi({
           }}
         >
           <span className="size-1.5 rounded-full" style={{ background: tone }} />
-          {connected ? 'Online' : 'Offline'}
+          {connected ? t('dash.online') : t('dash.offline')}
         </span>
       </div>
 

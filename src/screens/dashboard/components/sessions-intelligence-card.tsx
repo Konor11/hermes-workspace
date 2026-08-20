@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { formatModelName } from '@/screens/dashboard/lib/formatters'
+import { t } from '@/lib/i18n'
 
 export type SessionRowData = {
   key: string
@@ -192,7 +193,7 @@ export function SessionsIntelligenceCard({
           className="text-[11px] font-semibold uppercase tracking-[0.18em]"
           style={{ color: 'var(--theme-text)' }}
         >
-          Sessions intelligence
+          {t('dash.sessionsIntelligence')}
         </h3>
         <div className="flex items-center gap-2">
           <span
@@ -215,7 +216,7 @@ export function SessionsIntelligenceCard({
               color: 'var(--theme-muted)',
             }}
           >
-            Open chat →
+            {t('dash.openChat')}
           </button>
         </div>
       </div>
@@ -226,10 +227,10 @@ export function SessionsIntelligenceCard({
           style={{
             borderColor: 'var(--theme-border)',
             color: 'var(--theme-muted)',
-          }}
-        >
-          No sessions yet — start a chat.
-        </div>
+            }}
+            >
+            {t('dash.noSessionsYet')}
+            </div>
       ) : (
         // Iter 013: bumped from 8 → 14 rows. The card is now the
         // bottom anchor of the main column, so it has the room.

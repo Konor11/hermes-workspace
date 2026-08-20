@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import type { ReactNode } from 'react'
 import type { DashboardOverview } from '@/server/dashboard-aggregator'
+import { t, type TranslationKey } from '@/lib/i18n'
 
 function formatTokens(n: number): string {
   if (!n || n <= 0) return '0'
@@ -86,7 +87,7 @@ function Spark({
 }
 
 type HeroTileProps = {
-  label: string
+  labelKey: TranslationKey
   value: string
   sub?: string
   delta?: number | null
@@ -95,7 +96,7 @@ type HeroTileProps = {
   icon: string
 }
 
-function HeroTile({ label, value, sub, delta, spark, tone, icon }: HeroTileProps) {
+function HeroTile({ labelKey, value, sub, delta, spark, tone, icon }: HeroTileProps) {
   const deltaText = (() => {
     if (delta === null || delta === undefined) return null
     const sign = delta > 0 ? '+' : ''
@@ -133,7 +134,7 @@ function HeroTile({ label, value, sub, delta, spark, tone, icon }: HeroTileProps
           className="text-[10px] font-semibold uppercase tracking-[0.18em]"
           style={{ color: 'var(--theme-muted)' }}
         >
-          {label}
+          {t(labelKey)}
         </span>
         <span
           className="flex size-7 items-center justify-center rounded-md text-sm"
@@ -249,7 +250,7 @@ export function HeroMetrics({
   const tiles: Array<HeroTileProps> = useMemo(
     () => [
       {
-        label: 'Sessions',
+        labelKey: 'dash.sessions',
         value: formatCount(sessionsTotal),
         sub: window,
         delta: useAnalytics ? deltaPct(sessCurr, sessPrev) : null,
@@ -258,20 +259,20 @@ export function HeroMetrics({
         icon: '💬',
       },
       {
-        label: 'Tokens',
+        labelKey: 'dash.tokens',
         value: formatTokens(tokensTotal),
         sub: useAnalytics
-          ? `${formatTokens(analytics!.cacheReadTokens)} cached`
-          : 'Hermes ledger',
+          ? `${formatTokens(analytics!.cacheReadTokens)} ${t('dash.cached')}`
+          : t('dash.hermesLedger'),
         delta: useAnalytics ? deltaPct(tokCurr, tokPrev) : null,
         spark: useAnalytics ? dailyTokens : undefined,
         tone: 'var(--theme-accent-secondary)',
         icon: '⚡',
       },
       {
-        label: 'API Calls',
+        labelKey: 'dash.apiCalls',
         value: formatCount(apiCalls),
-        sub: useAnalytics ? `${window} window` : 'tool calls',
+        sub: useAnalytics ? `${window} ${t('dash.window')}` : t('dash.toolCalls'),
         delta: null,
         spark: useAnalytics ? dailyCalls : undefined,
         tone: 'var(--theme-success)',
