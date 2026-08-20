@@ -22,6 +22,7 @@ import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { hapticTap } from '@/lib/haptics'
 import { getTheme, getThemeVariant, isDarkTheme, setTheme } from '@/lib/theme'
+import { t, type TranslationKey, type LocaleId, getLocale } from '@/lib/i18n'
 import {
   selectChatProfileDisplayName,
   useChatSettingsStore,
@@ -31,63 +32,63 @@ import { useSettingsStore } from '@/hooks/use-settings'
 export const MOBILE_HAMBURGER_NAV_ITEMS = [
   {
     id: 'chat',
-    label: 'Chat',
+    labelKey: 'nav.chat',
     icon: Chat01Icon,
     to: '/chat/main',
     match: (p: string) => p.startsWith('/chat') || p === '/new' || p === '/',
   },
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    labelKey: 'nav.dashboard',
     icon: DashboardSquare01Icon,
     to: '/dashboard',
     match: (p: string) => p.startsWith('/dashboard'),
   },
   {
     id: 'playground',
-    label: 'HermesWorld',
+    labelKey: 'nav.hermesworld',
     icon: Castle02Icon,
     to: '/playground',
     match: (p: string) => p.startsWith('/playground'),
   },
   {
     id: 'terminal',
-    label: 'Terminal',
+    labelKey: 'nav.terminal',
     icon: CommandLineIcon,
     to: '/terminal',
     match: (p: string) => p.startsWith('/terminal'),
   },
   {
     id: 'jobs',
-    label: 'Jobs',
+    labelKey: 'nav.jobs',
     icon: Clock01Icon,
     to: '/jobs',
     match: (p: string) => p.startsWith('/jobs'),
   },
   {
     id: 'conductor',
-    label: 'Conductor',
+    labelKey: 'nav.conductor',
     icon: Rocket01Icon,
     to: '/conductor',
     match: (p: string) => p.startsWith('/conductor'),
   },
   {
     id: 'operations',
-    label: 'Operations',
+    labelKey: 'nav.operations',
     icon: UserMultipleIcon,
     to: '/operations',
     match: (p: string) => p.startsWith('/operations'),
   },
   {
     id: 'swarm',
-    label: 'Swarm',
+    labelKey: 'nav.swarm',
     icon: UserGroupIcon,
     to: '/swarm',
     match: (p: string) => p === '/swarm' || p.startsWith('/swarm2'),
   },
   {
     id: 'echo-studio',
-    label: 'Echo Studio',
+    labelKey: 'nav.echostudio',
     icon: Rocket01Icon,
     to: '/echo-studio',
     match: (p: string) => p.startsWith('/echo-studio'),
@@ -95,28 +96,28 @@ export const MOBILE_HAMBURGER_NAV_ITEMS = [
 
   {
     id: 'memory',
-    label: 'Memory',
+    labelKey: 'nav.memory',
     icon: BrainIcon,
     to: '/memory',
     match: (p: string) => p.startsWith('/memory'),
   },
   {
     id: 'skills',
-    label: 'Skills',
+    labelKey: 'nav.skills',
     icon: PuzzleIcon,
     to: '/skills',
     match: (p: string) => p.startsWith('/skills'),
   },
   {
     id: 'mcp',
-    label: 'MCP',
+    labelKey: 'nav.mcp',
     icon: McpServerIcon,
     to: '/mcp',
     match: (p: string) => p.startsWith('/mcp'),
   },
   {
     id: 'profiles',
-    label: 'Profiles',
+    labelKey: 'nav.profiles',
     icon: UserGroupIcon,
     to: '/profiles',
     match: (p: string) => p.startsWith('/profiles'),
@@ -163,6 +164,14 @@ export function MobileHamburgerMenu() {
       document.body.classList.remove('nav-drawer-open')
     }
   }, [open])
+
+  // Re-render nav labels when the UI language changes at runtime
+  const [locale, setLocaleState] = useState<LocaleId>(getLocale())
+  useEffect(() => {
+    const onLocaleChange = () => setLocaleState(getLocale())
+    window.addEventListener('locale-change', onLocaleChange)
+    return () => window.removeEventListener('locale-change', onLocaleChange)
+  }, [])
 
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
@@ -290,7 +299,7 @@ export function MobileHamburgerMenu() {
                   size={20}
                   strokeWidth={isActive ? 2 : 1.6}
                 />
-                <span className="text-[15px] font-medium">{item.label}</span>
+                <span className="text-[15px] font-medium">{t(item.labelKey)}</span>
               </button>
             )
           })}
