@@ -203,6 +203,35 @@ export const Route = createFileRoute('/api/mcp/')({
           return json({ ok: false, error: safeErrorMessage(err) }, { status: 500 })
         }
       },
+      // Stage4: DELETE /api/mcp/{name} — remove server via `hermes config` CLI.
+      // (Kept here instead of mcp/$name.ts because the dynamic $name route
+      // shadows static sub-routes like /api/mcp/test and /api/mcp/discover,
+      // causing them to 405. DELETE has no body, so we parse the name from the URL.)
+      DELETE: async ({ request }) => {
+        if (!isAuthenticated(request)) {
+          return json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+        }
+        const csrfCheck = requireJsonContentType(request)
+        if (csrfCheck) return csrfCheck
+        try {
+          const url = new URL(request.url)
+          const name = url.pathname.split('/').pop() || ''
+          if (!name) {
+            return json({ ok: false, error: 'Missing server name' }, { status: 400 })
+          }
+          const cfg = readMcpServersCli()
+          const servers =
+            cfg && typeof cfg === 'object' ? { ...(cfg as Record<string, unknown>) } : {}
+          if (!(name in servers)) {
+            return json({ ok: false, error: 'Server not found' }, { status: 404 })
+          }
+          delete servers[name]
+          writeMcpServersCli(servers)
+          return json({ ok: true, name })
+        } catch (err) {
+          return json({ ok: false, error: safeErrorMessage(err) }, { status: 500 })
+        }
+      },
     },
   },
 })

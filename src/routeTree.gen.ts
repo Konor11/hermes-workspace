@@ -146,7 +146,6 @@ import { Route as ApiMcpHubSourcesRouteImport } from './routes/api/mcp/hub-sourc
 import { Route as ApiMcpHubSearchRouteImport } from './routes/api/mcp/hub-search'
 import { Route as ApiMcpDiscoverRouteImport } from './routes/api/mcp/discover'
 import { Route as ApiMcpConfigureRouteImport } from './routes/api/mcp/configure'
-import { Route as ApiMcpNameRouteImport } from './routes/api/mcp/$name'
 import { Route as ApiKnowledgeSyncRouteImport } from './routes/api/knowledge/sync'
 import { Route as ApiKnowledgeSearchRouteImport } from './routes/api/knowledge/search'
 import { Route as ApiKnowledgeReadRouteImport } from './routes/api/knowledge/read'
@@ -857,11 +856,6 @@ const ApiMcpConfigureRoute = ApiMcpConfigureRouteImport.update({
   path: '/api/mcp/configure',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiMcpNameRoute = ApiMcpNameRouteImport.update({
-  id: '/api/mcp/$name',
-  path: '/api/mcp/$name',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiKnowledgeSyncRoute = ApiKnowledgeSyncRouteImport.update({
   id: '/api/knowledge/sync',
   path: '/api/knowledge/sync',
@@ -968,9 +962,9 @@ const ApiMcpHubSourcesIdRoute = ApiMcpHubSourcesIdRouteImport.update({
   getParentRoute: () => ApiMcpHubSourcesRoute,
 } as any)
 const ApiMcpNameLogsRoute = ApiMcpNameLogsRouteImport.update({
-  id: '/logs',
-  path: '/logs',
-  getParentRoute: () => ApiMcpNameRoute,
+  id: '/api/mcp/$name/logs',
+  path: '/api/mcp/$name/logs',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiHermesworldReservationsConfirmRoute =
   ApiHermesworldReservationsConfirmRouteImport.update({
@@ -1105,7 +1099,6 @@ export interface FileRoutesByFullPath {
   '/api/knowledge/read': typeof ApiKnowledgeReadRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/knowledge/sync': typeof ApiKnowledgeSyncRoute
-  '/api/mcp/$name': typeof ApiMcpNameRouteWithChildren
   '/api/mcp/configure': typeof ApiMcpConfigureRoute
   '/api/mcp/discover': typeof ApiMcpDiscoverRoute
   '/api/mcp/hub-search': typeof ApiMcpHubSearchRoute
@@ -1267,7 +1260,6 @@ export interface FileRoutesByTo {
   '/api/knowledge/read': typeof ApiKnowledgeReadRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/knowledge/sync': typeof ApiKnowledgeSyncRoute
-  '/api/mcp/$name': typeof ApiMcpNameRouteWithChildren
   '/api/mcp/configure': typeof ApiMcpConfigureRoute
   '/api/mcp/discover': typeof ApiMcpDiscoverRoute
   '/api/mcp/hub-search': typeof ApiMcpHubSearchRoute
@@ -1431,7 +1423,6 @@ export interface FileRoutesById {
   '/api/knowledge/read': typeof ApiKnowledgeReadRoute
   '/api/knowledge/search': typeof ApiKnowledgeSearchRoute
   '/api/knowledge/sync': typeof ApiKnowledgeSyncRoute
-  '/api/mcp/$name': typeof ApiMcpNameRouteWithChildren
   '/api/mcp/configure': typeof ApiMcpConfigureRoute
   '/api/mcp/discover': typeof ApiMcpDiscoverRoute
   '/api/mcp/hub-search': typeof ApiMcpHubSearchRoute
@@ -1596,7 +1587,6 @@ export interface FileRouteTypes {
     | '/api/knowledge/read'
     | '/api/knowledge/search'
     | '/api/knowledge/sync'
-    | '/api/mcp/$name'
     | '/api/mcp/configure'
     | '/api/mcp/discover'
     | '/api/mcp/hub-search'
@@ -1758,7 +1748,6 @@ export interface FileRouteTypes {
     | '/api/knowledge/read'
     | '/api/knowledge/search'
     | '/api/knowledge/sync'
-    | '/api/mcp/$name'
     | '/api/mcp/configure'
     | '/api/mcp/discover'
     | '/api/mcp/hub-search'
@@ -1921,7 +1910,6 @@ export interface FileRouteTypes {
     | '/api/knowledge/read'
     | '/api/knowledge/search'
     | '/api/knowledge/sync'
-    | '/api/mcp/$name'
     | '/api/mcp/configure'
     | '/api/mcp/discover'
     | '/api/mcp/hub-search'
@@ -2077,7 +2065,6 @@ export interface RootRouteChildren {
   ApiKnowledgeReadRoute: typeof ApiKnowledgeReadRoute
   ApiKnowledgeSearchRoute: typeof ApiKnowledgeSearchRoute
   ApiKnowledgeSyncRoute: typeof ApiKnowledgeSyncRoute
-  ApiMcpNameRoute: typeof ApiMcpNameRouteWithChildren
   ApiMcpConfigureRoute: typeof ApiMcpConfigureRoute
   ApiMcpDiscoverRoute: typeof ApiMcpDiscoverRoute
   ApiMcpHubSearchRoute: typeof ApiMcpHubSearchRoute
@@ -2101,6 +2088,7 @@ export interface RootRouteChildren {
   ApiUpdateStatusRoute: typeof ApiUpdateStatusRoute
   ApiUpdateWorkspaceRoute: typeof ApiUpdateWorkspaceRoute
   ApiMcpIndexRoute: typeof ApiMcpIndexRoute
+  ApiMcpNameLogsRoute: typeof ApiMcpNameLogsRoute
   ApiRunsSessionKeyRunIdAbandonRoute: typeof ApiRunsSessionKeyRunIdAbandonRoute
 }
 
@@ -3065,13 +3053,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMcpConfigureRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/mcp/$name': {
-      id: '/api/mcp/$name'
-      path: '/api/mcp/$name'
-      fullPath: '/api/mcp/$name'
-      preLoaderRoute: typeof ApiMcpNameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/knowledge/sync': {
       id: '/api/knowledge/sync'
       path: '/api/knowledge/sync'
@@ -3214,10 +3195,10 @@ declare module '@tanstack/react-router' {
     }
     '/api/mcp/$name/logs': {
       id: '/api/mcp/$name/logs'
-      path: '/logs'
+      path: '/api/mcp/$name/logs'
       fullPath: '/api/mcp/$name/logs'
       preLoaderRoute: typeof ApiMcpNameLogsRouteImport
-      parentRoute: typeof ApiMcpNameRoute
+      parentRoute: typeof rootRouteImport
     }
     '/api/hermesworld/reservations/confirm': {
       id: '/api/hermesworld/reservations/confirm'
@@ -3413,18 +3394,6 @@ const ApiHermesworldReservationsRouteWithChildren =
     ApiHermesworldReservationsRouteChildren,
   )
 
-interface ApiMcpNameRouteChildren {
-  ApiMcpNameLogsRoute: typeof ApiMcpNameLogsRoute
-}
-
-const ApiMcpNameRouteChildren: ApiMcpNameRouteChildren = {
-  ApiMcpNameLogsRoute: ApiMcpNameLogsRoute,
-}
-
-const ApiMcpNameRouteWithChildren = ApiMcpNameRoute._addFileChildren(
-  ApiMcpNameRouteChildren,
-)
-
 interface ApiMcpHubSourcesRouteChildren {
   ApiMcpHubSourcesIdRoute: typeof ApiMcpHubSourcesIdRoute
 }
@@ -3548,7 +3517,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiKnowledgeReadRoute: ApiKnowledgeReadRoute,
   ApiKnowledgeSearchRoute: ApiKnowledgeSearchRoute,
   ApiKnowledgeSyncRoute: ApiKnowledgeSyncRoute,
-  ApiMcpNameRoute: ApiMcpNameRouteWithChildren,
   ApiMcpConfigureRoute: ApiMcpConfigureRoute,
   ApiMcpDiscoverRoute: ApiMcpDiscoverRoute,
   ApiMcpHubSearchRoute: ApiMcpHubSearchRoute,
@@ -3572,6 +3540,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUpdateStatusRoute: ApiUpdateStatusRoute,
   ApiUpdateWorkspaceRoute: ApiUpdateWorkspaceRoute,
   ApiMcpIndexRoute: ApiMcpIndexRoute,
+  ApiMcpNameLogsRoute: ApiMcpNameLogsRoute,
   ApiRunsSessionKeyRunIdAbandonRoute: ApiRunsSessionKeyRunIdAbandonRoute,
 }
 export const routeTree = rootRouteImport
