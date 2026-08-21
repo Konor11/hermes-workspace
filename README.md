@@ -965,6 +965,8 @@ PRs are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 Одной командой поднимает полный стек на чистом Ubuntu/Debian-сервере: **Hermes Agent → Gateway → Dashboard → Workspace**, плюс **Caddy** как reverse-proxy с авто-TLS (Let's Encrypt).
 
+> **Версия Hermes Agent:** скрипт ставит проверенную `hermes-agent==0.20.4` (официальный one-liner `install.sh` тянет устаревшую `0.19.0` — поэтому он не используется). При необходимости версию можно поднять в `scripts/install.sh`.
+
 **Режимы (`--mode`):**
 
 | Режим | Что происходит |
