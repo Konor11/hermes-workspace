@@ -2,19 +2,27 @@
 #
 # Hermes Workspace — автоустановка на чистый сервер (Ubuntu/Debian).
 #
-# Что делает:
-#   1. Проверяет зависимости (bash4+, curl, node 22+, npm, python3, git).
-#   2. Ставит Hermes Agent (если ещё не установлен) системно.
-#   3. Клонирует форк hermes-workspace (или использует текущую папку).
-#   4. npm install + npm run build.
-#   5. Генерирует /root/.hermes/workspace_env.conf (секреты интерактивно).
-#   6. Устанавливает systemd unit hermes-workspace.service.
-#   7. Запускает и проверяет доступность.
+# Два режима рантайма (--mode):
+#   systemd  (по умолчанию) — Hermes Agent ставится системно, gateway/dashboard/
+#            workspace поднимаются как systemd-юниты, Caddy ставится системно.
+#   docker   — всё в контейнерах: Hermes Agent (nousresearch/hermes-agent),
+#            Workspace (собранный из Dockerfile репо) и Caddy — через docker compose.
 #
-# Требования: запуск от root (нужны systemd + запись в /root/.hermes).
+# Что делает:
+#   1. Проверяет зависимости (bash4+, curl, git, python3, Node 22+; docker — для --mode docker).
+#   2. Ставит Hermes Agent (если ещё не установлен).
+#   3. Поднимает Gateway (:8642) + Dashboard (:9119) — systemd или docker.
+#   4. Клонирует форк hermes-workspace, npm install + npm run build.
+#   5. Пишет /root/.hermes/workspace_env.conf (секреты интерактивно).
+#   6. Поднимает Workspace (:3001) — systemd или docker.
+#   7. Ставит Caddy и проксирует домены (HTTPS, авто-Let's Encrypt).
+#
+# Требования: запуск от root.
 # Использование:
-#   sudo bash scripts/install.sh
-#   sudo bash scripts/install.sh --dir /opt/hermes-workspace --no-build
+#   sudo bash scripts/install.sh                         # systemd + caddy
+#   sudo bash scripts/install.sh --mode docker           # всё в docker
+#   sudo bash scripts/install.sh --domain ws.example.com --dir /opt/hermes-workspace
+#   sudo bash scripts/install.sh --dry-run               # только проверки
 #
 set -euo pipefail
 
@@ -44,12 +52,16 @@ GIT_REF="main"
 DO_BUILD=1
 UPDATE=0
 DRY_RUN=0
+MODE="systemd"
+DOMAIN=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --dir)   WS_DIR="$2"; shift 2 ;;
-    --repo)  REPO_URL="$2"; shift 2 ;;
-    --ref)   GIT_REF="$2"; shift 2 ;;
+    --dir)      WS_DIR="$2"; shift 2 ;;
+    --repo)     REPO_URL="$2"; shift 2 ;;
+    --ref)      GIT_REF="$2"; shift 2 ;;
+    --mode)     MODE="$2"; shift 2 ;;
+    --domain)   DOMAIN="$2"; shift 2 ;;
     --no-build) DO_BUILD=0; shift ;;
     --update)   UPDATE=1; shift ;;
     --dry-run)  DRY_RUN=1; shift ;;
@@ -59,14 +71,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# В dry-run не пишем файлы и не трогаем systemd/сервисы
+[[ "$MODE" == "systemd" || "$MODE" == "docker" ]] || die "Неизвестный --mode: $MODE (systemd|docker)"
+
+# В dry-run не пишем файлы и не трогаем сервисы/контейнеры
 run() { if [[ "$DRY_RUN" -eq 1 ]]; then info "[dry-run] $*"; else eval "$@"; fi; }
-run_quiet() { if [[ "$DRY_RUN" -eq 1 ]]; then info "[dry-run] $*"; else eval "$@"; fi; }
 
 [[ "$(id -u)" -eq 0 ]] || die "Запускай от root: sudo bash $0"
 [[ "${BASH_VERSINFO:-0}" -ge 4 ]] || die "Нужен bash 4+ (у тебя ${BASH_VERSION})"
 
 ENV_FILE="/root/.hermes/workspace_env.conf"
+CADDY_FILE="/etc/caddy/Caddyfile"
 
 # ---------------------------------------------------------------------------
 # 1. Зависимости
@@ -83,11 +97,16 @@ if [[ "$NODE_MAJOR" -lt 22 ]]; then
   die "Нужен Node.js 22+, сейчас v${NODE_MAJOR}. Обнови Node и повтори."
 fi
 ok "Node v$(node -v) ✓"
-
-if ! command -v npm >/dev/null 2>&1; then
-  die "npm не найден (идёт с Node). Переустанови Node 22+."
-fi
+need npm
 ok "npm $(npm -v) ✓"
+
+if [[ "$MODE" == "docker" ]]; then
+  need docker
+  if ! docker compose version >/dev/null 2>&1; then
+    die "Нужен 'docker compose' (v2). Поставь docker с compose-плагином."
+  fi
+  ok "docker $(docker --version) ✓"
+fi
 
 # ---------------------------------------------------------------------------
 # 2. Hermes Agent
@@ -96,28 +115,78 @@ step "Hermes Agent"
 if command -v hermes >/dev/null 2>&1 && hermes --version >/dev/null 2>&1; then
   ok "Hermes Agent уже установлен: $(hermes --version 2>/dev/null || echo present)"
 else
-  warn "Hermes Agent не найден. Ставлю через pipx/uv/pip в venv /usr/local/lib/hermes-agent …"
-  # Приоритет установщика — официальный one-liner; если недоступен — pip.
+  warn "Hermes Agent не найден. Ставлю …"
   if curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/install.sh -o /tmp/hermes-install.sh 2>/dev/null; then
-    bash /tmp/hermes-install.sh || true
+    run bash /tmp/hermes-install.sh || true
   fi
   if ! command -v hermes >/dev/null 2>&1; then
-    python3 -m venv /usr/local/lib/hermes-agent/venv
-    /usr/local/lib/hermes-agent/venv/bin/pip install -U pip
-    /usr/local/lib/hermes-agent/venv/bin/pip install hermes-agent
-    ln -sf /usr/local/lib/hermes-agent/venv/bin/hermes /usr/local/bin/hermes
+    run "python3 -m venv /usr/local/lib/hermes-agent/venv"
+    run "/usr/local/lib/hermes-agent/venv/bin/pip install -U pip"
+    run "/usr/local/lib/hermes-agent/venv/bin/pip install hermes-agent"
+    run "ln -sf /usr/local/lib/hermes-agent/venv/bin/hermes /usr/local/bin/hermes"
   fi
   command -v hermes >/dev/null 2>&1 || die "Не удалось установить Hermes Agent."
-  ok "Hermes Agent установлен: $(hermes --version 2>/dev/null || echo present)"
-fi
-
-# Убедимся, что gateway/dashboard могут стартовать (systemd-юниты ставит сам hermes при first-run)
-if ! systemctl list-unit-files 2>/dev/null | grep -q "hermes-gateway.service"; then
-  warn "Юнит hermes-gateway.service не найден. Включи автозапуск: hermes gateway enable (или см. доку Hermes)."
+  ok "Hermes Agent установлен"
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Клон / обновление репозитория
+# 3. Gateway + Dashboard
+# ---------------------------------------------------------------------------
+if [[ "$MODE" == "systemd" ]]; then
+  step "Gateway + Dashboard (systemd)"
+  # Gateway — родной systemd-юнит от Hermes
+  if systemctl list-unit-files 2>/dev/null | grep -q "hermes-gateway.service"; then
+    warn "hermes-gateway.service уже есть — пропускаю install (restart при финале)."
+  else
+    run "hermes gateway install" || warn "hermes gateway install не сработал — см. hermes gateway --help"
+  fi
+  # Dashboard — пишем unit вручную (hermes не делает install для dashboard)
+  DASH_UNIT="/etc/systemd/system/hermes-dashboard.service"
+  if [[ -f "$DASH_UNIT" && "$DRY_RUN" -eq 0 ]]; then
+    warn "$DASH_UNIT уже существует — не перезаписываю."
+  elif [[ "$DRY_RUN" -eq 1 ]]; then
+    info "[dry-run] пропускаю запись $DASH_UNIT"
+  else
+    info "Устанавливаю $DASH_UNIT …"
+    cat > "$DASH_UNIT" <<'EOF'
+[Unit]
+Description=Hermes Dashboard
+After=network-online.target hermes-gateway.service
+Wants=hermes-gateway.service
+
+[Service]
+Type=simple
+User=root
+Environment="HOME=/root"
+EnvironmentFile=/root/.hermes/dashboard_auth_env.conf
+ExecStart=/usr/local/bin/hermes dashboard --host 0.0.0.0 --port 9119 --no-open --tui
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    ok "Dashboard unit записан"
+  fi
+  run systemctl daemon-reload
+  run systemctl enable hermes-gateway.service
+  run systemctl enable hermes-dashboard.service
+  run systemctl restart hermes-gateway.service
+  run systemctl restart hermes-dashboard.service
+  if [[ "$DRY_RUN" -eq 0 ]]; then
+    sleep 4
+    curl -fsS --max-time 5 http://127.0.0.1:8642/health >/dev/null 2>&1 && ok "Gateway :8642 ✅" || warn "Gateway :8642 не отвечает"
+    curl -fsS --max-time 5 http://127.0.0.1:9119/  >/dev/null 2>&1 && ok "Dashboard :9119 ✅" || warn "Dashboard :9119 не отвечает"
+  fi
+else
+  step "Gateway + Dashboard (docker)"
+  # Используем официальный образ; gateway и dashboard в одном контейнере.
+  run "docker pull nousresearch/hermes-agent:latest"
+  ok "Образ hermes-agent получен (будет запущен через compose на финале)"
+fi
+
+# ---------------------------------------------------------------------------
+# 4. Репозиторий workspace
 # ---------------------------------------------------------------------------
 step "Репозиторий workspace"
 if [[ -d "$WS_DIR/.git" ]]; then
@@ -141,13 +210,10 @@ else
   fi
 fi
 ok "Репозиторий: $WS_DIR"
-
-if [[ "$DRY_RUN" -eq 0 ]]; then
-  cd "$WS_DIR"
-fi
+[[ "$DRY_RUN" -eq 0 ]] && cd "$WS_DIR"
 
 # ---------------------------------------------------------------------------
-# 4. Сборка
+# 5. Сборка
 # ---------------------------------------------------------------------------
 if [[ "$DO_BUILD" -eq 1 ]]; then
   step "npm install + build"
@@ -161,13 +227,12 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 5. Секреты (workspace_env.conf)
+# 6. Секреты (workspace_env.conf)
 # ---------------------------------------------------------------------------
 step "Конфигурация /root/.hermes/workspace_env.conf"
 mkdir -p /root/.hermes
 
 prompt_secret() {
-  # $1=ключ $2=подсказка $3=текущее_значение(опц)
   local key="$1" hint="$2" cur="${3:-}" val=""
   if [[ "$DRY_RUN" -eq 1 ]]; then
     val="${cur:-<dry-run>}"
@@ -186,7 +251,6 @@ prompt_secret() {
   printf '%s=%s\n' "$key" "$val"
 }
 
-# Считываем текущие значения, если файл есть
 cur_token=$(grep -E '^HERMES_API_TOKEN='  "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
 cur_pw=$(grep -E '^HERMES_PASSWORD='      "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
 cur_bu=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_USERNAME=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
@@ -210,21 +274,22 @@ echo "(HERMES_API_TOKEN = API_SERVER_KEY гейтвея; basic-auth — из das
 ok "Записано: $ENV_FILE (chmod 600)"
 
 # ---------------------------------------------------------------------------
-# 6. systemd unit
+# 7. Workspace unit / контейнер
 # ---------------------------------------------------------------------------
-step "systemd unit hermes-workspace.service"
-UNIT="/etc/systemd/system/hermes-workspace.service"
-if [[ -f "$UNIT" && "$UPDATE" -eq 0 && "$DRY_RUN" -eq 0 ]]; then
-  warn "$UNIT уже существует — не перезаписываю (используй --update для перезаписи)."
-elif [[ "$DRY_RUN" -eq 1 ]]; then
-  info "[dry-run] пропускаю запись $UNIT"
-else
-  info "Устанавливаю $UNIT …"
-  cat > "$UNIT" <<EOF
+if [[ "$MODE" == "systemd" ]]; then
+  step "systemd unit hermes-workspace.service"
+  UNIT="/etc/systemd/system/hermes-workspace.service"
+  if [[ -f "$UNIT" && "$UPDATE" -eq 0 && "$DRY_RUN" -eq 0 ]]; then
+    warn "$UNIT уже существует — не перезаписываю (используй --update для перезаписи)."
+  elif [[ "$DRY_RUN" -eq 1 ]]; then
+    info "[dry-run] пропускаю запись $UNIT"
+  else
+    info "Устанавливаю $UNIT …"
+    cat > "$UNIT" <<EOF
 [Unit]
 Description=Hermes Workspace
-After=network-online.target hermes-gateway.service
-Wants=hermes-gateway.service
+After=network-online.target hermes-gateway.service hermes-dashboard.service
+Wants=hermes-gateway.service hermes-dashboard.service
 
 [Service]
 Type=simple
@@ -246,40 +311,184 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-  ok "Unit записан"
+    ok "Unit записан"
+  fi
+  run systemctl daemon-reload
+  run systemctl enable hermes-workspace.service
+  run systemctl restart hermes-workspace.service
+  if [[ "$DRY_RUN" -eq 0 ]]; then
+    up=0
+    for i in $(seq 1 30); do
+      curl -fsS --max-time 3 "http://127.0.0.1:3001/" >/dev/null 2>&1 && up=1 && break
+      sleep 1
+    done
+    [[ "$up" -eq 1 ]] && ok "Workspace :3001 ✅" || err "Workspace не поднялся за 30с (journalctl -u hermes-workspace -n 50)"
+  else
+    info "[dry-run] пропускаю проверку :3001"
+  fi
+else
+  step "Workspace (docker build + compose)"
+  run "docker build -t hermes-workspace:local ."
+  ok "Образ hermes-workspace:local собран (запустится через compose)"
 fi
 
-run systemctl daemon-reload
-run systemctl enable hermes-workspace.service
-ok "Unit включён (автозапуск при загрузке)"
+# ---------------------------------------------------------------------------
+# 8. Caddy (reverse proxy + HTTPS)
+# ---------------------------------------------------------------------------
+step "Caddy (reverse proxy, HTTPS)"
+if [[ -z "$DOMAIN" ]]; then
+  warn "Домен не задан (--domain). Caddy будет слушать на IP без авто-TLS."
+  DOMAIN=":3001"   # fallthrough: Caddy отдаёт workspace напрямую по IP
+fi
+
+if [[ "$MODE" == "systemd" ]]; then
+  # Ставим caddy системно (официальный репо)
+  if command -v caddy >/dev/null 2>&1; then
+    ok "Caddy уже установлен: $(caddy version 2>/dev/null | head -1)"
+  else
+    run "apt-get update -y"
+    run "apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl"
+    run "curl -fsSL https://dl.cloudsmith.io/public/caddy/stable/debian/gpg.key | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg"
+    run "echo 'deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] https://dl.cloudsmith.io/public/caddy/stable/debian/deb/ stable main' > /etc/apt/sources.list.d/caddy-stable.list"
+    run "apt-get update -y"
+    run "apt-get install -y caddy"
+    ok "Caddy установлен"
+  fi
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    info "[dry-run] пропускаю запись $CADDY_FILE"
+  else
+    info "Пишу $CADDY_FILE …"
+    if [[ "$DOMAIN" == ":3001" ]]; then
+      cat > "$CADDY_FILE" <<EOF
+# Без домена: отдаём workspace напрямую по IP (HTTP, без TLS)
+:80 {
+    reverse_proxy 127.0.0.1:3001
+}
+EOF
+    else
+      cat > "$CADDY_FILE" <<EOF
+# Авто-TLS через Let's Encrypt. Замени DOMAIN на свой.
+$DOMAIN {
+    reverse_proxy 127.0.0.1:3001
+}
+
+# Опционально: дашборд и гейтвей под отдельными субдоменами
+# dashboard.$DOMAIN {
+#     reverse_proxy 127.0.0.1:9119
+# }
+# gateway.$DOMAIN {
+#     reverse_proxy 127.0.0.1:8642
+# }
+EOF
+    fi
+    ok "Caddyfile записан"
+  fi
+  run systemctl daemon-reload
+  run systemctl enable caddy
+  run systemctl restart caddy
+  if [[ "$DRY_RUN" -eq 0 && "$DOMAIN" != ":3001" ]]; then
+    sleep 3
+    curl -fsS --max-time 5 "https://$DOMAIN/" >/dev/null 2>&1 && ok "Caddy $DOMAIN (HTTPS) ✅" || warn "Caddy $DOMAIN не отвечает (проверь DNS + открытый 80/443)"
+  fi
+else
+  # docker-режим: caddy тоже в контейнере (через compose)
+  info "Caddy будет запущен как контейнер через docker compose."
+fi
 
 # ---------------------------------------------------------------------------
-# 7. Запуск + проверка
+# 9. docker-режим: собираем compose и поднимаем
 # ---------------------------------------------------------------------------
-step "Запуск и проверка"
-run systemctl restart hermes-workspace.service
-# Ждём поднятия (до 30с)
-if [[ "$DRY_RUN" -eq 1 ]]; then
-  info "[dry-run] пропускаю ожидание/проверку порта"
-else
-  up=0
-  for i in $(seq 1 30); do
-    if curl -fsS --max-time 3 "http://127.0.0.1:3001/" >/dev/null 2>&1; then up=1; break; fi
-    sleep 1
-  done
-  if [[ "$up" -eq 1 ]]; then
-    ok "Workspace отвечает на http://127.0.0.1:3001/ ✅"
+if [[ "$MODE" == "docker" ]]; then
+  step "docker compose up"
+  COMPOSE="$WS_DIR/docker-compose.yml"
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    info "[dry-run] пропускаю docker compose up (файл: $COMPOSE)"
   else
-    err "Workspace не поднялся за 30с. Смотри: journalctl -u hermes-workspace -n 50"
-    exit 1
+    if [[ ! -f "$COMPOSE" ]]; then
+      # Генерируем минимальный compose, если нет в репо
+      cat > "$COMPOSE" <<EOF
+services:
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes-agent
+    restart: always
+    environment:
+      - HERMES_HOME=/root/.hermes
+    volumes:
+      - /root/.hermes:/root/.hermes
+    command: ["gateway", "run"]
+  workspace:
+    image: hermes-workspace:local
+    container_name: hermes-workspace
+    restart: always
+    env_file:
+      - /root/.hermes/workspace_env.conf
+    environment:
+      - PORT=3001
+      - HOST=0.0.0.0
+      - HERMES_API_URL=http://hermes:8642
+      - HERMES_DASHBOARD_URL=http://hermes:9119
+    depends_on:
+      - hermes
+  caddy:
+    image: caddy:latest
+    container_name: hermes-caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.docker:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - workspace
+volumes:
+  caddy_data:
+  caddy_config:
+EOF
+    fi
+    # Caddyfile для docker-режима
+    if [[ -z "$DOMAIN" || "$DOMAIN" == ":3001" ]]; then
+      cat > "$WS_DIR/Caddyfile.docker" <<'EOF'
+:80 {
+    reverse_proxy workspace:3001
+}
+EOF
+    else
+      cat > "$WS_DIR/Caddyfile.docker" <<EOF
+$DOMAIN {
+    reverse_proxy workspace:3001
+}
+EOF
+    fi
+    run "docker compose -f $COMPOSE up -d"
+    ok "Контейнеры подняты (hermes / workspace / caddy)"
   fi
 fi
 
+# ---------------------------------------------------------------------------
+# Финал
+# ---------------------------------------------------------------------------
 echo
-echo "${C_GRN}${C_BLD}Готово!${C_RST}"
-echo "  Workspace : http://127.0.0.1:3001/"
-echo "  Gateway   : http://127.0.0.1:8642/health"
-echo "  Dashboard : http://127.0.0.1:9119/"
+echo "${C_GRN}${C_BLD}Готово!${C_RST} (режим: $MODE)"
+if [[ "$MODE" == "systemd" ]]; then
+  if [[ "$DOMAIN" == ":3001" ]]; then
+    echo "  Workspace : http://127.0.0.1:3001/  (без домена; задать --domain для HTTPS)"
+  else
+    echo "  Workspace : https://$DOMAIN/"
+  fi
+  echo "  Gateway   : http://127.0.0.1:8642/health"
+  echo "  Dashboard : http://127.0.0.1:9119/"
+  echo "  Журналы   : journalctl -u hermes-workspace -f"
+else
+  if [[ "$DOMAIN" == ":3001" ]]; then
+    echo "  Workspace : http://<IP-сервера>:3001/  (контейнер hermes-workspace; задать --domain для HTTPS)"
+  else
+    echo "  Workspace : https://$DOMAIN/ (контейнер hermes-workspace)"
+  fi
+  echo "  Журналы   : docker compose -f $WS_DIR/docker-compose.yml logs -f"
+fi
 echo
-echo "Для доступа извне поставь reverse-proxy (caddy/nginx) на :3001 / :9119 / :8642."
-echo "Журнал: ${C_BLD}journalctl -u hermes-workspace -f${C_RST}"
+echo "Если задан --domain, убедись, что DNS указывает на этот сервер и"
+echo "порты 80/443 открыты — Caddy сам выпустит TLS-сертификат Let's Encrypt."
