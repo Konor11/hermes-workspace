@@ -22,6 +22,18 @@
 
 ---
 
+> [!NOTE]
+> **Это форк ([Konor11/hermes-workspace](https://github.com/Konor11/hermes-workspace)).**
+> Добавлено поверх upstream `outsourc-e/hermes-workspace`:
+> - 🇷🇺 **Полная русская локализация UI** — интерфейс переключается на русский автоматически (по `navigator.language` / `localStorage['hermes-locale']`).
+> - 🛠️ **Скрипт автоустановки** [`scripts/install.sh`](./scripts/install.sh) — ставит Hermes Agent, Gateway, Dashboard, Workspace и Caddy (reverse-proxy + HTTPS) одной командой. Поддерживает режимы `systemd` и `docker`, авто-подбор свободных портов и произвольные домены.
+>
+> Остальное — ванильный upstream (zero-fork behavior сохранён).
+
+---
+
+## 🚀 Быстрая установка (этот форк)
+
 ## Swarm Mode
 
 Hermes Agent Swarm turns the workspace into a live control plane: unlimited Hermes Agents, 1 orchestrator, 0 humans manually dispatching.
@@ -861,6 +873,40 @@ PRs are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 - Bug fixes → open a PR directly
 - New features → open an issue first to discuss
 - Security issues → see [SECURITY.md](SECURITY.md) for responsible disclosure
+
+---
+
+## 🛠️ Скрипт автоустановки (`scripts/install.sh`)
+
+Одной командой поднимает полный стек на чистом Ubuntu/Debian-сервере: **Hermes Agent → Gateway → Dashboard → Workspace**, плюс **Caddy** как reverse-proxy с авто-TLS (Let's Encrypt).
+
+**Режимы (`--mode`):**
+
+| Режим | Что происходит |
+|---|---|
+| `systemd` (по умолчанию) | Hermes Agent, Gateway, Dashboard и Workspace — systemd-юниты; Caddy ставится системно через apt. |
+| `docker` | Hermes Agent (`nousresearch/hermes-agent`), Workspace (образ из `Dockerfile`) и Caddy — контейнеры через `docker compose`. |
+
+**Порты:** Workspace ищет свободный `3000 → 3001 → 3002 → …`; Gateway (`:8642`) и Dashboard (`:9119`) тоже проверяются и сдвигаются, если заняты.
+
+**Домены:** любые FQDN, без ограничений на префикс.
+
+```bash
+# systemd + Caddy, workspace на https://dp.mydomain.com, dashboard на https://hermes.mydomain.com
+sudo bash scripts/install.sh \
+  --domain dp.mydomain.com \
+  --dashboard-domain hermes.mydomain.com
+
+# или всё в Docker
+sudo bash scripts/install.sh --mode docker --domain dp.mydomain.com
+
+# сухой прогон (только проверки, без изменений)
+sudo bash scripts/install.sh --dry-run --domain dp.mydomain.com
+```
+
+Скрипт интерактивно спросит 4 секрета (API-токен гейтвея, пароль Workspace, basic-auth дашборда) и запишет их в `/root/.hermes/workspace_env.conf` (chmod 600, вне репо).
+
+> Требования: запуск от root, bash 4+, Node.js 22+, открытые порты 80/443 (для выпуска TLS-сертификата).
 
 ---
 
