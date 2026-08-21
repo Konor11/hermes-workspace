@@ -179,13 +179,56 @@ fi
 # ---------------------------------------------------------------------------
 if [[ "$MODE" == "systemd" ]]; then
   step "Gateway + Dashboard (systemd)"
-  if systemctl list-unit-files 2>/dev/null | grep -q "hermes-gateway.service"; then
-    warn "hermes-gateway.service уже есть — пропускаю install."
-  else
-    run "hermes gateway install" || warn "hermes gateway install не сработал."
-  fi
+
+  # hermes gateway install на чистом сервере НЕ создаёт юнит — пишем сами.
+  GW_UNIT="/etc/systemd/system/hermes-gateway.service"
   DASH_UNIT="/etc/systemd/system/hermes-dashboard.service"
-  if [[ -f "$DASH_UNIT" && "$DRY_RUN" -eq 0 ]]; then
+
+  # /root/.hermes/.env — нужен gateway для запуска API-сервера (API_SERVER_KEY)
+  HERMES_ENV="/root/.hermes/.env"
+  if [[ ! -f "$HERMES_ENV" && "$DRY_RUN" -eq 0 ]]; then
+    mkdir -p /root/.hermes
+    # Сгенерируем ключ, если ещё нет (используем для gateway API + workspace)
+    GEN_KEY=$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 32)
+    cat > "$HERMES_ENV" <<EOF
+HOME=/root
+API_SERVER_ENABLED=true
+API_SERVER_KEY=$GEN_KEY
+API_SERVER_HOST=0.0.0.0
+EOF
+    chmod 600 "$HERMES_ENV"
+    ok ".env gateway записан (API_SERVER_KEY сгенерирован)"
+  elif [[ "$DRY_RUN" -eq 1 ]]; then
+    info "[dry-run] пропускаю запись $HERMES_ENV"
+  fi
+
+  if [[ -f "$GW_UNIT" && "$DRY_RUN" -eq 0 && "$UPDATE" -eq 0 ]]; then
+    warn "$GW_UNIT уже существует — не перезаписываю."
+  elif [[ "$DRY_RUN" -eq 1 ]]; then
+    info "[dry-run] пропускаю запись $GW_UNIT"
+  else
+    info "Устанавливаю $GW_UNIT (порт $GW_PORT) …"
+    cat > "$GW_UNIT" <<EOF
+[Unit]
+Description=Hermes Gateway
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+Environment="HOME=/root"
+EnvironmentFile=/root/.hermes/.env
+ExecStart=/usr/local/bin/hermes gateway run
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    ok "Gateway unit записан"
+  fi
+
+  if [[ -f "$DASH_UNIT" && "$DRY_RUN" -eq 0 && "$UPDATE" -eq 0 ]]; then
     warn "$DASH_UNIT уже существует — не перезаписываю."
   elif [[ "$DRY_RUN" -eq 1 ]]; then
     info "[dry-run] пропускаю запись $DASH_UNIT"
@@ -211,13 +254,14 @@ WantedBy=multi-user.target
 EOF
     ok "Dashboard unit записан"
   fi
+
   run systemctl daemon-reload
   run systemctl enable hermes-gateway.service
   run systemctl enable hermes-dashboard.service
   run systemctl restart hermes-gateway.service
   run systemctl restart hermes-dashboard.service
   if [[ "$DRY_RUN" -eq 0 ]]; then
-    sleep 4
+    sleep 5
     curl -fsS --max-time 5 "http://127.0.0.1:$GW_PORT/health" >/dev/null 2>&1 && ok "Gateway :$GW_PORT ✅" || warn "Gateway :$GW_PORT не отвечает"
     curl -fsS --max-time 5 "http://127.0.0.1:$DASH_PORT/" >/dev/null 2>&1 && ok "Dashboard :$DASH_PORT ✅" || warn "Dashboard :$DASH_PORT не отвечает"
   fi
@@ -294,6 +338,12 @@ prompt_secret() {
 }
 
 cur_token=$(grep -E '^HERMES_API_TOKEN='  "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
+# Если токен ещё не задан — берём сгенерированный API_SERVER_KEY из .env gateway,
+# чтобы workspace мог подключиться к тому же gateway без ручного ввода.
+if [[ -z "$cur_token" && -n "${GEN_KEY:-}" ]]; then
+  cur_token="$GEN_KEY"
+  info "HERMES_API_TOKEN возьмёт сгенерированный API_SERVER_KEY (можно Enter)."
+fi
 cur_pw=$(grep -E '^HERMES_PASSWORD='      "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
 cur_bu=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_USERNAME=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
 cur_bp=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
