@@ -19,6 +19,7 @@ import { DialogContent, DialogRoot, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { toast } from '@/components/ui/toast'
 import { cn } from '@/lib/utils'
+import { __hermesT } from '@/lib/i18n'
 
 type ProfileSummary = {
   name: string
@@ -209,13 +210,13 @@ export function ProfilesScreen() {
         ...(wizardModel ? { model: wizardModel } : {}),
         ...(wizardProvider ? { provider: wizardProvider } : {}),
       })
-      toast(`Created profile ${newProfileName.trim()}`, { type: 'success' })
+      toast(`${(__hermesT || (globalThis as any).__hermesT)('profiles.created')} ${newProfileName.trim()}`, { type: 'success' })
       setCreateOpen(false)
       resetWizard()
       await refreshProfiles()
     } catch (error) {
       toast(
-        error instanceof Error ? error.message : 'Failed to create profile',
+        error instanceof Error ? error.message : (__hermesT || (globalThis as any).__hermesT)('profiles.failedCreate'),
         { type: 'error' },
       )
     } finally {
@@ -227,11 +228,11 @@ export function ProfilesScreen() {
     setBusyName(name)
     try {
       await postJson('/api/profiles/activate', { name })
-      toast(`Activated profile ${name}`, { type: 'success' })
+      toast(`${(__hermesT || (globalThis as any).__hermesT)('profiles.activated')} ${name}`, { type: 'success' })
       await refreshProfiles()
     } catch (error) {
       toast(
-        error instanceof Error ? error.message : 'Failed to activate profile',
+        error instanceof Error ? error.message : (__hermesT || (globalThis as any).__hermesT)('profiles.failedActivate'),
         { type: 'error' },
       )
     } finally {
@@ -242,17 +243,17 @@ export function ProfilesScreen() {
   async function handleDelete(name: string) {
     if (
       typeof window !== 'undefined' &&
-      !window.confirm(`Delete profile ${name}?`)
+      !window.confirm(`${(__hermesT || (globalThis as any).__hermesT)('profiles.confirmDelete')} ${name}?`)
     )
       return
     setBusyName(name)
     try {
       await postJson('/api/profiles/delete', { name })
-      toast(`Deleted profile ${name}`, { type: 'success' })
+      toast(`${(__hermesT || (globalThis as any).__hermesT)('profiles.deleted')} ${name}`, { type: 'success' })
       await refreshProfiles()
     } catch (error) {
       toast(
-        error instanceof Error ? error.message : 'Failed to delete profile',
+        error instanceof Error ? error.message : (__hermesT || (globalThis as any).__hermesT)('profiles.failedDelete'),
         { type: 'error' },
       )
     } finally {
@@ -268,7 +269,7 @@ export function ProfilesScreen() {
         oldName: renameTarget.name,
         newName: renameValue.trim(),
       })
-      toast(`Renamed ${renameTarget.name} → ${renameValue.trim()}`, {
+      toast(`${(__hermesT || (globalThis as any).__hermesT)('profiles.renamed')} ${renameTarget.name} → ${renameValue.trim()}`, {
         type: 'success',
       })
       setRenameTarget(null)
@@ -276,7 +277,7 @@ export function ProfilesScreen() {
       await refreshProfiles()
     } catch (error) {
       toast(
-        error instanceof Error ? error.message : 'Failed to rename profile',
+        error instanceof Error ? error.message : (__hermesT || (globalThis as any).__hermesT)('profiles.failedRename'),
         { type: 'error' },
       )
     } finally {
@@ -292,7 +293,7 @@ export function ProfilesScreen() {
         name: detailsName,
         patch: { description: descriptionDraft.trim() || null },
       })
-      toast(`Saved description for ${detailsName}`, { type: 'success' })
+      toast(`${(__hermesT || (globalThis as any).__hermesT)('profiles.savedDescription')} ${detailsName}`, { type: 'success' })
       await Promise.all([
         refreshProfiles(),
         queryClient.invalidateQueries({ queryKey: ['profiles', 'read', detailsName] }),
@@ -300,7 +301,7 @@ export function ProfilesScreen() {
       await detailQuery.refetch()
     } catch (error) {
       toast(
-        error instanceof Error ? error.message : 'Failed to save description',
+        error instanceof Error ? error.message : (__hermesT || (globalThis as any).__hermesT)('profiles.failedSaveDescription'),
         { type: 'error' },
       )
     } finally {
@@ -314,16 +315,15 @@ export function ProfilesScreen() {
         <div>
           <div className="flex items-center gap-2">
             <HugeiconsIcon icon={UserGroupIcon} size={22} strokeWidth={1.7} />
-            <h1 className="text-lg font-semibold text-primary-900">Profiles</h1>
+            <h1 className="text-lg font-semibold text-primary-900">{(__hermesT || (globalThis as any).__hermesT)('profiles.profiles')}</h1>
           </div>
           <p className="mt-1 text-sm text-primary-600">
-            Browse and manage Hermes profiles stored under{' '}
-            <span className="font-mono">~/.hermes/profiles</span>.
+            {(__hermesT || (globalThis as any).__hermesT)('profiles.subtitle')}
           </p>
         </div>
         <Button onClick={() => setCreateOpen(true)} className="gap-2">
           <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={1.8} />
-          Create profile
+          {(__hermesT || (globalThis as any).__hermesT)('profiles.create')}
         </Button>
       </div>
 
@@ -376,7 +376,7 @@ export function ProfilesScreen() {
                         className="text-white"
                       />
                       <span className="text-[9px] font-bold uppercase tracking-wider text-white">
-                        Active
+                        {(__hermesT || (globalThis as any).__hermesT)('profiles.active')}
                       </span>
                     </div>
                   )}
@@ -387,25 +387,25 @@ export function ProfilesScreen() {
                   {profile.name}
                 </h2>
                 <span className="mt-1 inline-block rounded-full bg-primary-100 px-2.5 py-0.5 text-[11px] font-medium text-primary-600 dark:bg-neutral-800 dark:text-neutral-400">
-                  {profile.provider || 'no provider'}
+                  {profile.provider || (__hermesT || (globalThis as any).__hermesT)('profiles.noProvider')}
                 </span>
                 <p className="mt-3 line-clamp-2 min-h-[2.5rem] px-6 text-center text-xs text-primary-500 dark:text-neutral-400">
-                  {profile.description?.trim() || 'No description yet'}
+                  {profile.description?.trim() || (__hermesT || (globalThis as any).__hermesT)('profiles.noDescription')}
                 </p>
               </div>
 
               {/* Stats ring */}
               <div className="mx-4 mt-4 grid grid-cols-4 divide-x divide-primary-200 rounded-xl border border-primary-200 bg-primary-100/50 dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/50">
-                <ProfileStat label="Skills" value={profile.skillCount} />
-                <ProfileStat label="Sessions" value={profile.sessionCount} />
+                <ProfileStat label={(__hermesT || (globalThis as any).__hermesT)('profiles.statSkills')} value={profile.skillCount} />
+                <ProfileStat label={(__hermesT || (globalThis as any).__hermesT)('profiles.statSessions')} value={profile.sessionCount} />
                 <ProfileStat
-                  label="Model"
-                  value={profile.model || '\u2014'}
+                  label={(__hermesT || (globalThis as any).__hermesT)('profiles.statModel')}
+                  value={profile.model || '—'}
                   truncate
                 />
                 <ProfileStat
-                  label="Env"
-                  value={profile.hasEnv ? '\u2713' : '\u2014'}
+                  label={(__hermesT || (globalThis as any).__hermesT)('profiles.statEnv')}
+                  value={profile.hasEnv ? '✓' : '—'}
                 />
               </div>
 
@@ -433,7 +433,7 @@ export function ProfilesScreen() {
                     size={13}
                     strokeWidth={1.8}
                   />{' '}
-                  Activate
+                  {(__hermesT || (globalThis as any).__hermesT)('profiles.activate')}
                 </button>
                 <button
                   type="button"
@@ -445,7 +445,7 @@ export function ProfilesScreen() {
                     size={13}
                     strokeWidth={1.8}
                   />{' '}
-                  Details
+                  {(__hermesT || (globalThis as any).__hermesT)('profiles.details')}
                 </button>
                 <button
                   type="button"
@@ -460,7 +460,7 @@ export function ProfilesScreen() {
                     size={13}
                     strokeWidth={1.8}
                   />{' '}
-                  Rename
+                  {(__hermesT || (globalThis as any).__hermesT)('profiles.rename')}
                 </button>
                 <button
                   type="button"
@@ -478,7 +478,7 @@ export function ProfilesScreen() {
                     size={13}
                     strokeWidth={1.8}
                   />{' '}
-                  Delete
+                  {(__hermesT || (globalThis as any).__hermesT)('profiles.delete')}
                 </button>
               </div>
             </article>
@@ -488,7 +488,7 @@ export function ProfilesScreen() {
 
       {sorted.length === 0 && !profilesQuery.isLoading ? (
         <div className="rounded-2xl border border-dashed border-primary-200 bg-primary-50/70 p-8 text-center text-sm text-primary-600">
-          No named profiles found yet. The active profile is{' '}
+          {(__hermesT || (globalThis as any).__hermesT)('profiles.noneFound')}{' '}
           <span className="font-semibold">{activeProfile}</span>.
         </div>
       ) : null}
@@ -566,25 +566,24 @@ export function ProfilesScreen() {
               <div className="space-y-5">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase tracking-wider text-primary-600 dark:text-neutral-400">
-                    Profile name
+                    {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardName')}
                   </label>
                   <Input
                     value={newProfileName}
                     onChange={(e) => setNewProfileName(e.target.value)}
-                    placeholder="e.g. builder, researcher, ops"
+                    placeholder={(__hermesT || (globalThis as any).__hermesT)('profiles.wizardNamePlaceholder')}
                     className="h-11 text-sm"
                     autoFocus
                   />
                   {newProfileName.trim() && !nameValid ? (
                     <p className="text-xs text-red-500">
-                      Use letters, numbers, underscores, or hyphens. Cannot be
-                      &quot;default&quot;.
+                      {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardNameInvalid')}
                     </p>
                   ) : newProfileName.trim() && nameValid ? (
                     <p className="text-xs text-emerald-600">✓ Valid name</p>
                   ) : (
                     <p className="text-xs text-primary-400 dark:text-neutral-500">
-                      Choose a short, memorable identifier
+                      {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardNameHint')}
                     </p>
                   )}
                 </div>
@@ -597,7 +596,7 @@ export function ProfilesScreen() {
                         size={13}
                         strokeWidth={1.8}
                       />
-                      Clone from existing
+                      {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardClone')}
                     </span>
                   </label>
                   <select
@@ -605,7 +604,7 @@ export function ProfilesScreen() {
                     onChange={(e) => setCloneFrom(e.target.value)}
                     className="h-11 w-full rounded-xl border border-primary-200 bg-primary-50 px-3 text-sm text-primary-900 outline-none transition-colors focus:border-accent-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
                   >
-                    <option value="">Start fresh — empty config</option>
+                    <option value="">{(__hermesT || (globalThis as any).__hermesT)('profiles.wizardCloneFresh')}</option>
                     {profiles.map((p) => (
                       <option key={p.name} value={p.name}>
                         {p.name} {p.model ? `(${p.model})` : ''}{' '}
@@ -614,18 +613,13 @@ export function ProfilesScreen() {
                     ))}
                   </select>
                   <p className="text-xs text-primary-400 dark:text-neutral-500">
-                    Copies config, skills path, and env from the selected
-                    profile
+                    {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardCloneHint')}
                   </p>
                 </div>
 
                 <div className="rounded-xl border border-primary-200 bg-primary-50/60 p-3 dark:border-neutral-800 dark:bg-neutral-900/40">
                   <p className="text-xs text-primary-500 dark:text-neutral-400">
-                    Profiles are stored under{' '}
-                    <code className="rounded bg-primary-100 px-1 py-0.5 font-mono text-[11px] dark:bg-neutral-800">
-                      ~/.hermes/profiles/&lt;name&gt;/
-                    </code>{' '}
-                    with their own config, skills, sessions, and env.
+                    {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardStored')}
                   </p>
                 </div>
               </div>
@@ -635,16 +629,15 @@ export function ProfilesScreen() {
               <div className="space-y-5">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold uppercase tracking-wider text-primary-600 dark:text-neutral-400">
-                    Default model
+                    {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardModel')}
                   </label>
                   {loadingModels ? (
                     <div className="flex h-11 items-center rounded-xl border border-primary-200 bg-primary-50 px-3 text-sm text-primary-400 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-500">
-                      Loading configured models…
+                      {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardLoadingModels')}
                     </div>
                   ) : allModels.length === 0 ? (
                     <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-xs text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
-                      No models found. Make sure Hermes Agent is running and
-                      has models configured.
+                      {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardNoModels')}
                     </div>
                   ) : (
                     <select
@@ -657,7 +650,7 @@ export function ProfilesScreen() {
                       }}
                       className="h-11 w-full rounded-xl border border-primary-200 bg-primary-50 px-3 text-sm text-primary-900 outline-none transition-colors focus:border-accent-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
                     >
-                      <option value="">Skip — configure later</option>
+                      <option value="">{(__hermesT || (globalThis as any).__hermesT)('profiles.wizardSkipModel')}</option>
                       {allModels.map((m) => (
                         <option key={m.id} value={m.id}>
                           {m.name || m.id}
@@ -677,8 +670,7 @@ export function ProfilesScreen() {
                 {!wizardModel && !loadingModels && allModels.length > 0 && (
                   <div className="rounded-xl border border-primary-200 bg-primary-50/60 p-3 dark:border-neutral-800 dark:bg-neutral-900/40">
                     <p className="text-xs text-primary-500 dark:text-neutral-400">
-                      Select a model or skip to configure later from profile
-                      details or config.yaml.
+                      {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardSelectOrSkip')}
                     </p>
                   </div>
                 )}
@@ -689,20 +681,20 @@ export function ProfilesScreen() {
               <div className="space-y-4">
                 <div className="rounded-2xl border border-primary-200 bg-primary-50/80 p-4 dark:border-neutral-800 dark:bg-neutral-900/60">
                   <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-primary-500 dark:text-neutral-400">
-                    Profile summary
+                    {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardSummary')}
                   </h3>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <SummaryField label="Name" value={newProfileName.trim()} />
+                    <SummaryField label={(__hermesT || (globalThis as any).__hermesT)('profiles.wizardName')} value={newProfileName.trim()} />
                     <SummaryField
-                      label="Template"
-                      value={cloneFrom || 'Fresh start'}
+                      label={(__hermesT || (globalThis as any).__hermesT)('profiles.wizardTemplate')}
+                      value={cloneFrom || (__hermesT || (globalThis as any).__hermesT)('profiles.wizardFreshStart')}
                     />
                     <SummaryField
-                      label="Model"
+                      label={(__hermesT || (globalThis as any).__hermesT)('profiles.wizardModel')}
                       value={
                         wizardModel
                           ? `${wizardModel}${wizardProvider ? ` (${wizardProvider})` : ''}`
-                          : 'Not set'
+                          : (__hermesT || (globalThis as any).__hermesT)('profiles.wizardNotSet')
                       }
                       muted={!wizardModel}
                     />
@@ -711,12 +703,11 @@ export function ProfilesScreen() {
 
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 dark:border-emerald-900/40 dark:bg-emerald-950/20">
                   <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                    This will create{' '}
+                    {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardCreateConfirm')}{' '}
                     <code className="rounded bg-emerald-100 px-1 py-0.5 font-mono text-[11px] dark:bg-emerald-900/40">
                       ~/.hermes/profiles/{newProfileName.trim()}/
                     </code>{' '}
-                    with config.yaml
-                    {cloneFrom ? ` cloned from ${cloneFrom}` : ''}, skills/, and
+                    {cloneFrom ? (__hermesT || (globalThis as any).__hermesT)('profiles.wizardClonedFrom').replace('{src}', cloneFrom) : ''}, skills/, and
                     sessions/ directories.
                   </p>
                 </div>
@@ -733,7 +724,7 @@ export function ProfilesScreen() {
                   size="sm"
                   onClick={() => setWizardStep((s) => (s - 1) as 1 | 2 | 3)}
                 >
-                  Back
+                  {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardBack')}
                 </Button>
               )}
             </div>
@@ -746,7 +737,7 @@ export function ProfilesScreen() {
                   resetWizard()
                 }}
               >
-                Cancel
+                {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardCancel')}
               </Button>
               {wizardStep < 3 ? (
                 <Button
@@ -755,7 +746,7 @@ export function ProfilesScreen() {
                   disabled={wizardStep === 1 && !nameValid}
                   className="gap-1.5"
                 >
-                  Next
+                  {(__hermesT || (globalThis as any).__hermesT)('profiles.wizardNext')}
                   <HugeiconsIcon
                     icon={ArrowRight01Icon}
                     size={14}

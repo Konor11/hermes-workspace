@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils'
 import { hapticTap } from '@/lib/haptics'
 import { CHAT_OPEN_MESSAGE_SEARCH_EVENT } from '@/screens/chat/chat-events'
 import { useChatStore } from '@/stores/chat-store'
+import { __hermesT } from '@/lib/i18n'
 
 /** Duration (ms) the thinking indicator stays visible after waitingForResponse
  *  clears, giving the first response message time to render before the
@@ -1671,7 +1672,7 @@ function ChatMessageListComponent({
                 type="text"
                 value={messageSearchValue}
                 onChange={(e) => setMessageSearchValue(e.target.value)}
-                placeholder="Search messages..."
+                placeholder={(__hermesT || (globalThis as any).__hermesT)('chat.searchMessages')}
                 className="min-w-0 flex-1 rounded-md border border-primary-200 bg-primary-50 px-2.5 py-1.5 text-sm text-primary-900 outline-none placeholder:text-primary-400 focus:border-primary-400 focus:ring-1 focus:ring-primary-400"
               />
               {isMessageSearchActive && (

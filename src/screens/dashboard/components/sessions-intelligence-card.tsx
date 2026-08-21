@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { formatModelName } from '@/screens/dashboard/lib/formatters'
-import { t, type TranslationKey } from '@/lib/i18n'
+import { __hermesT, type TranslationKey } from '@/lib/i18n'
 
 export type SessionRowData = {
   key: string
@@ -55,11 +55,11 @@ function sessionGlyph(
 function relativeTime(ms: number | null): string {
   if (!ms) return '—'
   const diff = Date.now() - ms
-  if (diff < 0) return t('dash.justNow')
-  if (diff < 60_000) return t('dash.justNow')
-  if (diff < 3_600_000) return `${Math.round(diff / 60_000)} ${t('dash.mAgo')}`
-  if (diff < 86_400_000) return `${Math.round(diff / 3_600_000)} ${t('dash.hAgo')}`
-  return `${Math.round(diff / 86_400_000)} ${t('dash.dAgo')}`
+  if (diff < 0) return (__hermesT || (globalThis as any).__hermesT)('dash.justNow')
+  if (diff < 60_000) return (__hermesT || (globalThis as any).__hermesT)('dash.justNow')
+  if (diff < 3_600_000) return `${Math.round(diff / 60_000)} ${(__hermesT || (globalThis as any).__hermesT)('dash.mAgo')}`
+  if (diff < 86_400_000) return `${Math.round(diff / 3_600_000)} ${(__hermesT || (globalThis as any).__hermesT)('dash.hAgo')}`
+  return `${Math.round(diff / 86_400_000)} ${(__hermesT || (globalThis as any).__hermesT)('dash.dAgo')}`
 }
 
 function formatTokens(n: number): string {
@@ -96,7 +96,7 @@ function buildBadges(s: SessionRowData): Array<SessionBadge> {
       label: 'hot',
       labelKey: 'dash.hot',
       tone: 'var(--theme-success)',
-      title: t('dash.activeInLast5'),
+      title: (__hermesT || (globalThis as any).__hermesT)('dash.activeInLast5'),
     })
   }
   if (s.toolCallCount >= 20) {
@@ -104,7 +104,7 @@ function buildBadges(s: SessionRowData): Array<SessionBadge> {
       label: 'tool-heavy',
       labelKey: 'dash.toolHeavy',
       tone: 'var(--theme-accent)',
-      title: `${s.toolCallCount} ${t('dash.toolCallsN')}`,
+      title: `${s.toolCallCount} ${(__hermesT || (globalThis as any).__hermesT)('dash.toolCallsN')}`,
     })
   }
   if (s.tokenCount >= 50_000) {
@@ -112,7 +112,7 @@ function buildBadges(s: SessionRowData): Array<SessionBadge> {
       label: 'high-token',
       labelKey: 'dash.highToken',
       tone: 'var(--theme-accent-secondary)',
-      title: `${formatTokens(s.tokenCount)} ${t('dash.tokensN')}`,
+      title: `${formatTokens(s.tokenCount)} ${(__hermesT || (globalThis as any).__hermesT)('dash.tokensN')}`,
     })
   }
   if (s.status?.toLowerCase() === 'error' || s.status?.toLowerCase() === 'failed') {
@@ -120,7 +120,7 @@ function buildBadges(s: SessionRowData): Array<SessionBadge> {
       label: 'error',
       labelKey: 'dash.errorState',
       tone: 'var(--theme-danger)',
-      title: t('dash.sessionEndedError'),
+      title: (__hermesT || (globalThis as any).__hermesT)('dash.sessionEndedError'),
     })
   }
   if (
@@ -132,7 +132,7 @@ function buildBadges(s: SessionRowData): Array<SessionBadge> {
       label: 'stale',
       labelKey: 'dash.stale',
       tone: 'var(--theme-muted)',
-      title: t('dash.noActivity7d'),
+      title: (__hermesT || (globalThis as any).__hermesT)('dash.noActivity7d'),
     })
   }
   return badges
@@ -199,7 +199,7 @@ export function SessionsIntelligenceCard({
           className="text-[11px] font-semibold uppercase tracking-[0.18em]"
           style={{ color: 'var(--theme-text)' }}
         >
-          {t('dash.sessionsIntelligence')}
+          {(__hermesT || (globalThis as any).__hermesT)('dash.sessionsIntelligence')}
         </h3>
         <div className="flex items-center gap-2">
           <span
@@ -222,7 +222,7 @@ export function SessionsIntelligenceCard({
               color: 'var(--theme-muted)',
             }}
           >
-            {t('dash.openChat')}
+            {(__hermesT || (globalThis as any).__hermesT)('dash.openChat')}
           </button>
         </div>
       </div>
@@ -235,7 +235,7 @@ export function SessionsIntelligenceCard({
             color: 'var(--theme-muted)',
             }}
             >
-            {t('dash.noSessionsYet')}
+            {(__hermesT || (globalThis as any).__hermesT)('dash.noSessionsYet')}
             </div>
       ) : (
         // Iter 013: bumped from 8 → 14 rows. The card is now the
@@ -293,7 +293,7 @@ export function SessionsIntelligenceCard({
                           }}
                           title={b.title}
                         >
-                          {t(b.labelKey)}
+                          {(__hermesT || (globalThis as any).__hermesT)(b.labelKey)}
                         </span>
                       ))}
                     </div>
@@ -313,12 +313,12 @@ export function SessionsIntelligenceCard({
                           {formatModelName(s.model)}
                         </span>
                       ) : null}
-                      <span>{s.messageCount} {t('dash.msgs')}</span>
+                      <span>{s.messageCount} {(__hermesT || (globalThis as any).__hermesT)('dash.msgs')}</span>
                       {s.toolCallCount > 0 ? (
-                        <span>{s.toolCallCount} {t('dash.tools')}</span>
+                        <span>{s.toolCallCount} {(__hermesT || (globalThis as any).__hermesT)('dash.tools')}</span>
                       ) : null}
                       {s.tokenCount > 0 ? (
-                        <span>{formatTokens(s.tokenCount)} {t('dash.tok')}</span>
+                        <span>{formatTokens(s.tokenCount)} {(__hermesT || (globalThis as any).__hermesT)('dash.tok')}</span>
                       ) : null}
                       <span className="ml-auto">
                         {relativeTime(s.updatedAt ?? s.startedAt)}

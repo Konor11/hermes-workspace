@@ -37,6 +37,7 @@ import {
 } from '@/hooks/use-chat-settings'
 import { cn } from '@/lib/utils'
 import { CHAT_SUBMIT_SELECTION_EVENT } from '@/screens/chat/chat-events'
+import { __hermesT } from '@/lib/i18n'
 
 const WORDS_PER_TICK = 4
 const TICK_INTERVAL_MS = 50
@@ -1365,7 +1366,7 @@ function MarkdownDocumentCard({
           <div className="truncate text-sm font-medium text-primary-900">
             {title}
           </div>
-          <div className="text-[11px] text-primary-600">Markdown document</div>
+          <div className="text-[11px] text-primary-600">{(__hermesT || (globalThis as any).__hermesT)('chat.markdownDocument')}</div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {hasContent ? (
@@ -1456,7 +1457,7 @@ function extractStandaloneMarkdownFence(text: string): string | null {
 function MarkdownMessageCard({ content }: { content: string }) {
   return (
     <MarkdownDocumentCard
-      title="Markdown preview"
+      title={(__hermesT || (globalThis as any).__hermesT)('chat.markdownPreview')}
       content={content}
       className="max-w-full"
     />
@@ -1606,7 +1607,7 @@ function InlineArtifactCard({ artifact }: { artifact: InlineArtifact }) {
               <DialogTitle className="truncate text-base">{artifact.title}</DialogTitle>
               <div className="text-xs uppercase tracking-wide opacity-70">{artifact.type}</div>
             </div>
-            <DialogClose>Close</DialogClose>
+            <DialogClose>{(__hermesT || (globalThis as any).__hermesT)('chat.close')}</DialogClose>
           </div>
           <div className="p-4">
             <ArtifactPreviewBody artifact={artifact} />

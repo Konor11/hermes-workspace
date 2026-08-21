@@ -22,7 +22,7 @@ import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 import { hapticTap } from '@/lib/haptics'
 import { getTheme, getThemeVariant, isDarkTheme, setTheme } from '@/lib/theme'
-import { t, type TranslationKey, type LocaleId, getLocale } from '@/lib/i18n'
+import { __hermesT, type TranslationKey, type LocaleId, getLocale } from '@/lib/i18n'
 import {
   selectChatProfileDisplayName,
   useChatSettingsStore,
@@ -299,7 +299,7 @@ export function MobileHamburgerMenu() {
                   size={20}
                   strokeWidth={isActive ? 2 : 1.6}
                 />
-                <span className="text-[15px] font-medium">{t(item.labelKey)}</span>
+                <span className="text-[15px] font-medium">{(__hermesT || (globalThis as any).__hermesT)(item.labelKey)}</span>
               </button>
             )
           })}

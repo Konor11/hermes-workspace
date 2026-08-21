@@ -5,7 +5,7 @@ import type {
   DashboardAchievementUnlock,
   DashboardOverview,
 } from '@/server/dashboard-aggregator'
-import { t } from '@/lib/i18n'
+import { __hermesT } from '@/lib/i18n'
 
 const TIER_COLORS: Record<string, string> = {
   Copper: '#b45309',
@@ -155,7 +155,7 @@ export function AchievementsCard({
               className="text-[10px] font-semibold uppercase tracking-[0.18em]"
               style={{ color: 'var(--theme-text)' }}
             >
-              {t('dash.achievements')}
+              {(__hermesT || (globalThis as any).__hermesT)('dash.achievements')}
             </h3>
           </div>
           <button
@@ -164,7 +164,7 @@ export function AchievementsCard({
             className="font-mono text-[9px] uppercase tracking-[0.15em] transition-colors hover:text-[var(--theme-accent)]"
             style={{ color: 'var(--theme-muted)' }}
           >
-            {achievements.totalUnlocked} unlocked · {t('dash.viewAll')}
+            {achievements.totalUnlocked} unlocked · {(__hermesT || (globalThis as any).__hermesT)('dash.viewAll')}
           </button>
         </div>
         <div className="flex flex-col gap-1.5">
@@ -173,7 +173,7 @@ export function AchievementsCard({
               className="py-3 text-center text-[11px]"
               style={{ color: 'var(--theme-muted)' }}
             >
-              {t('dash.noUnlocksYet')}
+              {(__hermesT || (globalThis as any).__hermesT)('dash.noUnlocksYet')}
             </div>
           ) : (
             // Render every unlock the aggregator returns so the card
@@ -206,7 +206,7 @@ export function AchievementsCard({
                 className="text-sm font-semibold uppercase tracking-[0.15em]"
                 style={{ color: 'var(--theme-text)' }}
               >
-                {t('dash.achievementRibbon')}
+                {(__hermesT || (globalThis as any).__hermesT)('dash.achievementRibbon')}
               </h2>
               <button
                 type="button"

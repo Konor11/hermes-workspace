@@ -23,6 +23,7 @@ import {
   type AddSourceInput,
   type MutationError,
 } from '../hooks/use-mcp-hub-sources'
+import { __hermesT } from '@/lib/i18n'
 
 interface Props {
   open: boolean
@@ -102,48 +103,48 @@ function SourceForm({ initial, isEdit, onSave, onCancel, saving, serverErrors }:
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className={LABEL}>
-        <span>Source ID <span className="text-red-500">*</span></span>
+        <span>{(__hermesT || (globalThis as any).__hermesT)('mcp.sourceId')} <span className="text-red-500">*</span></span>
         <input
           className={FIELD}
           value={form.id}
           onChange={(e) => set('id', e.target.value)}
           disabled={isEdit || saving}
-          placeholder="internal"
+          placeholder={(__hermesT || (globalThis as any).__hermesT)('mcp.sourceIdPlaceholder')}
           autoFocus
         />
         {idErr ? <p className={ERROR_TEXT}>{idErr}</p> : null}
-        <p className="text-[11px] text-primary-400">Lowercase, alphanumeric + _ -. Cannot be changed after creation.</p>
+        <p className="text-[11px] text-primary-400">{(__hermesT || (globalThis as any).__hermesT)('mcp.sourceIdHint')}</p>
       </div>
 
       <div className={LABEL}>
-        <span>Name <span className="text-red-500">*</span></span>
+        <span>{(__hermesT || (globalThis as any).__hermesT)('mcp.sourceName')} <span className="text-red-500">*</span></span>
         <input
           className={FIELD}
           value={form.name}
           onChange={(e) => set('name', e.target.value)}
           disabled={saving}
-          placeholder="Internal Catalog"
+          placeholder={(__hermesT || (globalThis as any).__hermesT)('mcp.sourceNamePlaceholder')}
         />
         {nameErr ? <p className={ERROR_TEXT}>{nameErr}</p> : null}
       </div>
 
       <div className={LABEL}>
-        <span>URL <span className="text-red-500">*</span></span>
+        <span>{(__hermesT || (globalThis as any).__hermesT)('mcp.sourceUrl')} <span className="text-red-500">*</span></span>
         <input
           className={FIELD}
           value={form.url}
           onChange={(e) => set('url', e.target.value)}
           disabled={saving}
-          placeholder="https://corp.local/mcp.json"
+          placeholder={(__hermesT || (globalThis as any).__hermesT)('mcp.sourceUrlPlaceholder')}
           type="url"
         />
         {urlErr ? <p className={ERROR_TEXT}>{urlErr}</p> : null}
-        <p className="text-[11px] text-primary-400">HTTPS only. Must return JSON.</p>
+        <p className="text-[11px] text-primary-400">{(__hermesT || (globalThis as any).__hermesT)('mcp.sourceUrlHint')}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className={LABEL}>
-          <span>Trust</span>
+          <span>{(__hermesT || (globalThis as any).__hermesT)('mcp.trust')}</span>
           <select
             className={FIELD}
             value={form.trust}
@@ -158,7 +159,7 @@ function SourceForm({ initial, isEdit, onSave, onCancel, saving, serverErrors }:
         </div>
 
         <div className={LABEL}>
-          <span>Format</span>
+          <span>{(__hermesT || (globalThis as any).__hermesT)('mcp.format')}</span>
           <select
             className={FIELD}
             value={form.format}
@@ -375,9 +376,9 @@ export function SourcesManagerDialog({ open, onClose }: Props) {
           {mode === 'list' ? (
             <div className="flex flex-col gap-3">
               {query.isLoading ? (
-                <p className="text-sm text-primary-400">Loading sources…</p>
+                <p className="text-sm text-primary-400">{(__hermesT || (globalThis as any).__hermesT)('mcp.loadingSources')}</p>
               ) : query.error ? (
-                <p className="text-sm text-red-600">Failed to load sources.</p>
+                <p className="text-sm text-red-600">{(__hermesT || (globalThis as any).__hermesT)('mcp.failedLoadSources')}</p>
               ) : (
                 <div className="flex flex-col gap-2">
                   {sources.map((source) => (

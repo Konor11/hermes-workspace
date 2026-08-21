@@ -14,6 +14,7 @@ import { toast } from '@/components/ui/toast'
 import { runCronJob } from '@/lib/cron-api'
 import { cn } from '@/lib/utils'
 import { formatRelativeTime } from '@/screens/dashboard/lib/formatters'
+import { __hermesT } from '@/lib/i18n'
 import {
   useAgentOutputs,
   type AgentOutput,
@@ -209,10 +210,10 @@ function OutputCard({ output }: { output: AgentOutput }) {
           <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--theme-text)]">{output.summary}</p>
           {output.model || output.sessionKey || output.chatSessionKey ? (
             <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--theme-muted)]">
-              {output.model ? <span>Model: {output.model}</span> : null}
-              {output.sessionKey ? <span>Session: {output.sessionKey}</span> : null}
+              {output.model ? <span>{(__hermesT || (globalThis as any).__hermesT)('operations.modelLabel')} {output.model}</span> : null}
+              {output.sessionKey ? <span>{(__hermesT || (globalThis as any).__hermesT)('operations.sessionLabel')} {output.sessionKey}</span> : null}
               {output.chatSessionKey && output.chatSessionKey !== output.sessionKey ? (
-                <span>Chat: {output.chatSessionKey}</span>
+                <span>{(__hermesT || (globalThis as any).__hermesT)('operations.chatLabel')} {output.chatSessionKey}</span>
               ) : null}
             </div>
           ) : null}
@@ -386,7 +387,7 @@ export function FullOutputsView() {
 
       <div className="mt-4 flex items-center justify-between px-1">
         <div>
-          <h2 className="text-lg font-semibold text-[var(--theme-text)]">Outputs</h2>
+          <h2 className="text-lg font-semibold text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.outputsTitle')}</h2>
           <p className="mt-1 text-sm text-[var(--theme-muted-2)]">
             {outputs.length} recent {outputs.length === 1 ? 'run' : 'runs'} across the team
           </p>

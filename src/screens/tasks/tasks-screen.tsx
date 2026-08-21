@@ -11,6 +11,7 @@ import { TaskDialog } from './task-dialog'
 import type { ClaudeTask, CreateTaskInput, TaskAssignee, TaskColumn } from '@/lib/tasks-api'
 import { toast } from '@/components/ui/toast'
 import { cn } from '@/lib/utils'
+import { __hermesT } from '@/lib/i18n'
 import {
   COLUMN_COLORS,
   COLUMN_LABELS,
@@ -117,26 +118,26 @@ export function TasksScreen() {
 
   const createMutation = useMutation({
     mutationFn: createTask,
-    onSuccess: () => { invalidate(); toast('Task created'); setShowCreate(false) },
-    onError: (e) => toast(e instanceof Error ? e.message : 'Failed to create task', { type: 'error' }),
+    onSuccess: () => { invalidate(); toast((__hermesT || (globalThis as any).__hermesT)('tasks.created')); setShowCreate(false) },
+    onError: (e) => toast(e instanceof Error ? e.message : (__hermesT || (globalThis as any).__hermesT)('common.error'), { type: 'error' }),
   })
 
   const updateMutation = useMutation({
     mutationFn: ({ id, input }: { id: string; input: CreateTaskInput }) => updateTask(id, input),
-    onSuccess: () => { invalidate(); toast('Task updated'); setEditingTask(null) },
-    onError: (e) => toast(e instanceof Error ? e.message : 'Failed to update task', { type: 'error' }),
+    onSuccess: () => { invalidate(); toast((__hermesT || (globalThis as any).__hermesT)('tasks.updated')); setEditingTask(null) },
+    onError: (e) => toast(e instanceof Error ? e.message : (__hermesT || (globalThis as any).__hermesT)('common.error'), { type: 'error' }),
   })
 
   const deleteMutation = useMutation({
     mutationFn: deleteTask,
-    onSuccess: () => { invalidate(); toast('Task deleted') },
-    onError: (e) => toast(e instanceof Error ? e.message : 'Failed to delete task', { type: 'error' }),
+    onSuccess: () => { invalidate(); toast((__hermesT || (globalThis as any).__hermesT)('tasks.deleted')) },
+    onError: (e) => toast(e instanceof Error ? e.message : (__hermesT || (globalThis as any).__hermesT)('common.error'), { type: 'error' }),
   })
 
   const moveMutation = useMutation({
     mutationFn: ({ id, column }: { id: string; column: TaskColumn }) => moveTask(id, column, 'user'),
     onSuccess: () => invalidate(),
-    onError: (e) => toast(e instanceof Error ? e.message : 'Failed to move task', { type: 'error' }),
+    onError: (e) => toast(e instanceof Error ? e.message : (__hermesT || (globalThis as any).__hermesT)('common.error'), { type: 'error' }),
   })
 
   function handleDragStart(e: React.DragEvent, taskId: string) {
@@ -161,7 +162,7 @@ export function TasksScreen() {
     // Hybrid autonomy: if a human reviewer is configured, only they can move
     // tasks into the 'done' column — agents may move to 'review' at most.
     if (targetColumn === 'done' && humanReviewer) {
-      toast(`Only ${humanReviewer} can mark tasks as done`, { type: 'error' })
+      toast((__hermesT || (globalThis as any).__hermesT)('tasks.onlyReviewerDone').replace('{reviewer}', humanReviewer), { type: 'error' })
       setDraggingId(null)
       setDragOverColumn(null)
       return
@@ -186,38 +187,38 @@ export function TasksScreen() {
       <header className="rounded-2xl border border-primary-200 bg-primary-50/85 p-4 backdrop-blur-xl">
         <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <h1 className="text-2xl font-medium text-ink">Tasks</h1>
+          <h1 className="text-2xl font-medium text-ink">{(__hermesT || (globalThis as any).__hermesT)('tasks.title')}</h1>
           {assigneeFilter && (
             <div className="flex items-center gap-2 text-xs text-[var(--theme-muted)]">
-              <span>Filtered by: <span className="capitalize" style={{ color: '#f59e0b' }}>{assigneeFilter}</span></span>
+              <span>{(__hermesT || (globalThis as any).__hermesT)('tasks.filteredBy')} <span className="capitalize" style={{ color: '#f59e0b' }}>{assigneeFilter}</span></span>
               <button
                 type="button"
                 onClick={() => setAssigneeFilter(null)}
                 className="text-[var(--theme-muted)] hover:text-[var(--theme-text)] transition-colors"
               >
-                ✕ Clear
+                ✕ {(__hermesT || (globalThis as any).__hermesT)('tasks.clear')}
               </button>
             </div>
           )}
           {/* Stats */}
           <div className="flex items-center gap-2 text-xs text-[var(--theme-muted)] flex-wrap">
-            <span>{stats.total} total</span>
+            <span>{(__hermesT || (globalThis as any).__hermesT)('tasks.statTotal').replace('{n}', String(stats.total))}</span>
             <span className="hidden sm:inline">·</span>
-            <span className="hidden sm:inline">{stats.running} running</span>
+            <span className="hidden sm:inline">{(__hermesT || (globalThis as any).__hermesT)('tasks.statRunning').replace('{n}', String(stats.running))}</span>
             {stats.blocked > 0 && (
               <>
                 <span className="hidden sm:inline">·</span>
-                <span className="text-red-400">{stats.blocked} blocked</span>
+                <span className="text-red-400">{(__hermesT || (globalThis as any).__hermesT)('tasks.statBlocked').replace('{n}', String(stats.blocked))}</span>
               </>
             )}
             {stats.overdue > 0 && (
               <>
                 <span>·</span>
-                <span className="text-red-400">{stats.overdue} overdue</span>
+                <span className="text-red-400">{(__hermesT || (globalThis as any).__hermesT)('tasks.statOverdue').replace('{n}', String(stats.overdue))}</span>
               </>
             )}
             <span className="hidden sm:inline">·</span>
-            <span className="hidden sm:inline">{stats.completion}% done</span>
+            <span className="hidden sm:inline">{(__hermesT || (globalThis as any).__hermesT)('tasks.statDone').replace('{n}', String(stats.completion))}</span>
           </div>
         </div>
 
@@ -231,12 +232,12 @@ export function TasksScreen() {
                 : 'border-[var(--theme-border)] text-[var(--theme-muted)] hover:text-[var(--theme-text)] hover:border-[var(--theme-accent)]',
             )}
           >
-            {showDone ? 'Hide Done' : 'Show Done'}
+            {showDone ? (__hermesT || (globalThis as any).__hermesT)('tasks.hideDone') : (__hermesT || (globalThis as any).__hermesT)('tasks.showDone')}
           </button>
           <button
             onClick={invalidate}
             className="rounded-lg p-1.5 transition-colors hover:bg-[var(--theme-hover)]"
-            title="Refresh"
+            title={(__hermesT || (globalThis as any).__hermesT)('tasks.refresh')}
           >
             <HugeiconsIcon icon={RefreshIcon} size={16} className="text-[var(--theme-muted)]" />
           </button>
@@ -246,12 +247,12 @@ export function TasksScreen() {
             style={{ background: 'var(--theme-accent)' }}
           >
             <HugeiconsIcon icon={Add01Icon} size={14} />
-            New Task
+            {(__hermesT || (globalThis as any).__hermesT)('tasks.newTask')}
           </button>
         </div>
       </div>
         <p className="mt-3 text-xs text-[var(--theme-muted)]">
-          {TASKS_BOARD_HELP_TEXT}
+          {(__hermesT || (globalThis as any).__hermesT)('tasks.boardHelp')}
         </p>
       </header>
 
@@ -296,7 +297,7 @@ export function TasksScreen() {
                 <button
                   onClick={() => { setCreateColumn(col); setShowCreate(true) }}
                   className="rounded p-0.5 hover:bg-[var(--theme-hover)] transition-colors"
-                  title={`Add to ${COLUMN_LABELS[col]}`}
+                  title={(__hermesT || (globalThis as any).__hermesT)('tasks.addTo').replace('{col}', COLUMN_LABELS[col])}
                 >
                   <HugeiconsIcon icon={Add01Icon} size={14} className="text-[var(--theme-muted)]" />
                 </button>
@@ -311,12 +312,12 @@ export function TasksScreen() {
                     animate={{ opacity: 1 }}
                     className="flex flex-col items-center justify-center py-8 gap-2 text-red-400"
                   >
-                    <p className="text-xs font-medium">Failed to load tasks</p>
+                    <p className="text-xs font-medium">{(__hermesT || (globalThis as any).__hermesT)('tasks.failedLoad')}</p>
                     <button
                       onClick={() => tasksQuery.refetch()}
                       className="text-xs text-[var(--theme-accent)] hover:underline"
                     >
-                      Retry
+                      {(__hermesT || (globalThis as any).__hermesT)('tasks.retry')}
                     </button>
                   </motion.div>
                 ) : tasksQuery.isLoading ? (
@@ -336,8 +337,8 @@ export function TasksScreen() {
                         className="flex flex-col items-center justify-center py-8 gap-2 text-[var(--theme-muted)] opacity-60"
                       >
                         <HugeiconsIcon icon={CheckListIcon} size={22} />
-                        <p className="text-xs font-medium">No tasks</p>
-                        <p className="text-[10px]">Drop here or click + to add</p>
+                        <p className="text-xs font-medium">{(__hermesT || (globalThis as any).__hermesT)('tasks.noTasks')}</p>
+                        <p className="text-[10px]">{(__hermesT || (globalThis as any).__hermesT)('tasks.dropHere')}</p>
                       </motion.div>
                     ) : (
                       colTasks.map(task => (

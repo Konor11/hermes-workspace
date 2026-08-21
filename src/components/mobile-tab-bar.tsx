@@ -25,7 +25,7 @@ import type { TouchEvent } from 'react'
 import { cn } from '@/lib/utils'
 import { hapticTap } from '@/lib/haptics'
 import { useSettings } from '@/hooks/use-settings'
-import { t, type TranslationKey, type LocaleId, getLocale } from '@/lib/i18n'
+import { __hermesT, type TranslationKey, type LocaleId, getLocale } from '@/lib/i18n'
 
 /** Height constant for consistent bottom insets on mobile routes with tab bar */
 export const MOBILE_TAB_BAR_OFFSET = 'var(--tabbar-h, 80px)'
@@ -306,7 +306,7 @@ export function MobileTabBar() {
                   }
                 }}
                 aria-current={isActive ? 'page' : undefined}
-                aria-label={t(tab.labelKey)}
+                aria-label={(__hermesT || (globalThis as any).__hermesT)(tab.labelKey)}
                 className={cn(
                   // 32x32 touch target (compact to fit all 9 tabs on mobile)
                   'flex items-center justify-center',

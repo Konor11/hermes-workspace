@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/scroll-area'
 import { Markdown } from '@/components/prompt-kit/markdown'
 import { cn } from '@/lib/utils'
+import { __hermesT } from '@/lib/i18n'
 import { writeTextToClipboard } from '@/lib/clipboard'
 import { toast } from '@/components/ui/toast'
 
@@ -168,6 +169,28 @@ const DEFAULT_CATEGORIES = [
   'Data & Analytics',
   'Finance & Crypto',
 ]
+
+const CATEGORY_KEYS: Record<string, string> = {
+  'All': 'skills.categoryAll',
+  'Web & Frontend': 'skills.categoryWebFrontend',
+  'Coding Agents': 'skills.categoryCodingAgents',
+  'Git & GitHub': 'skills.categoryGitGithub',
+  'DevOps & Cloud': 'skills.categoryDevopsCloud',
+  'Browser & Automation': 'skills.categoryBrowserAutomation',
+  'Image & Video': 'skills.categoryImageVideo',
+  'Search & Research': 'skills.categorySearchResearch',
+  'AI & LLMs': 'skills.categoryAiLlms',
+  'Productivity': 'skills.categoryProductivity',
+  'Marketing & Sales': 'skills.categoryMarketingSales',
+  'Communication': 'skills.categoryCommunication',
+  'Data & Analytics': 'skills.categoryDataAnalytics',
+  'Finance & Crypto': 'skills.categoryFinanceCrypto',
+}
+
+function categoryLabel(category: string): string {
+  const key = CATEGORY_KEYS[category]
+  return key ? (__hermesT || (globalThis as any).__hermesT)(key as Parameters<typeof t>[0]) : category
+}
 
 function resolveSkillSearchTier(
   skill: SkillSummary,
@@ -643,14 +666,13 @@ export function SkillsScreen() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="space-y-1.5">
               <p className="text-xs font-medium uppercase text-primary-500 tabular-nums">
-                Hermes Workspace Marketplace
+                {(__hermesT || (globalThis as any).__hermesT)('skills.marketplace')}
               </p>
               <h1 className="text-2xl font-medium text-ink text-balance sm:text-3xl">
-                Skills Browser
+                {(__hermesT || (globalThis as any).__hermesT)('skills.title') ?? 'Skills Browser'}
               </h1>
               <p className="text-sm text-primary-500 text-pretty sm:text-base">
-                Discover, install, and manage skills across your local workspace
-                and Skills Hub.
+                {(__hermesT || (globalThis as any).__hermesT)('skills.subtitle') ?? 'Discover, install, and manage skills across your local workspace and Skills Hub.'}
               </p>
             </div>
           </div>
@@ -662,7 +684,7 @@ export function SkillsScreen() {
               {profiles.length > 1 ? (
                 <label className="flex h-9 items-center gap-2 rounded-lg border border-primary-200 bg-primary-100/60 px-3 text-xs text-primary-500">
                   <span className="font-medium uppercase tracking-wider text-[10px]">
-                    Profile
+                    {(__hermesT || (globalThis as any).__hermesT)('skills.profileLabel')}
                   </span>
                   <select
                     value={effectiveProfile}
@@ -671,12 +693,12 @@ export function SkillsScreen() {
                       setPage(1)
                     }}
                     className="h-7 rounded-md border border-primary-200 bg-primary-50/70 px-2 text-xs text-ink outline-none"
-                    aria-label="Profile"
+                    aria-label={(__hermesT || (globalThis as any).__hermesT)('skills.profileLabel')}
                   >
                     {profiles.map((profile) => (
                       <option key={profile.name} value={profile.name}>
                         {profile.name === activeProfileName
-                          ? `${profile.name} (active)`
+                          ? `${profile.name} (${(__hermesT || (globalThis as any).__hermesT)('skills.activeProfile')})`
                           : profile.name}
                       </option>
                     ))}
@@ -689,8 +711,8 @@ export function SkillsScreen() {
                 onChange={(event) => handleSearchChange(event.target.value)}
                 placeholder={
                   tab === 'marketplace'
-                    ? 'Search Skills Hub, GitHub, and local fallback'
-                    : 'Search by name, tags, or description'
+                    ? (__hermesT || (globalThis as any).__hermesT)('skills.searchHub')
+                    : (__hermesT || (globalThis as any).__hermesT)('skills.search')
                 }
                 className="h-9 w-full min-w-0 flex-1 rounded-lg border border-primary-200 bg-primary-100/60 px-3 text-sm text-ink outline-none transition-colors focus:border-primary sm:min-w-[220px]"
               />
@@ -705,7 +727,7 @@ export function SkillsScreen() {
                 >
                   {categories.map((item) => (
                     <option key={item} value={item}>
-                      {item}
+                      {categoryLabel(item)}
                     </option>
                   ))}
                 </select>
@@ -1255,10 +1277,10 @@ function SkillsGrid({
                       )}
                     >
                       {skill.origin === 'builtin'
-                        ? 'Built-in'
+                        ? (__hermesT || (globalThis as any).__hermesT)('skills.builtin')
                         : skill.origin === 'agent-created'
-                          ? 'Agent-created'
-                          : 'Marketplace'}
+                          ? (__hermesT || (globalThis as any).__hermesT)('skills.agentCreated')
+                          : (__hermesT || (globalThis as any).__hermesT)('skills.marketplace')}
                     </span>
                   ) : null}
                   <span
@@ -1269,7 +1291,7 @@ function SkillsGrid({
                         : 'border-primary-200 bg-primary-100/60 text-primary-500',
                     )}
                   >
-                    {skill.installed ? 'Installed' : 'Available'}
+                    {skill.installed ? (__hermesT || (globalThis as any).__hermesT)('skills.installed') : (__hermesT || (globalThis as any).__hermesT)('skills.available')}
                   </span>
                 </div>
               </div>
@@ -1299,7 +1321,7 @@ function SkillsGrid({
                   size="sm"
                   onClick={() => onOpenDetails(skill)}
                 >
-                  Details
+                  {(__hermesT || (globalThis as any).__hermesT)('skills.details')}
                 </Button>
 
                 {tab === 'installed' ? (
@@ -1311,9 +1333,9 @@ function SkillsGrid({
                         onCheckedChange={(checked) =>
                           onToggle(skill.id, checked)
                         }
-                        aria-label={`Toggle ${skill.name}`}
+                        aria-label={`${(__hermesT || (globalThis as any).__hermesT)('skills.toggle')} ${skill.name}`}
                       />
-                      {skill.enabled ? 'Enabled' : 'Disabled'}
+                      {skill.enabled ? (__hermesT || (globalThis as any).__hermesT)('skills.enabled') : (__hermesT || (globalThis as any).__hermesT)('skills.disabled')}
                     </div>
                     <Button
                       variant="outline"
@@ -1321,7 +1343,7 @@ function SkillsGrid({
                       disabled={isActing}
                       onClick={() => onUninstall(skill.id)}
                     >
-                      Uninstall
+                      {(__hermesT || (globalThis as any).__hermesT)('skills.uninstall')}
                     </Button>
                   </div>
                 ) : skill.installed ? (
@@ -1331,7 +1353,7 @@ function SkillsGrid({
                     disabled={isActing}
                     onClick={() => onUninstall(skill.id)}
                   >
-                    Uninstall
+                    {(__hermesT || (globalThis as any).__hermesT)('skills.uninstall')}
                   </Button>
                 ) : (
                   <Button
@@ -1339,7 +1361,7 @@ function SkillsGrid({
                     disabled={isActing}
                     onClick={() => onInstall(skill.id)}
                   >
-                    Install
+                    {(__hermesT || (globalThis as any).__hermesT)('skills.install')}
                   </Button>
                 )}
               </div>
@@ -1375,7 +1397,7 @@ function FeaturedGrid({
   if (skills.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-primary-200 bg-primary-100/40 px-4 py-10 text-center text-sm text-primary-500 text-pretty">
-        Featured picks are currently unavailable.
+        {(__hermesT || (globalThis as any).__hermesT)('skills.featuredUnavailable')}
       </div>
     )
   }
@@ -1392,12 +1414,12 @@ function FeaturedGrid({
             <div className="mb-3 flex items-start justify-between gap-2">
               <div className="space-y-1">
                 <p className="text-xs font-medium uppercase text-primary-500 tabular-nums">
-                  {skill.featuredGroup || 'Staff Pick'}
+                  {skill.featuredGroup || (__hermesT || (globalThis as any).__hermesT)('skills.staffPick')}
                 </p>
                 <h3 className="text-lg font-medium text-ink text-balance">
                   {skill.icon} {skill.name}
                 </h3>
-                <p className="text-sm text-primary-500">by {skill.author}</p>
+                <p className="text-sm text-primary-500">{(__hermesT || (globalThis as any).__hermesT)('skills.byAuthor').replace('{author}', skill.author)}</p>
               </div>
 
               <span
@@ -1408,7 +1430,7 @@ function FeaturedGrid({
                     : 'border-primary-200 bg-primary-100/60 text-primary-500',
                 )}
               >
-                {skill.installed ? 'Installed' : 'Staff Pick'}
+                {skill.installed ? (__hermesT || (globalThis as any).__hermesT)('skills.installed') : (__hermesT || (globalThis as any).__hermesT)('skills.staffPick')}
               </span>
             </div>
 

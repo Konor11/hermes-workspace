@@ -18,6 +18,7 @@ import {
   CommandSeparator,
 } from '@/components/ui/command'
 import { useAutocompleteFilter } from '@/components/ui/autocomplete'
+import { __hermesT } from '@/lib/i18n'
 
 type CommandSession = {
   key: string
@@ -100,7 +101,7 @@ function CommandSessionDialog({
           onValueChange={setValue}
           mode="none"
         >
-          <CommandInput placeholder="Search sessions" />
+          <CommandInput placeholder={(__hermesT || (globalThis as any).__hermesT)('chat.searchSessions')} />
           <CommandPanel className="flex min-h-0 flex-1 flex-col">
             {isEmpty ? (
               <div className="h-72 min-h-0 flex items-center justify-center text-sm text-primary-600">
@@ -150,20 +151,20 @@ function CommandSessionDialog({
                     strokeWidth={1.5}
                   />
                 </span>
-                <span>Navigate</span>
+                <span>{(__hermesT || (globalThis as any).__hermesT)('chat.navigate')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="rounded-md border border-primary-200 bg-surface px-2 py-1 text-[11px] font-medium text-primary-700">
                   Enter
                 </span>
-                <span>Open</span>
+                <span>{(__hermesT || (globalThis as any).__hermesT)('chat.open')}</span>
               </div>
             </div>
             <div className="flex items-center gap-2 text-primary-700">
               <span className="rounded-md border border-primary-200 bg-surface px-2 py-1 text-[11px] font-medium text-primary-700">
                 Esc
               </span>
-              <span>Close</span>
+              <span>{(__hermesT || (globalThis as any).__hermesT)('chat.close')}</span>
             </div>
           </CommandFooter>
         </Command>

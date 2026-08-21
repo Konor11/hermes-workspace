@@ -5,6 +5,7 @@ import { AgentProgress } from '@/components/agent-view/agent-progress'
 import { PixelAvatar } from '@/components/agent-swarm/pixel-avatar'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { __hermesT } from '@/lib/i18n'
 
 const ChatScreen = lazy(() =>
   import('@/screens/chat/chat-screen').then((m) => ({ default: m.ChatScreen })),
@@ -52,7 +53,7 @@ export function OrchestratorCard({
                     totalAgents > 0 && 'animate-pulse',
                   )}
                   aria-label="Active"
-                  title="Active"
+                  title={(__hermesT || (globalThis as any).__hermesT)('operations.active')}
                 />
               </span>
             </h2>
@@ -63,7 +64,7 @@ export function OrchestratorCard({
                 onClick={openSettings}
                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--theme-muted)] transition-colors hover:text-[var(--theme-text)]"
                 aria-label="Orchestrator settings"
-                title="Orchestrator settings"
+                title={(__hermesT || (globalThis as any).__hermesT)('operations.orchestratorSettings')}
               >
                 <HugeiconsIcon icon={Settings01Icon} size={16} strokeWidth={1.8} />
               </button>

@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs'
 import { useFeatureAvailable } from '@/hooks/use-feature-available'
 import { usePageTitle } from '@/hooks/use-page-title'
 import { getUnavailableReason } from '@/lib/feature-gates'
+import { __hermesT } from '@/lib/i18n'
 
 const MemoryBrowserScreen = lazy(async () => {
   const module = await import('@/screens/memory/memory-browser-screen')
@@ -29,7 +30,7 @@ export const Route = createFileRoute('/memory')({
     )
     const memoryAvailable = useFeatureAvailable('memory')
 
-    usePageTitle('Memory')
+    usePageTitle((__hermesT || (globalThis as any).__hermesT)('memory.title'))
 
     return (
       <div className="flex h-full min-h-0 flex-col">
@@ -45,9 +46,9 @@ export const Route = createFileRoute('/memory')({
               variant="underline"
               className="w-full justify-start gap-1"
             >
-              <TabsTab value="memory">Memory</TabsTab>
-              <TabsTab value="knowledge">Knowledge</TabsTab>
-              <TabsTab value="external">External providers</TabsTab>
+              <TabsTab value="memory">{(__hermesT || (globalThis as any).__hermesT)('memory.tabMemory')}</TabsTab>
+              <TabsTab value="knowledge">{(__hermesT || (globalThis as any).__hermesT)('memory.tabKnowledge')}</TabsTab>
+              <TabsTab value="external">{(__hermesT || (globalThis as any).__hermesT)('memory.tabExternal')}</TabsTab>
             </TabsList>
           </div>
 
@@ -55,14 +56,14 @@ export const Route = createFileRoute('/memory')({
             {tab === 'memory' ? (
               <Suspense
                 fallback={
-                  <RouteLoadingState label="Loading memory browser..." />
+                  <RouteLoadingState label={(__hermesT || (globalThis as any).__hermesT)('memory.loadingBrowser')} />
                 }
               >
                 {memoryAvailable ? (
                   <MemoryBrowserScreen />
                 ) : (
                   <BackendUnavailableState
-                    feature="Memory"
+                    feature={(__hermesT || (globalThis as any).__hermesT)('memory.feature')}
                     description={getUnavailableReason('Memory')}
                   />
                 )}
@@ -74,7 +75,7 @@ export const Route = createFileRoute('/memory')({
             {tab === 'knowledge' ? (
               <Suspense
                 fallback={
-                  <RouteLoadingState label="Loading knowledge browser..." />
+                  <RouteLoadingState label={(__hermesT || (globalThis as any).__hermesT)('memory.loadingKnowledge')} />
                 }
               >
                 <KnowledgeBrowserScreen />
@@ -86,7 +87,7 @@ export const Route = createFileRoute('/memory')({
             {tab === 'external' ? (
               <Suspense
                 fallback={
-                  <RouteLoadingState label="Loading external memory providers..." />
+                  <RouteLoadingState label={(__hermesT || (globalThis as any).__hermesT)('memory.loadingExternal')} />
                 }
               >
                 <ExternalMemoryBrowserScreen />

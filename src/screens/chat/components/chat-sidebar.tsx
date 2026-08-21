@@ -37,7 +37,7 @@ import { SessionDeleteDialog } from './sidebar/session-delete-dialog'
 import { SidebarSessions } from './sidebar/sidebar-sessions'
 import type { ChatOpenSettingsDetail } from '../chat-events'
 import type { SessionMeta } from '../types'
-import { t } from '@/lib/i18n'
+import { __hermesT } from '@/lib/i18n'
 import { SettingsDialog } from '@/components/settings-dialog'
 import {
   TooltipContent,
@@ -776,7 +776,7 @@ function ChatSidebarComponent({
   const searchItem: NavItemDef = {
     kind: 'button',
     icon: Search01Icon,
-    label: 'Search',
+    label: (__hermesT || (globalThis as any).__hermesT)('nav.search'),
     active: isSearchModalOpen,
     onClick: openSearchModal,
   }
@@ -788,14 +788,14 @@ function ChatSidebarComponent({
       kind: 'link',
       to: '/dashboard',
       icon: DashboardSquare01Icon,
-      label: t('nav.dashboard'),
+      label: (__hermesT || (globalThis as any).__hermesT)('nav.dashboard'),
       active: isDashboardActive,
     },
     {
       kind: 'link',
       to: '/chat',
       icon: MessageMultiple01Icon,
-      label: t('nav.chat'),
+      label: (__hermesT || (globalThis as any).__hermesT)('nav.chat'),
       active: isChatActive,
     },
 
@@ -803,49 +803,49 @@ function ChatSidebarComponent({
       kind: 'link',
       to: '/files',
       icon: File01Icon,
-      label: t('nav.files'),
+      label: (__hermesT || (globalThis as any).__hermesT)('nav.files'),
       active: isFilesActive,
     },
     {
       kind: 'link',
       to: '/terminal',
       icon: ComputerTerminal01Icon,
-      label: t('nav.terminal'),
+      label: (__hermesT || (globalThis as any).__hermesT)('nav.terminal'),
       active: isTerminalActive,
     },
     {
       kind: 'link',
       to: '/jobs',
       icon: Clock01Icon,
-      label: t('nav.jobs'),
+      label: (__hermesT || (globalThis as any).__hermesT)('nav.jobs'),
       active: isJobsActive,
     },
     {
       kind: 'link',
       to: '/tasks',
       icon: CheckListIcon,
-      label: 'Tasks',
+      label: (__hermesT || (globalThis as any).__hermesT)('nav.tasks'),
       active: isTasksActive,
     },
     {
       kind: 'link',
       to: '/conductor',
       icon: Rocket01Icon,
-      label: 'Conductor',
+      label: (__hermesT || (globalThis as any).__hermesT)('nav.conductor'),
       active: isConductorActive,
     },
     {
       kind: 'link',
       to: '/operations',
       icon: UserMultipleIcon,
-      label: 'Operations',
+      label: (__hermesT || (globalThis as any).__hermesT)('nav.operations'),
       active: isOperationsActive,
     },
     {
       kind: 'link',
       to: '/swarm',
       icon: UserGroupIcon,
-      label: 'Swarm',
+      label: (__hermesT || (globalThis as any).__hermesT)('nav.swarm'),
       active: isSwarmActive,
     },
     ...(echoStudioEnabled
@@ -854,7 +854,7 @@ function ChatSidebarComponent({
             kind: 'link' as const,
             to: '/echo-studio',
             icon: DashboardSquare01Icon,
-            label: 'Echo Studio',
+            label: (__hermesT || (globalThis as any).__hermesT)('nav.echostudio'),
             active: pathname.startsWith('/echo-studio'),
           },
         ]
@@ -867,14 +867,14 @@ function ChatSidebarComponent({
       kind: 'link',
       to: '/memory',
       icon: BrainIcon,
-      label: t('nav.memory'),
+      label: (__hermesT || (globalThis as any).__hermesT)('nav.memory'),
       active: isMemoryActive,
     },
     {
       kind: 'link',
       to: '/skills',
       icon: PuzzleIcon,
-      label: t('nav.skills'),
+      label: (__hermesT || (globalThis as any).__hermesT)('nav.skills'),
       active: isSkillsActive,
       dataTour: 'skills',
     },
@@ -882,14 +882,14 @@ function ChatSidebarComponent({
       kind: 'link',
       to: '/mcp',
       icon: McpServerIcon,
-      label: 'MCP',
+      label: (__hermesT || (globalThis as any).__hermesT)('nav.mcp'),
       active: isMcpActive,
     },
     {
       kind: 'link',
       to: '/profiles',
       icon: UserMultipleIcon,
-      label: t('nav.profiles'),
+      label: (__hermesT || (globalThis as any).__hermesT)('nav.profiles'),
       active: pathname === '/profiles',
     },
   ]
@@ -1041,7 +1041,7 @@ function ChatSidebarComponent({
               strokeWidth={1.5}
               className="size-5 shrink-0"
             />
-            <span>New Session</span>
+            <span>{(__hermesT || (globalThis as any).__hermesT)('chat.newSession')}</span>
           </Link>
         </div>
       )}

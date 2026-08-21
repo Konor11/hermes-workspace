@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { __hermesT } from '@/lib/i18n'
 import { createFileRoute } from '@tanstack/react-router'
 import { usePageTitle } from '@/hooks/use-page-title'
 import { ProfilesScreen } from '@/screens/profiles/profiles-screen'
@@ -10,7 +11,7 @@ export const Route = createFileRoute('/profiles')({
 })
 
 function ProfilesRoute() {
-  usePageTitle('Profiles')
+  usePageTitle((__hermesT || (globalThis as any).__hermesT)('page.profiles'))
   const [tab, setTab] = useState<'profiles' | 'monitoring'>('profiles')
 
   return (

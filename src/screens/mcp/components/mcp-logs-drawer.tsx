@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { McpServer } from '@/types/mcp'
+import { __hermesT } from '@/lib/i18n'
 
 interface Props {
   server: McpServer | null
@@ -101,7 +102,7 @@ export function McpLogsDrawer({ server, open, onClose }: Props) {
     <div
       className="fixed inset-0 z-40 flex justify-end"
       role="dialog"
-      aria-label={`Logs for ${server.name}`}
+      aria-label={(__hermesT || (globalThis as any).__hermesT)('mcp.logsFor').replace('{name}', server.name)}
     >
       <button
         type="button"
@@ -133,7 +134,7 @@ export function McpLogsDrawer({ server, open, onClose }: Props) {
               className="rounded border border-primary-300 px-2 py-1 text-xs text-primary-700 hover:bg-primary-50"
               onClick={onClose}
             >
-              Close
+              {(__hermesT || (globalThis as any).__hermesT)('mcp.close')}
             </button>
           </div>
         </header>
@@ -142,7 +143,7 @@ export function McpLogsDrawer({ server, open, onClose }: Props) {
           className="flex-1 overflow-y-auto bg-primary-950/95 px-3 py-2 font-mono text-xs text-primary-100"
         >
           {lines.length === 0 ? (
-            <p className="text-primary-300">Waiting for logs…</p>
+            <p className="text-primary-300">{(__hermesT || (globalThis as any).__hermesT)('mcp.waitingLogs')}</p>
           ) : (
             <ul className="space-y-0.5">
               {lines.map((line) => (

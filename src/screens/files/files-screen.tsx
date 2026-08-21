@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { __hermesT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { usePageTitle } from '@/hooks/use-page-title'
 import {
@@ -37,8 +38,8 @@ type FilesListResponse = {
   entries: Array<FileEntry>
 }
 
-export const FILE_BROWSER_MODE_LABEL = 'Server workspace'
-export const FILE_BROWSER_REMOTE_HELP =
+export const FILE_BROWSER_MODE_LABEL = (__hermesT || (globalThis as any).__hermesT)('files.modeLabel')
+export const FILE_BROWSER_REMOTE_HELP = (__hermesT || (globalThis as any).__hermesT)('files.remoteHelp')
   'Files are loaded from the Workspace server via /api/files, so remote deployments show files created by the agent.'
 
 type FileReadResponse = {
@@ -794,7 +795,7 @@ function FilePanel({ selectedEntry }: FilePanelProps) {
         <div className="flex h-full items-center justify-center text-center text-primary-400 dark:text-neutral-600">
           <div>
             <div className="text-5xl mb-3 opacity-40">📂</div>
-            <p className="text-sm">Select a file to preview or edit</p>
+            <p className="text-sm">{(__hermesT || (globalThis as any).__hermesT)('files.selectToPreview')}</p>
           </div>
         </div>
       </>
@@ -810,7 +811,7 @@ function FilePanel({ selectedEntry }: FilePanelProps) {
             <div className="text-5xl mb-3 opacity-40">📁</div>
             <p className="text-sm font-medium">{selectedEntry.name}</p>
             <p className="text-xs mt-1 opacity-70">
-              Select a file inside to preview
+              {(__hermesT || (globalThis as any).__hermesT)('files.selectInside')}
             </p>
           </div>
         </div>
@@ -845,7 +846,7 @@ function FilePanel({ selectedEntry }: FilePanelProps) {
             disabled={!dirty || saving}
             onClick={handleSave}
           >
-            {saving ? 'Saving…' : savedOk ? '✓ Saved' : 'Save'}
+            {saving ? (__hermesT || (globalThis as any).__hermesT)('files.saving') : savedOk ? (__hermesT || (globalThis as any).__hermesT)('files.saved') : (__hermesT || (globalThis as any).__hermesT)('files.save')}
           </Button>
         )}
       </div>
@@ -858,10 +859,10 @@ function FilePanel({ selectedEntry }: FilePanelProps) {
         <span>{formatBytes(selectedEntry.size)}</span>
       )}
       {selectedEntry.modifiedAt && (
-        <span>Modified {formatDate(selectedEntry.modifiedAt)}</span>
+        <span>{(__hermesT || (globalThis as any).__hermesT)('files.modified')} {formatDate(selectedEntry.modifiedAt)}</span>
       )}
       {dirty && (
-        <span className="text-accent-500 font-medium">Unsaved changes</span>
+        <span className="text-accent-500 font-medium">{(__hermesT || (globalThis as any).__hermesT)('files.unsaved')}</span>
       )}
     </div>
   )
@@ -875,7 +876,7 @@ function FilePanel({ selectedEntry }: FilePanelProps) {
         <div className="flex h-full flex-col">
           {header}
           <div className="flex flex-1 items-center justify-center text-sm text-primary-400 dark:text-neutral-500">
-            Loading…
+            {(__hermesT || (globalThis as any).__hermesT)('files.loading')}
           </div>
           {footer}
         </div>
@@ -914,7 +915,7 @@ function FilePanel({ selectedEntry }: FilePanelProps) {
                 className="max-h-full max-w-full rounded-lg border border-primary-200 dark:border-neutral-800 shadow-sm object-contain"
               />
             ) : (
-              <div className="text-sm text-primary-400">No preview</div>
+              <div className="text-sm text-primary-400">{(__hermesT || (globalThis as any).__hermesT)('files.noPreview')}</div>
             )}
           </div>
           {footer}
@@ -1033,7 +1034,7 @@ function FilePanel({ selectedEntry }: FilePanelProps) {
 // ──────────────────────────────────────────────────────────────────────────────
 
 export function FilesScreen() {
-  usePageTitle('Files')
+  usePageTitle((__hermesT || (globalThis as any).__hermesT)('page.files'))
 
   const [entries, setEntries] = useState<Array<FileEntry>>([])
   const [treeLoading, setTreeLoading] = useState(false)
@@ -1216,7 +1217,7 @@ export function FilesScreen() {
             <button
               type="button"
               onClick={openNewFolderPrompt}
-              title="New folder"
+              title={(__hermesT || (globalThis as any).__hermesT)('files.newFolder')}
               className="rounded p-1 text-sm text-primary-400 hover:bg-primary-200 dark:hover:bg-neutral-800 hover:text-primary-600 dark:hover:text-neutral-300 transition-colors leading-none"
             >
               📁+
@@ -1224,7 +1225,7 @@ export function FilesScreen() {
             <button
               type="button"
               onClick={() => void loadTree()}
-              title="Refresh"
+              title={(__hermesT || (globalThis as any).__hermesT)('files.refresh')}
               className="rounded p-1 text-lg text-primary-400 hover:bg-primary-200 dark:hover:bg-neutral-800 hover:text-primary-600 dark:hover:text-neutral-300 transition-colors leading-none"
             >
               ↺
@@ -1243,18 +1244,18 @@ export function FilesScreen() {
             </div>
             {treeLoading ? (
               <div className="px-3 py-2 text-xs text-primary-400 dark:text-neutral-500">
-                Loading server workspace…
+                {(__hermesT || (globalThis as any).__hermesT)('files.loadingServer')}
               </div>
             ) : treeError ? (
               <div className="space-y-1 px-3 py-2 text-xs text-red-500">
                 <div>{treeError}</div>
                 <div className="text-primary-400 dark:text-neutral-500">
-                  Check the server workspace catalog or HERMES_WORKSPACE_DIR; this browser no longer needs local folder access.
+                  {(__hermesT || (globalThis as any).__hermesT)('files.treeErrorHelp')}
                 </div>
               </div>
             ) : entries.length === 0 ? (
               <div className="px-3 py-2 text-xs text-primary-400 dark:text-neutral-500">
-                Server workspace is empty. Agent-created files will appear here after they are written to the configured workspace path.
+                {(__hermesT || (globalThis as any).__hermesT)('files.emptyWorkspace')}
               </div>
             ) : (
               entries
@@ -1306,7 +1307,7 @@ export function FilesScreen() {
               setContextMenu(null)
             }}
           >
-            ✏️ Rename
+            {(__hermesT || (globalThis as any).__hermesT)('files.rename')}
           </button>
           {contextMenu.entry.type === 'folder' ? (
             <button
@@ -1320,7 +1321,7 @@ export function FilesScreen() {
                 setContextMenu(null)
               }}
             >
-              📁 New folder inside
+              {(__hermesT || (globalThis as any).__hermesT)('files.newFolderInside')}
             </button>
           ) : (
             <button
@@ -1330,7 +1331,7 @@ export function FilesScreen() {
                 setContextMenu(null)
               }}
             >
-              ⬇️ Download
+              {(__hermesT || (globalThis as any).__hermesT)('files.download')}
             </button>
           )}
           <button
@@ -1355,12 +1356,12 @@ export function FilesScreen() {
         <DialogContent>
           <div className="p-5 space-y-3">
             <DialogTitle>
-              {promptState?.mode === 'rename' ? 'Rename' : 'New Folder'}
+              {promptState?.mode === 'rename' ? (__hermesT || (globalThis as any).__hermesT)('files.renameTitle') : (__hermesT || (globalThis as any).__hermesT)('files.newFolder')}
             </DialogTitle>
             <DialogDescription>
               {promptState?.mode === 'rename'
-                ? 'Enter a new name.'
-                : 'Enter a folder name to create.'}
+                ? (__hermesT || (globalThis as any).__hermesT)('files.renamePrompt')
+                : (__hermesT || (globalThis as any).__hermesT)('files.newFolderPrompt')}
             </DialogDescription>
             <input
               value={promptValue}
@@ -1372,8 +1373,8 @@ export function FilesScreen() {
               autoFocus
             />
             <div className="flex justify-end gap-2 pt-2">
-              <DialogClose render={<Button variant="outline">Cancel</Button>} />
-              <Button onClick={() => void handlePromptSubmit()}>Save</Button>
+              <DialogClose render={<Button variant="outline">{(__hermesT || (globalThis as any).__hermesT)('files.cancel')}</Button>} />
+              <Button onClick={() => void handlePromptSubmit()}>{(__hermesT || (globalThis as any).__hermesT)('files.save')}</Button>
             </div>
           </div>
         </DialogContent>
@@ -1389,22 +1390,22 @@ export function FilesScreen() {
         <DialogContent>
           <div className="p-5 space-y-3">
             <DialogTitle>
-              Delete {deleteConfirm?.type === 'folder' ? 'Folder' : 'File'}
+              {deleteConfirm?.type === 'folder' ? (__hermesT || (globalThis as any).__hermesT)('files.confirmDeleteFolder') : (__hermesT || (globalThis as any).__hermesT)('files.confirmDeleteFile')}
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete{' '}
+              {(__hermesT || (globalThis as any).__hermesT)('files.deleteConfirmDesc')}{' '}
               <strong>{deleteConfirm?.name}</strong>?
               {deleteConfirm?.type === 'folder' &&
-                ' This will delete all contents inside.'}{' '}
-              This action cannot be undone.
+                ' ' + (__hermesT || (globalThis as any).__hermesT)('files.deleteFolderWarn')}{' '}
+              {(__hermesT || (globalThis as any).__hermesT)('files.cannotUndo')}
             </DialogDescription>
             <div className="flex justify-end gap-2 pt-2">
-              <DialogClose render={<Button variant="outline">Cancel</Button>} />
+              <DialogClose render={<Button variant="outline">{(__hermesT || (globalThis as any).__hermesT)('files.cancel')}</Button>} />
               <Button
                 variant="destructive"
                 onClick={() => void handleDeleteConfirmed()}
               >
-                Delete
+                {(__hermesT || (globalThis as any).__hermesT)('files.delete')}
               </Button>
             </div>
           </div>

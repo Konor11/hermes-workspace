@@ -10,6 +10,7 @@ import {
 import { useMcpCapabilityMode } from '../hooks/use-mcp-capability-mode'
 import { useMcpOauth } from '../hooks/use-mcp-oauth'
 import { isArgPlaceholder, isUrlPlaceholder } from '../lib/placeholder-detect'
+import { __hermesT } from '@/lib/i18n'
 import type { McpServer, McpTestResult } from '@/types/mcp'
 
 interface Props {
@@ -53,7 +54,7 @@ export function McpServerCard({ server, onEdit }: Props) {
   // (workspace shells out to `hermes mcp test <name>`). Logs and Reauth
   // still require the live runtime /api/mcp endpoints.
   const liveOnlyTitle = fallbackMode
-    ? 'Requires hermes-agent /api/mcp runtime endpoint (not available in local fallback mode).'
+    ? (__hermesT || (globalThis as any).__hermesT)('mcp.liveOnly')
     : ''
   const qc = useQueryClient()
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -82,19 +83,19 @@ export function McpServerCard({ server, onEdit }: Props) {
           onCheckedChange={(checked) =>
             configure.mutate({ name: server.name, enabled: checked })
           }
-          aria-label={server.enabled ? 'Disable server' : 'Enable server'}
+          aria-label={server.enabled ? (__hermesT || (globalThis as any).__hermesT)('mcp.disableServer') : (__hermesT || (globalThis as any).__hermesT)('mcp.enableServer')}
         />
       </header>
 
       <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-primary-500">
         <div className="flex items-center gap-1.5">
-          <dt>Tools:</dt>
+          <dt>{(__hermesT || (globalThis as any).__hermesT)('mcp.tools')}</dt>
           <dd className="font-medium text-ink tabular-nums">
             {server.discoveredToolsCount}
           </dd>
         </div>
         <div className="flex items-center gap-1.5">
-          <dt>Auth:</dt>
+          <dt>{(__hermesT || (globalThis as any).__hermesT)('mcp.auth')}</dt>
           <dd className="font-medium text-ink">{server.authType}</dd>
         </div>
       </dl>
@@ -116,7 +117,7 @@ export function McpServerCard({ server, onEdit }: Props) {
             qc.invalidateQueries({ queryKey: ['mcp', 'servers'] })
           }}
         >
-          {test.isPending ? 'Testing…' : 'Test'}
+          {test.isPending ? (__hermesT || (globalThis as any).__hermesT)('mcp.testing') : (__hermesT || (globalThis as any).__hermesT)('mcp.test')}
         </Button>
         {server.authType === 'oauth' ? (
           <Button
@@ -128,7 +129,7 @@ export function McpServerCard({ server, onEdit }: Props) {
               void oauth.start(server)
             }}
           >
-            {oauth.isPending ? 'Reauth…' : 'Reauth'}
+            {oauth.isPending ? (__hermesT || (globalThis as any).__hermesT)('mcp.reauthPending') : (__hermesT || (globalThis as any).__hermesT)('mcp.reauth')}
           </Button>
         ) : null}
         {/* Logs button hidden until hermes-agent dashboard exposes the
@@ -136,7 +137,7 @@ export function McpServerCard({ server, onEdit }: Props) {
             endpoint is available; the McpLogsDrawer component is still
             available at ./mcp-logs-drawer. */}
         <Button variant="outline" size="sm" onClick={() => onEdit(server)}>
-          Edit
+          {(__hermesT || (globalThis as any).__hermesT)('mcp.edit')}
         </Button>
         {confirmDelete ? (
           <>

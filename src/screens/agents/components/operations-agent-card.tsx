@@ -18,6 +18,7 @@ import { runCronJob, toggleCronJob } from '@/lib/cron-api'
 import { cn } from '@/lib/utils'
 import { useAgentChat, type OperationsChatMessage } from '../hooks/use-agent-chat'
 import type { OperationsAgent } from '../hooks/use-operations'
+import { __hermesT } from '@/lib/i18n'
 
 function getStatusStyles(status: OperationsAgent['status']) {
   if (status === 'error') {
@@ -347,7 +348,7 @@ export function OperationsAgentCard({
             type="button"
             onClick={() => onOpenSettings(agent.id)}
             className="mt-1 inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-amber-300/40 bg-amber-300/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-200 transition-colors hover:bg-amber-300/20"
-            title="This agent has no model configured. Click to set one up."
+            title={(__hermesT || (globalThis as any).__hermesT)('operations.noModelConfigured')}
           >
             <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-300" />
             Needs setup — click to configure

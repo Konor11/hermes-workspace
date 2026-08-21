@@ -299,7 +299,7 @@ function SettingsRow({ label, description, children }: RowProps) {
 type SettingsSectionId = SettingsNavId
 
 function SettingsRoute() {
-  usePageTitle('Settings')
+  usePageTitle((__hermesT || (globalThis as any).__hermesT)('page.settings'))
   const { settings, updateSettings } = useSettings()
 
   // Phase 4.2: Fetch models for preferred model dropdowns

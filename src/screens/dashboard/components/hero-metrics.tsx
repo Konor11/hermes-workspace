@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import type { ReactNode } from 'react'
 import type { DashboardOverview } from '@/server/dashboard-aggregator'
-import { t, type TranslationKey } from '@/lib/i18n'
+import { __hermesT, type TranslationKey } from '@/lib/i18n'
 
 function formatTokens(n: number): string {
   if (!n || n <= 0) return '0'
@@ -134,7 +134,7 @@ function HeroTile({ labelKey, value, sub, delta, spark, tone, icon }: HeroTilePr
           className="text-[10px] font-semibold uppercase tracking-[0.18em]"
           style={{ color: 'var(--theme-muted)' }}
         >
-          {t(labelKey)}
+          {(__hermesT || (globalThis as any).__hermesT)(labelKey)}
         </span>
         <span
           className="flex size-7 items-center justify-center rounded-md text-sm"
@@ -262,8 +262,8 @@ export function HeroMetrics({
         labelKey: 'dash.tokens',
         value: formatTokens(tokensTotal),
         sub: useAnalytics
-          ? `${formatTokens(analytics!.cacheReadTokens)} ${t('dash.cached')}`
-          : t('dash.hermesLedger'),
+          ? `${formatTokens(analytics!.cacheReadTokens)} ${(__hermesT || (globalThis as any).__hermesT)('dash.cached')}`
+          : (__hermesT || (globalThis as any).__hermesT)('dash.hermesLedger'),
         delta: useAnalytics ? deltaPct(tokCurr, tokPrev) : null,
         spark: useAnalytics ? dailyTokens : undefined,
         tone: 'var(--theme-accent-secondary)',
@@ -272,7 +272,7 @@ export function HeroMetrics({
       {
         labelKey: 'dash.apiCalls',
         value: formatCount(apiCalls),
-        sub: useAnalytics ? `${window} ${t('dash.window')}` : t('dash.toolCalls'),
+        sub: useAnalytics ? `${window} ${(__hermesT || (globalThis as any).__hermesT)('dash.window')}` : (__hermesT || (globalThis as any).__hermesT)('dash.toolCalls'),
         delta: null,
         spark: useAnalytics ? dailyCalls : undefined,
         tone: 'var(--theme-success)',

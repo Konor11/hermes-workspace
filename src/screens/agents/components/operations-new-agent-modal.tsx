@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { fetchModels, type GatewayModelCatalogEntry } from '@/lib/gateway-api'
 import { cn } from '@/lib/utils'
 import { AGENT_PRESETS } from '../agent-presets'
+import { __hermesT } from '@/lib/i18n'
 
 type PresetOption = {
   id: string
@@ -254,7 +255,7 @@ export function OperationsNewAgentModal({
 
         <div className="mt-4 grid gap-4 md:grid-cols-[1.2fr_0.6fr]">
           <label className="space-y-2">
-            <span className="text-sm font-medium text-[var(--theme-text)]">Name</span>
+            <span className="text-sm font-medium text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.name')}</span>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -264,7 +265,7 @@ export function OperationsNewAgentModal({
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-[var(--theme-text)]">Emoji</span>
+            <span className="text-sm font-medium text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.emoji')}</span>
             <input
               value={emoji}
               onChange={(event) => setEmoji(event.target.value)}
@@ -275,12 +276,12 @@ export function OperationsNewAgentModal({
         </div>
 
         <label className="mt-4 block space-y-2">
-          <span className="text-sm font-medium text-[var(--theme-text)]">Model</span>
+          <span className="text-sm font-medium text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.model')}</span>
           <ModelSelector value={model} onChange={setModel} models={models} />
         </label>
 
         <label className="mt-4 block space-y-2">
-          <span className="text-sm font-medium text-[var(--theme-text)]">Description</span>
+          <span className="text-sm font-medium text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.description')}</span>
           <input
             value={description}
             onChange={(event) => setDescription(event.target.value)}

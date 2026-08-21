@@ -14,6 +14,7 @@ import {
 } from '@/lib/gateway-api'
 import { cn } from '@/lib/utils'
 import type { OperationsAgent } from '../hooks/use-operations'
+import { __hermesT } from '@/lib/i18n'
 
 type AvailableModel = {
   id: string
@@ -242,7 +243,7 @@ export function OperationsAgentDetail({
 
         <div className="mt-6 grid gap-4 md:grid-cols-[1.2fr_0.6fr]">
           <label className="space-y-2">
-            <span className="text-sm font-medium text-[var(--theme-text)]">Name</span>
+            <span className="text-sm font-medium text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.name')}</span>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -251,7 +252,7 @@ export function OperationsAgentDetail({
           </label>
 
           <label className="space-y-2">
-            <span className="text-sm font-medium text-[var(--theme-text)]">Emoji</span>
+            <span className="text-sm font-medium text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.emoji')}</span>
             <input
               value={emoji}
               onChange={(event) => setEmoji(event.target.value)}
@@ -261,7 +262,7 @@ export function OperationsAgentDetail({
         </div>
 
         <label className="mt-4 block space-y-2">
-          <span className="text-sm font-medium text-[var(--theme-text)]">Model</span>
+          <span className="text-sm font-medium text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.model')}</span>
           <ModelSelector value={model} onChange={setModel} models={models} />
         </label>
 

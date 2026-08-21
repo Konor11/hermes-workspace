@@ -2,6 +2,11 @@ import { createRouter } from '@tanstack/react-router'
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
+import { __hermesT } from './lib/i18n'
+
+// Keep the i18n translator referenced from the main (router) chunk so it is
+// not hoisted into the entry chunk where cross-chunk importers can't see it.
+void __hermesT
 
 declare global {
   interface Window {

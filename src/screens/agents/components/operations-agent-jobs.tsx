@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from '@/components/ui/toast'
 import { toggleCronJob, upsertCronJob } from '@/lib/cron-api'
 import { formatRelativeTime } from '@/screens/dashboard/lib/formatters'
+import { __hermesT } from '@/lib/i18n'
 
 function displayJobName(job: CronJob, agentId: string): string {
   const prefix = `ops:${agentId}:`
@@ -169,7 +170,7 @@ export function OperationsAgentJobs({
         <div className="mt-4 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg)] p-4">
           <div className="grid gap-3 md:grid-cols-2">
             <label className="space-y-2">
-              <span className="text-sm font-medium text-[var(--theme-text)]">Job Name</span>
+              <span className="text-sm font-medium text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.jobName')}</span>
               <input
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
@@ -178,7 +179,7 @@ export function OperationsAgentJobs({
               />
             </label>
             <label className="space-y-2">
-              <span className="text-sm font-medium text-[var(--theme-text)]">Schedule</span>
+              <span className="text-sm font-medium text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.schedule')}</span>
               <input
                 value={schedule}
                 onChange={(event) => setSchedule(event.target.value)}
@@ -188,7 +189,7 @@ export function OperationsAgentJobs({
             </label>
           </div>
           <label className="mt-3 block space-y-2">
-            <span className="text-sm font-medium text-[var(--theme-text)]">Description</span>
+            <span className="text-sm font-medium text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.description')}</span>
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}

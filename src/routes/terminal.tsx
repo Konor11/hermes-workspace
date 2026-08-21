@@ -1,4 +1,5 @@
 import { Suspense, lazy } from 'react'
+import { __hermesT } from '@/lib/i18n'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { usePageTitle } from '@/hooks/use-page-title'
 
@@ -34,7 +35,7 @@ export const Route = createFileRoute('/terminal')({
 })
 
 function TerminalRoute() {
-  usePageTitle('Terminal')
+  usePageTitle((__hermesT || (globalThis as any).__hermesT)('page.terminal'))
   // Terminal is rendered persistently in WorkspaceShell — return null here to avoid double mount
   return null
 }

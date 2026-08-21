@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { __hermesT } from '@/lib/i18n'
 
 type AgentBusSummary = {
   total?: number
@@ -206,7 +207,7 @@ export function AgentBusPanel() {
           <div className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-[1.1fr_0.9fr]">
             <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg)] p-4">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold text-[var(--theme-text)]">Active Issues</h3>
+                <h3 className="text-sm font-semibold text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.activeIssues')}</h3>
                 <span className="text-xs text-[var(--theme-muted)]">{issues.length} items</span>
               </div>
               <div className="mt-3 space-y-2">
@@ -239,7 +240,7 @@ export function AgentBusPanel() {
 
             <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg)] p-4">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold text-[var(--theme-text)]">Recent Missions</h3>
+                <h3 className="text-sm font-semibold text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.recentMissions')}</h3>
                 <span className="text-xs text-[var(--theme-muted)]">{missions.length} logs</span>
               </div>
               <div className="mt-3 space-y-2">
@@ -273,7 +274,7 @@ export function AgentBusPanel() {
           <div className="mt-5 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg)] p-4">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-[var(--theme-text)]">Safe Actions</h3>
+                <h3 className="text-sm font-semibold text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.safeActions')}</h3>
                 <p className="mt-1 text-xs text-[var(--theme-muted)]">
                   No restart, no WhatsApp, and no automated token consumption.
                 </p>

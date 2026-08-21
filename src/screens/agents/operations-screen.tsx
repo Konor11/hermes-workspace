@@ -7,6 +7,7 @@ import {
   PlusSignIcon,
 } from '@hugeicons/core-free-icons'
 import { cn } from '@/lib/utils'
+import { __hermesT } from '@/lib/i18n'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Button } from '@/components/ui/button'
 import { formatRelativeTime } from '@/screens/dashboard/lib/formatters'
@@ -87,9 +88,9 @@ export function OperationsScreen() {
               <HugeiconsIcon icon={AiBrain03Icon} size={22} strokeWidth={1.8} />
             </div>
             <div>
-              <h1 className="text-base font-semibold text-primary-900">Operations</h1>
+              <h1 className="text-base font-semibold text-primary-900">{(__hermesT || (globalThis as any).__hermesT)('operations.title')}</h1>
               <p className="mt-1 text-sm text-primary-600">
-                Your persistent agent team
+                {(__hermesT || (globalThis as any).__hermesT)('operations.subtitle')}
               </p>
             </div>
           </div>
@@ -125,7 +126,7 @@ export function OperationsScreen() {
               onClick={() => setNewAgentOpen(true)}
             >
               <HugeiconsIcon icon={PlusSignIcon} size={16} strokeWidth={1.8} />
-              New Agent
+              {(__hermesT || (globalThis as any).__hermesT)('operations.newAgent')}
             </Button>
             <Button
               variant="secondary"
@@ -133,14 +134,14 @@ export function OperationsScreen() {
               onClick={() => setSettingsOpen(true)}
             >
               <HugeiconsIcon icon={Settings01Icon} size={16} strokeWidth={1.8} />
-              Settings
+              {(__hermesT || (globalThis as any).__hermesT)('operations.settings')}
             </Button>
           </div>
         </header>
 
         {isLoading ? (
           <section className="rounded-3xl border border-[var(--theme-border)] bg-[var(--theme-card)] px-6 py-12 text-center text-sm text-[var(--theme-muted)] shadow-[0_24px_80px_var(--theme-shadow)]">
-            Loading Operations roster…
+            {(__hermesT || (globalThis as any).__hermesT)('operations.loading')}
           </section>
         ) : error ? (
           <section className="rounded-3xl border border-[var(--theme-danger-border)] bg-[var(--theme-danger-soft)] px-6 py-12 text-center text-sm text-[var(--theme-text)] shadow-[0_24px_80px_var(--theme-shadow)]">
@@ -196,7 +197,7 @@ export function OperationsScreen() {
                   strokeWidth={1.7}
                   className="text-[var(--theme-muted)]"
                 />
-                <span className="mt-3 text-sm text-[var(--theme-muted)]">Add Agent</span>
+                <span className="mt-3 text-sm text-[var(--theme-muted)]">{(__hermesT || (globalThis as any).__hermesT)('operations.addAgent')}</span>
               </motion.button>
             </section>
 
@@ -204,10 +205,10 @@ export function OperationsScreen() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold text-[var(--theme-text)]">
-                    Recent Activity
+                    {(__hermesT || (globalThis as any).__hermesT)('operations.recentActivity')}
                   </h2>
                   <p className="mt-1 text-sm text-[var(--theme-muted-2)]">
-                    Latest outputs across the team
+                    {(__hermesT || (globalThis as any).__hermesT)('operations.latestOutputs')}
                   </p>
                 </div>
               </div>
@@ -233,7 +234,7 @@ export function OperationsScreen() {
                   })
                 ) : (
                   <div className="rounded-2xl border border-dashed border-[var(--theme-border)] bg-[var(--theme-bg)] px-4 py-6 text-sm text-[var(--theme-muted)]">
-                    No recent activity yet.
+                    {(__hermesT || (globalThis as any).__hermesT)('operations.noActivity')}
                   </div>
                 )}
               </div>

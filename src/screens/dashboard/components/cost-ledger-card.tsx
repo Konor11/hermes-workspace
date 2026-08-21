@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { DashboardOverview } from '@/server/dashboard-aggregator'
-import { t } from '@/lib/i18n'
+import { __hermesT } from '@/lib/i18n'
 
 const SUBSCRIPTION_PATTERNS: Array<RegExp> = [
   /(^|[\s\-:/])codex(\b|[-/])/i,
@@ -104,14 +104,14 @@ export function CostLedgerCard({
           className="text-[10px] font-semibold uppercase tracking-[0.18em]"
           style={{ color: 'var(--theme-text)' }}
         >
-          {t('dash.costLedger')}
+          {(__hermesT || (globalThis as any).__hermesT)('dash.costLedger')}
         </h3>
         <span
           className="font-mono text-[9px] uppercase tracking-[0.15em]"
           style={{ color: 'var(--theme-muted)' }}
-          title={t('dash.totalBilled')}
+          title={(__hermesT || (globalThis as any).__hermesT)('dash.totalBilled')}
         >
-          {formatCostUsd(paidTotal)} {t('dash.paid')}
+          {formatCostUsd(paidTotal)} {(__hermesT || (globalThis as any).__hermesT)('dash.paid')}
         </span>
       </div>
 
@@ -145,17 +145,17 @@ export function CostLedgerCard({
               style={{ color: 'var(--theme-text)' }}
             >
               {row.included ? (
-                <span title={`${row.sessions} ${t('dash.sessions')}`}>
+                <span title={`${row.sessions} ${(__hermesT || (globalThis as any).__hermesT)('dash.sessions')}`}>
                   {formatTokens(row.tokens)}
                   <span
                     className="ml-1"
                     style={{ color: 'var(--theme-muted)' }}
                   >
-                    {t('dash.included')}
+                    {(__hermesT || (globalThis as any).__hermesT)('dash.included')}
                   </span>
                 </span>
               ) : (
-                <span title={`${row.sessions} ${t('dash.sessions')} · ${row.tokens.toLocaleString()} ${t('dash.tokensN')}`}>
+                <span title={`${row.sessions} ${(__hermesT || (globalThis as any).__hermesT)('dash.sessions')} · ${row.tokens.toLocaleString()} ${(__hermesT || (globalThis as any).__hermesT)('dash.tokensN')}`}>
                   {formatCostUsd(row.cost)}
                 </span>
               )}

@@ -1,11 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { __hermesT } from '@/lib/i18n'
 import { usePageTitle } from '@/hooks/use-page-title'
 import { Swarm2Screen } from '@/screens/swarm2/swarm2-screen'
 
 export const Route = createFileRoute('/swarm')({
   ssr: false,
   component: function SwarmRoute() {
-    usePageTitle('Swarm')
+    usePageTitle((__hermesT || (globalThis as any).__hermesT)('page.swarm'))
     return <Swarm2Screen />
   },
   errorComponent: function SwarmError({ error }) {

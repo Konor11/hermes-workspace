@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Cancel01Icon } from '@hugeicons/core-free-icons'
 import type { ClaudeJob, JobProfileOption } from '@/lib/jobs-api'
+import { __hermesT } from '@/lib/i18n'
 
 const SCHEDULE_PRESETS = [
   { label: 'Every 15m', value: 'every 15m' },
@@ -188,7 +189,7 @@ export function EditJobDialog({
               style={{ borderColor: 'var(--theme-border)' }}
             >
               <div>
-                <h2 className="text-lg font-semibold">Edit Job</h2>
+                <h2 className="text-lg font-semibold">{(__hermesT || (globalThis as any).__hermesT)('jobs.dialogEdit')}</h2>
                 <p
                   className="mt-1 text-sm"
                   style={{ color: 'var(--theme-muted)' }}
@@ -209,7 +210,7 @@ export function EditJobDialog({
 
             <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">
               <section className="space-y-2">
-                <label className="text-sm font-medium">Profile</label>
+                <label className="text-sm font-medium">{(__hermesT || (globalThis as any).__hermesT)('jobs.profile')}</label>
                 <select
                   value={form.profile}
                   onChange={(event) =>
@@ -252,7 +253,7 @@ export function EditJobDialog({
               </section>
 
               <section className="space-y-2">
-                <label className="text-sm font-medium">Name</label>
+                <label className="text-sm font-medium">{(__hermesT || (globalThis as any).__hermesT)('jobs.name')}</label>
                 <input
                   value={form.name}
                   onChange={(event) =>
@@ -261,7 +262,7 @@ export function EditJobDialog({
                       name: event.target.value,
                     }))
                   }
-                  placeholder="Daily research summary"
+                  placeholder={(__hermesT || (globalThis as any).__hermesT)('jobs.namePlaceholder')}
                   required
                   className="w-full rounded-xl border px-3 py-2.5 text-sm focus:outline-none focus:ring-1"
                   style={{
@@ -275,7 +276,7 @@ export function EditJobDialog({
 
               <section className="space-y-3">
                 <div>
-                  <h3 className="text-sm font-medium">Schedule</h3>
+                  <h3 className="text-sm font-medium">{(__hermesT || (globalThis as any).__hermesT)('jobs.schedule')}</h3>
                   <p
                     className="mt-1 text-xs"
                     style={{ color: 'var(--theme-muted)' }}
@@ -313,7 +314,7 @@ export function EditJobDialog({
                   })}
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Custom schedule</label>
+                  <label className="text-sm font-medium">{(__hermesT || (globalThis as any).__hermesT)('jobs.customSchedule')}</label>
                   <input
                     value={form.schedule}
                     onChange={(event) =>
@@ -322,7 +323,7 @@ export function EditJobDialog({
                         schedule: event.target.value,
                       }))
                     }
-                    placeholder="every 30m or 0 9 * * *"
+                    placeholder={(__hermesT || (globalThis as any).__hermesT)('jobs.customSchedulePlaceholder')}
                     required
                     className="w-full rounded-xl border px-3 py-2.5 text-sm focus:outline-none focus:ring-1"
                     style={{
@@ -335,7 +336,7 @@ export function EditJobDialog({
               </section>
 
               <section className="space-y-2">
-                <label className="text-sm font-medium">Prompt</label>
+                <label className="text-sm font-medium">{(__hermesT || (globalThis as any).__hermesT)('jobs.prompt')}</label>
                 <textarea
                   value={form.prompt}
                   onChange={(event) =>
@@ -344,7 +345,7 @@ export function EditJobDialog({
                       prompt: event.target.value,
                     }))
                   }
-                  placeholder="What should Hermes Agent do?"
+                  placeholder={(__hermesT || (globalThis as any).__hermesT)('jobs.promptPlaceholder')}
                   required
                   rows={5}
                   className="w-full resize-none rounded-xl border px-3 py-2.5 text-sm focus:outline-none focus:ring-1"
@@ -358,7 +359,7 @@ export function EditJobDialog({
 
               <section className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium">Options</h3>
+                  <h3 className="text-sm font-medium">{(__hermesT || (globalThis as any).__hermesT)('jobs.options')}</h3>
                   <p
                     className="mt-1 text-xs"
                     style={{ color: 'var(--theme-muted)' }}
@@ -368,7 +369,7 @@ export function EditJobDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Skills</label>
+                  <label className="text-sm font-medium">{(__hermesT || (globalThis as any).__hermesT)('jobs.skills')}</label>
                   <input
                     value={form.skillsInput}
                     onChange={(event) =>
@@ -377,7 +378,7 @@ export function EditJobDialog({
                         skillsInput: event.target.value,
                       }))
                     }
-                    placeholder="research, writing, synthesis"
+                    placeholder={(__hermesT || (globalThis as any).__hermesT)('jobs.skillsPlaceholder')}
                     className="w-full rounded-xl border px-3 py-2.5 text-sm focus:outline-none focus:ring-1"
                     style={{
                       background: 'var(--theme-input)',
@@ -388,7 +389,7 @@ export function EditJobDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Deliver to</label>
+                  <label className="text-sm font-medium">{(__hermesT || (globalThis as any).__hermesT)('jobs.deliverTo')}</label>
                   <div className="flex flex-wrap gap-2">
                     {DELIVERY_OPTIONS.map((option) => {
                       const isActive = form.deliver.includes(option)
@@ -427,7 +428,7 @@ export function EditJobDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Repeat</label>
+                  <label className="text-sm font-medium">{(__hermesT || (globalThis as any).__hermesT)('jobs.repeat')}</label>
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"

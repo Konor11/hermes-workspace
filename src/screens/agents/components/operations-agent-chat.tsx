@@ -6,6 +6,7 @@ import { Markdown } from '@/components/prompt-kit/markdown'
 import { cn } from '@/lib/utils'
 import { formatRelativeTime } from '@/screens/dashboard/lib/formatters'
 import { useAgentChat } from '../hooks/use-agent-chat'
+import { __hermesT } from '@/lib/i18n'
 
 export function OperationsAgentChat({
   agentId,
@@ -37,7 +38,7 @@ export function OperationsAgentChat({
     <section className="rounded-3xl border border-[var(--theme-border)] bg-[var(--theme-card)] p-5 shadow-[0_20px_70px_color-mix(in_srgb,var(--theme-shadow)_14%,transparent)]">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold text-[var(--theme-text)]">Chat</h3>
+          <h3 className="text-lg font-semibold text-[var(--theme-text)]">{(__hermesT || (globalThis as any).__hermesT)('operations.chat')}</h3>
           <p className="mt-1 text-sm text-[var(--theme-muted-2)]">
             Persistent session with {agentName}
           </p>

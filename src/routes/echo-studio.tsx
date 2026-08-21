@@ -1,11 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { __hermesT } from '@/lib/i18n'
 import { usePageTitle } from '@/hooks/use-page-title'
 import { EchoStudioScreen } from '@/screens/echo-studio/echo-studio-screen'
 
 export const Route = createFileRoute('/echo-studio')({
   ssr: false,
   component: function EchoStudioRoute() {
-    usePageTitle('Echo Studio')
+    usePageTitle((__hermesT || (globalThis as any).__hermesT)('page.echoStudio'))
     return <EchoStudioScreen />
   },
   errorComponent: function EchoStudioError({ error }) {

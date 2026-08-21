@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { __hermesT } from '@/lib/i18n'
 import { Editor } from '@monaco-editor/react'
 import { createFileRoute } from '@tanstack/react-router'
 import { HugeiconsIcon } from '@hugeicons/react'
@@ -121,7 +122,7 @@ export const Route = createFileRoute('/files')({
 })
 
 function FilesRoute() {
-  usePageTitle('Files')
+  usePageTitle((__hermesT || (globalThis as any).__hermesT)('page.files'))
   const { settings } = useSettings()
   const [isMobile, setIsMobile] = useState(false)
   const [fileExplorerCollapsed, setFileExplorerCollapsed] = useState(false)

@@ -1,5 +1,6 @@
 'use client'
 
+import { __hermesT } from '@/lib/i18n'
 import {
   AlertDialogAction,
   AlertDialogCancel,
@@ -28,14 +29,14 @@ export function SessionDeleteDialog({
     <AlertDialogRoot open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <div className="p-4">
-          <AlertDialogTitle className="mb-1">Delete Session</AlertDialogTitle>
+          <AlertDialogTitle className="mb-1">{(__hermesT || (globalThis as any).__hermesT)('chat.deleteSession')}</AlertDialogTitle>
           <AlertDialogDescription className="mb-4">
             Are you sure you want to delete "{sessionTitle}"? This action cannot
             be undone.
           </AlertDialogDescription>
           <div className="flex justify-end gap-2">
-            <AlertDialogCancel onClick={onCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
+            <AlertDialogCancel onClick={onCancel}>{(__hermesT || (globalThis as any).__hermesT)('chat.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={onConfirm}>{(__hermesT || (globalThis as any).__hermesT)('chat.delete')}</AlertDialogAction>
           </div>
         </div>
       </AlertDialogContent>

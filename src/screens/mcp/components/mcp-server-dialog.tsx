@@ -12,6 +12,7 @@ import {
   ScrollAreaThumb,
   ScrollAreaViewport,
 } from '@/components/ui/scroll-area'
+import { __hermesT } from '@/lib/i18n'
 import {
   useDiscoverMcpTools,
   useUpsertMcpServer,
@@ -144,16 +145,16 @@ export function McpServerDialog({ open, initial, onClose }: Props) {
             <ScrollAreaViewport className="px-5 py-4">
               <div className="space-y-3">
                 <label className={LABEL}>
-                  <span>Name</span>
+                  <span>{(__hermesT || (globalThis as any).__hermesT)('mcp.name')}</span>
                   <input
                     className={FIELD}
                     value={draft.name}
                     onChange={(e) => update({ name: e.target.value })}
-                    placeholder="my-mcp-server"
+                    placeholder={(__hermesT || (globalThis as any).__hermesT)('mcp.namePlaceholder')}
                   />
                 </label>
                 <label className={LABEL}>
-                  <span>Transport</span>
+                  <span>{(__hermesT || (globalThis as any).__hermesT)('mcp.transport')}</span>
                   <select
                     className={FIELD}
                     value={draft.transportType}
@@ -169,27 +170,27 @@ export function McpServerDialog({ open, initial, onClose }: Props) {
                 </label>
                 {draft.transportType === 'http' ? (
                   <label className={LABEL}>
-                    <span>URL</span>
+                    <span>{(__hermesT || (globalThis as any).__hermesT)('mcp.url')}</span>
                     <input
                       className={FIELD}
                       value={draft.url || ''}
                       onChange={(e) => update({ url: e.target.value })}
-                      placeholder="https://example.com/mcp"
+                      placeholder={(__hermesT || (globalThis as any).__hermesT)('mcp.urlPlaceholder')}
                     />
                   </label>
                 ) : (
                   <>
                     <label className={LABEL}>
-                      <span>Command</span>
+                      <span>{(__hermesT || (globalThis as any).__hermesT)('mcp.command')}</span>
                       <input
                         className={FIELD}
                         value={draft.command || ''}
                         onChange={(e) => update({ command: e.target.value })}
-                        placeholder="/usr/local/bin/my-mcp"
+                        placeholder={(__hermesT || (globalThis as any).__hermesT)('mcp.commandPlaceholder')}
                       />
                     </label>
                     <label className={LABEL}>
-                      <span>Args (one per line)</span>
+                      <span>{(__hermesT || (globalThis as any).__hermesT)('mcp.args')}</span>
                       <textarea
                         className={`${FIELD} h-auto py-2 font-mono text-xs`}
                         rows={3}
@@ -207,7 +208,7 @@ export function McpServerDialog({ open, initial, onClose }: Props) {
                   </>
                 )}
                 <label className={LABEL}>
-                  <span>Auth</span>
+                  <span>{(__hermesT || (globalThis as any).__hermesT)('mcp.auth')}</span>
                   <select
                     className={FIELD}
                     value={draft.authType || 'none'}
@@ -224,7 +225,7 @@ export function McpServerDialog({ open, initial, onClose }: Props) {
                 </label>
                 {draft.authType === 'bearer' ? (
                   <label className={LABEL}>
-                    <span>Bearer token</span>
+                    <span>{(__hermesT || (globalThis as any).__hermesT)('mcp.bearerToken')}</span>
                     <input
                       type="password"
                       className={FIELD}
@@ -233,13 +234,13 @@ export function McpServerDialog({ open, initial, onClose }: Props) {
                       autoComplete="off"
                       placeholder={
                         initialHasBearer
-                          ? '••••••• (currently set — leave blank to keep, type to replace)'
-                          : 'Enter bearer token'
+                          ? (__hermesT || (globalThis as any).__hermesT)('mcp.bearerKeep')
+                          : (__hermesT || (globalThis as any).__hermesT)('mcp.bearerEnter')
                       }
                     />
                     {authEnvRef ? (
                       <span className="text-[11px] text-amber-700 dark:text-amber-300">
-                        Token resolved from env var <code className="font-mono">{authEnvRef}</code> — leave blank to keep current, or type to override.
+                        {(__hermesT || (globalThis as any).__hermesT)('mcp.bearerEnv').replace('{env}', authEnvRef)}
                       </span>
                     ) : initialHasBearer ? (
                       <span className="text-[11px] text-emerald-700 dark:text-emerald-300">

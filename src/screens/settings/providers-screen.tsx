@@ -1,3 +1,4 @@
+import { __hermesT } from '@/lib/i18n'
 import {
   Add01Icon,
   CheckmarkCircle02Icon,
@@ -667,7 +668,7 @@ function SettingCard(props: {
                 })
               }}
             >
-              <option value="">Select…</option>
+              <option value="">{(__hermesT || (globalThis as any).__hermesT)('providers.selectPlaceholder')}</option>
               {(setting.options ?? []).map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -963,7 +964,7 @@ function ModelConfigSection(props: {
         </span>
         <Input
           value={value.baseUrl}
-          placeholder="http://127.0.0.1:11434/v1"
+          placeholder={(__hermesT || (globalThis as any).__hermesT)('providers.ollamaPlaceholder')}
           className="border-[var(--theme-border)] bg-[var(--theme-card)] font-mono text-sm"
           onChange={(event) => {
             onChange({
@@ -1133,7 +1134,7 @@ function ActiveModelCard({
       ) : (
         <div className="mt-5 space-y-4">
           <ModelConfigSection
-            title="Primary Model"
+            title={(__hermesT || (globalThis as any).__hermesT)('providers.primaryModel')}
             description="Default provider, model, and base URL used for new Hermes Agent requests."
             value={primaryConfig}
             onChange={setPrimaryConfig}
@@ -1169,7 +1170,7 @@ function ActiveModelCard({
             {showFallback ? (
               <div className="mt-4">
                 <ModelConfigSection
-                  title="Fallback Settings"
+                  title={(__hermesT || (globalThis as any).__hermesT)('providers.fallbackSettings')}
                   description="Keep these fields empty if you do not want a fallback model configured."
                   value={fallbackConfig}
                   onChange={setFallbackConfig}
@@ -1208,7 +1209,7 @@ function ActiveModelCard({
                     }))
                   }}
                 />
-                <p className="text-xs text-primary-500">Default: 90s</p>
+                <p className="text-xs text-primary-500">{(__hermesT || (globalThis as any).__hermesT)('providers.default90s')}</p>
               </label>
 
               <label className="space-y-1.5">
@@ -1227,7 +1228,7 @@ function ActiveModelCard({
                     }))
                   }}
                 />
-                <p className="text-xs text-primary-500">Default: 60s</p>
+                <p className="text-xs text-primary-500">{(__hermesT || (globalThis as any).__hermesT)('providers.default60s')}</p>
               </label>
             </div>
 
@@ -1594,7 +1595,7 @@ export function ProvidersScreen({ embedded = false }: ProvidersScreenProps) {
         )}
       >
         <BackendUnavailableState
-          feature="Provider Setup"
+          feature={(__hermesT || (globalThis as any).__hermesT)('feature.providerSetup')}
           description={getUnavailableReason('config')}
         />
       </div>
@@ -1636,7 +1637,7 @@ export function ProvidersScreen({ embedded = false }: ProvidersScreenProps) {
                 <Input
                   value={search}
                   type="search"
-                  placeholder="Search settings, paths, or descriptions"
+                  placeholder={(__hermesT || (globalThis as any).__hermesT)('providers.searchPlaceholder')}
                   className="pl-10"
                   onChange={(event) => {
                     setSearch(event.target.value)

@@ -62,6 +62,7 @@ import {
 } from '@/hooks/use-search-modal'
 import { setLocalModelOverride } from '@/screens/chat/local-model-override'
 import { formatModelName } from '@/lib/format-model-name'
+import { __hermesT } from '@/lib/i18n'
 
 type ChatComposerAttachment = {
   id: string
@@ -2692,7 +2693,7 @@ function ChatComposerComponent({
                                     >
                                       <path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z" />
                                     </svg>
-                                    <span>Pinned</span>
+                                    <span>{(__hermesT || (globalThis as any).__hermesT)('chat.pinned')}</span>
                                   </div>
                                   {pinnedEntries.map(renderEntry)}
                                 </div>
@@ -2887,7 +2888,7 @@ function ChatComposerComponent({
                                     </button>
                                   )
                                 })}
-                                {profilesQuery.isError ? <div className="px-3 py-2 text-xs text-red-500">Failed to load profiles</div> : null}
+                                {profilesQuery.isError ? <div className="px-3 py-2 text-xs text-red-500">{(__hermesT || (globalThis as any).__hermesT)('chat.failedLoadProfiles')}</div> : null}
                               </div>
                             )}
                           </div>

@@ -50,7 +50,7 @@ import { getUnavailableReason } from '@/lib/feature-gates'
 import { cn } from '@/lib/utils'
 import { applyTheme, useSettingsStore } from '@/hooks/use-settings'
 import { openHamburgerMenu } from '@/components/mobile-hamburger-menu'
-import { t } from '@/lib/i18n'
+import { __hermesT } from '@/lib/i18n'
 import { useFeatureAvailable } from '@/hooks/use-feature-available'
 
 // `IconSvgObject` isn't exported from @hugeicons/react; reuse the
@@ -288,7 +288,7 @@ function ActivityChart({
 
   return (
     <GlassCard
-      title={t('dash.activity')}
+      title={(__hermesT || (globalThis as any).__hermesT)('dash.activity')}
       titleRight={<span className="text-[10px] text-muted">14 days</span>}
       accentColor={palette.accent}
       className="h-full"
@@ -406,7 +406,7 @@ function SkillsWidget({
   if (!skillsAvailable) {
     return (
       <UnavailableWidget
-        title={t('dash.skills')}
+        title={(__hermesT || (globalThis as any).__hermesT)('dash.skills')}
         description={getUnavailableReason('skills')}
       />
     )
@@ -445,7 +445,7 @@ function SkillsWidget({
           className="text-[10px] font-semibold uppercase tracking-[0.18em]"
           style={{ color: 'var(--theme-muted)' }}
         >
-          {t('dash.skills')}
+          {(__hermesT || (globalThis as any).__hermesT)('dash.skills')}
         </h3>
         <span
           className="font-mono text-[9px] uppercase tracking-[0.15em]"
@@ -960,12 +960,12 @@ export function DashboardScreen() {
             <span>New Chat</span>
           </button>
           <SecondaryAction
-            label={t('nav.terminal')}
+            label={(__hermesT || (globalThis as any).__hermesT)('nav.terminal')}
             icon={ConsoleIcon}
             onClick={() => navigate({ to: '/terminal' })}
           />
           <SecondaryAction
-            label={t('nav.skills')}
+            label={(__hermesT || (globalThis as any).__hermesT)('nav.skills')}
             icon={PuzzleIcon}
             onClick={() => navigate({ to: '/skills' })}
             disabled={!skillsAvailable}
@@ -975,8 +975,8 @@ export function DashboardScreen() {
               hidden widgets. Persisted to localStorage. */}
           <button
             type="button"
-            aria-label={layout.editMode ? t('dash.doneEditing') : t('dash.editLayout')}
-            title={layout.editMode ? t('dash.doneEditing') : t('dash.editLayout')}
+            aria-label={layout.editMode ? (__hermesT || (globalThis as any).__hermesT)('dash.doneEditing') : (__hermesT || (globalThis as any).__hermesT)('dash.editLayout')}
+            title={layout.editMode ? (__hermesT || (globalThis as any).__hermesT)('dash.doneEditing') : (__hermesT || (globalThis as any).__hermesT)('dash.editLayout')}
             onClick={layout.toggleEdit}
             className="inline-flex size-9 items-center justify-center rounded-lg border transition-all hover:scale-[1.05] hover:bg-[var(--theme-card)]/70"
             style={{
@@ -999,8 +999,8 @@ export function DashboardScreen() {
           </button>
           <button
             type="button"
-            aria-label={t('nav.settings')}
-            title={t('nav.settings')}
+            aria-label={(__hermesT || (globalThis as any).__hermesT)('nav.settings')}
+            title={(__hermesT || (globalThis as any).__hermesT)('nav.settings')}
             onClick={() => navigate({ to: '/settings', search: {} })}
             className="inline-flex size-9 items-center justify-center rounded-lg border transition-all hover:scale-[1.05] hover:bg-[var(--theme-card)]/70 hover:text-[var(--theme-text)]"
             style={{
@@ -1145,7 +1145,7 @@ export function DashboardScreen() {
               <WidgetShell id="sessions_intelligence" layout={layout}>
                 {sessionsQuery.isError || sessionsUnavailable ? (
                   <UnavailableWidget
-                    title={t('dash.recentSessions')}
+                    title={(__hermesT || (globalThis as any).__hermesT)('dash.recentSessions')}
                     description={
                       sessionsQuery.isError
                         ? getUnavailableReason('sessions')

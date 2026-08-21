@@ -1,11 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { __hermesT } from '@/lib/i18n'
 import { usePageTitle } from '@/hooks/use-page-title'
 import { OperationsScreen } from '@/screens/agents/operations-screen'
 
 export const Route = createFileRoute('/operations')({
   ssr: false,
   component: function OperationsRoute() {
-    usePageTitle('Operations')
+    usePageTitle((__hermesT || (globalThis as any).__hermesT)('page.operations'))
     return <OperationsScreen />
   },
   errorComponent: function OperationsError({ error }) {

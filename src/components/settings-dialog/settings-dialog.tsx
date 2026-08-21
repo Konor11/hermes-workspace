@@ -1,5 +1,6 @@
 'use client'
 
+import { __hermesT } from '@/lib/i18n'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
   ArrowLeft01Icon,
@@ -611,7 +612,7 @@ function HermesContent() {
   if (!configAvailable) {
     return (
       <BackendUnavailableState
-        feature="Hermes Agent Settings"
+        feature={(__hermesT || (globalThis as any).__hermesT)('feature.hermesAgent')}
         description={getUnavailableReason('config')}
       />
     )

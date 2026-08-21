@@ -12,6 +12,7 @@ import type { HubMcpEntry } from './hooks/use-mcp-hub'
 import type { McpClientInput, McpServer } from '@/types/mcp'
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
+import { __hermesT } from '@/lib/i18n'
 
 type Tab = 'installed' | 'marketplace'
 
@@ -62,11 +63,10 @@ export function McpScreen() {
                 Hermes Workspace · MCP
               </p>
               <h1 className="text-2xl font-medium text-ink text-balance sm:text-3xl">
-                MCP Servers
+                {(__hermesT || (globalThis as any).__hermesT)('page.mcp')}
               </h1>
               <p className="text-sm text-primary-500 text-pretty sm:text-base">
-                Discover, install, and manage Model Context Protocol servers
-                exposed to Hermes Agent.
+                {(__hermesT || (globalThis as any).__hermesT)('mcp.subtitle')}
               </p>
             </div>
             <Button
@@ -77,7 +77,7 @@ export function McpScreen() {
                 setDialogOpen(true)
               }}
             >
-              Add Server
+              {(__hermesT || (globalThis as any).__hermesT)('mcp.addServer')}
             </Button>
           </div>
           {capabilityMode === 'fallback' ? (
@@ -85,8 +85,7 @@ export function McpScreen() {
               role="status"
               className="mt-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
             >
-              ⚠ Local fallback mode — using config.yaml. Test, Discover, and
-              Logs require the new hermes-agent /api/mcp endpoints.
+              ⚠ {(__hermesT || (globalThis as any).__hermesT)('mcp.fallbackMode')}
             </div>
           ) : null}
         </header>
@@ -99,10 +98,10 @@ export function McpScreen() {
                 variant="default"
               >
                 <TabsTab value="installed" className="min-w-[110px]">
-                  Installed
+                  {(__hermesT || (globalThis as any).__hermesT)('mcp.tabInstalled')}
                 </TabsTab>
                 <TabsTab value="marketplace" className="min-w-[120px]">
-                  Marketplace
+                  {(__hermesT || (globalThis as any).__hermesT)('mcp.tabMarketplace')}
                 </TabsTab>
               </TabsList>
 
@@ -111,8 +110,8 @@ export function McpScreen() {
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={
                   tab === 'marketplace'
-                    ? 'Search MCP catalog…'
-                    : 'Search servers by name'
+                    ? (__hermesT || (globalThis as any).__hermesT)('mcp.searchCatalog')
+                    : (__hermesT || (globalThis as any).__hermesT)('mcp.searchServers')
                 }
                 className={`${TOOLBAR_FIELD} flex-1`}
               />
@@ -156,14 +155,14 @@ export function McpScreen() {
                   className="h-7 px-2 text-xs"
                   onClick={() => setSourcesOpen(true)}
                 >
-                  Sources
+                  {(__hermesT || (globalThis as any).__hermesT)('mcp.sources')}
                 </Button>
               </div>
 
               {hubQuery.data?.warnings && hubQuery.data.warnings.length > 0 ? (
                 hubQuery.data.results && hubQuery.data.results.length > 0 ? (
                   <p className="text-xs text-amber-700 dark:text-amber-300">
-                    ⚠ One or more sources unavailable; showing local results.
+                    ⚠ {(__hermesT || (globalThis as any).__hermesT)('mcp.oneOrMoreSources')}
                     <span className="ml-1 text-[11px] text-primary-500">
                       ({hubQuery.data.warnings[0]})
                     </span>
@@ -179,7 +178,7 @@ export function McpScreen() {
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
                   {hubQuery.error instanceof Error
                     ? hubQuery.error.message
-                    : 'Failed to load marketplace.'}
+                    : (__hermesT || (globalThis as any).__hermesT)('mcp.failedLoadMarketplace')}
                 </div>
               ) : null}
 
@@ -200,8 +199,8 @@ export function McpScreen() {
                     onClick={() => hubQuery.fetchNextPage()}
                   >
                     {hubQuery.isFetchingNextPage
-                      ? 'Loading…'
-                      : `Load more (${(hubQuery.data?.results.length ?? 0).toLocaleString()} of ${(hubQuery.data?.total ?? 0).toLocaleString()})`}
+                      ? (__hermesT || (globalThis as any).__hermesT)('mcp.loading')
+                      : `${(__hermesT || (globalThis as any).__hermesT)('mcp.loadMore')} (${(hubQuery.data?.results.length ?? 0).toLocaleString()} / ${(hubQuery.data?.total ?? 0).toLocaleString()})`}
                   </Button>
                 </div>
               ) : null}
@@ -212,7 +211,7 @@ export function McpScreen() {
         <footer className="flex items-center justify-between rounded-xl border border-primary-200 bg-primary-50/80 px-3 py-2.5 text-sm text-primary-500 tabular-nums">
           <span>{totalLabel}</span>
           <span className="text-xs">
-            mode: {capabilityMode === 'fallback' ? 'config fallback' : 'native'}
+            mode: {capabilityMode === 'fallback' ? (__hermesT || (globalThis as any).__hermesT)('mcp.modeFallback') : (__hermesT || (globalThis as any).__hermesT)('mcp.modeNative')}
           </span>
         </footer>
       </div>
@@ -250,15 +249,15 @@ function ServerList({ query, onEdit }: ServerListProps) {
   if (query.isLoading) {
     return (
       <EmptyCard
-        title="Loading servers…"
-        description="Fetching MCP servers from Hermes Agent."
+        title={(__hermesT || (globalThis as any).__hermesT)('mcp.loadingServers')}
+        description={(__hermesT || (globalThis as any).__hermesT)('mcp.fetchingServers')}
       />
     )
   }
   if (query.isError) {
     return (
       <EmptyCard
-        title="Failed to load servers"
+        title={(__hermesT || (globalThis as any).__hermesT)('mcp.failedLoadServers')}
         description={query.error.message}
         tone="danger"
       />
@@ -267,8 +266,8 @@ function ServerList({ query, onEdit }: ServerListProps) {
   if (servers.length === 0) {
     return (
       <EmptyCard
-        title="No MCP servers configured"
-        description="Add a server from the My Presets tab or click Add Server above."
+        title={(__hermesT || (globalThis as any).__hermesT)('mcp.noServers')}
+        description={(__hermesT || (globalThis as any).__hermesT)('mcp.noServersDesc')}
       />
     )
   }
@@ -310,25 +309,25 @@ function EmptyCard({ title, description, tone = 'neutral' }: EmptyCardProps) {
 
 const TRUST_PILL: Record<string, { label: string; className: string }> = {
   official: {
-    label: 'Official',
+    label: (__hermesT || (globalThis as any).__hermesT)('mcp.trustOfficial'),
     className:
       'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-300',
   },
   community: {
-    label: 'Community',
+    label: (__hermesT || (globalThis as any).__hermesT)('mcp.trustCommunity'),
     className:
       'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300',
   },
   unverified: {
-    label: 'Unverified',
+    label: (__hermesT || (globalThis as any).__hermesT)('mcp.trustUnverified'),
     className:
       'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300',
   },
 }
 
 const SOURCE_LABEL: Record<string, string> = {
-  'mcp-get': 'mcp.run',
-  local: 'Local',
+  'mcp-get': (__hermesT || (globalThis as any).__hermesT)('mcp.sourceMcpRun'),
+  local: (__hermesT || (globalThis as any).__hermesT)('mcp.sourceLocal'),
 }
 
 interface MarketplaceGridProps {
@@ -363,8 +362,8 @@ function MarketplaceGrid({
   if (entries.length === 0) {
     return (
       <EmptyCard
-        title="No results"
-        description="Try a different search term. The registry may be unavailable — local presets are used as fallback."
+        title={(__hermesT || (globalThis as any).__hermesT)('mcp.noResults')}
+        description={(__hermesT || (globalThis as any).__hermesT)('mcp.noResultsDesc')}
       />
     )
   }
@@ -393,14 +392,14 @@ function MarketplaceGrid({
                     {entry.installed ? (
                       <span
                         className="shrink-0 rounded-md border border-primary/40 bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary"
-                        aria-label="Installed"
+                        aria-label={(__hermesT || (globalThis as any).__hermesT)('mcp.installed')}
                       >
-                        Installed
+                        {(__hermesT || (globalThis as any).__hermesT)('mcp.installed')}
                       </span>
                     ) : null}
                   </div>
                   <p className="line-clamp-2 text-xs text-primary-500 text-pretty">
-                    {entry.description || 'No description.'}
+                    {entry.description || (__hermesT || (globalThis as any).__hermesT)('mcp.noDescription')}
                   </p>
                 </div>
               </div>
@@ -427,7 +426,7 @@ function MarketplaceGrid({
               <div className="mt-auto flex items-center justify-end gap-2 pt-2">
                 {entry.installed ? (
                   <span className="text-xs text-primary-500">
-                    Already installed
+                    {(__hermesT || (globalThis as any).__hermesT)('mcp.alreadyInstalled')}
                   </span>
                 ) : (
                   <Button
@@ -435,7 +434,7 @@ function MarketplaceGrid({
                     size="sm"
                     onClick={() => onInstall(entry)}
                   >
-                    Install
+                    {(__hermesT || (globalThis as any).__hermesT)('mcp.install')}
                   </Button>
                 )}
               </div>
