@@ -1,21 +1,18 @@
 #!/usr/bin/env bash
 #
-# Hermes Workspace — автоустановка на чистый сервер (Ubuntu/Debian).
+# Hermes Workspace — интерактивная установка на чистый сервер (Ubuntu/Debian).
 #
-# Два режима рантайма (--mode):
-#   systemd  (по умолчанию) — Hermes Agent ставится системно, gateway/dashboard/
-#            workspace поднимаются как systemd-юниты, Caddy ставится системно.
-#   docker   — всё в контейнерах: Hermes Agent (nousresearch/hermes-agent),
-#            Workspace (собранный из Dockerfile репо) и Caddy — через docker compose.
+# Запуск без аргументов — скрипт сам задаст понятные вопросы (TUI):
+#   режим рантайма (systemd / docker), домен workspace, отдельный домен
+#   для dashboard, и секреты (пароли/токены). Enter принимает значение по
+#   умолчанию. Можно также передать флаги для неинтерактивного режима.
 #
 # Порты: workspace ищет свободный 3000→3001→… ; gateway 8642 / dashboard 9119
-# проверяются и при необходимости сдвигаются. Домены задаются через
-# --domain (workspace), --dashboard-domain, --gateway-domain — любые FQDN.
+# проверяются и при необходимости сдвигаются автоматически.
 #
 # Использование:
-#   sudo bash scripts/install.sh --domain ws.example.com
-#   sudo bash scripts/install.sh --domain ws.example.com --dashboard-domain hermes.example.com
-#   sudo bash scripts/install.sh --mode docker --domain ws.example.com
+#   sudo bash scripts/install.sh
+#   sudo bash scripts/install.sh --domain ws.example.com --mode docker
 #   sudo bash scripts/install.sh --dry-run
 #
 set -euo pipefail
@@ -25,9 +22,9 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 if [[ -t 1 ]]; then
   C_RED=$'\033[0;31m'; C_GRN=$'\033[0;32m'; C_YEL=$'\033[0;33m'
-  C_BLU=$'\033[0;34m'; C_RST=$'\033[0m'; C_BLD=$'\033[1m'
+  C_BLU=$'\033[0;34m'; C_RST=$'\033[0m'; C_BLD=$'\033[1m'; C_CYN=$'\033[0;36m'
 else
-  C_RED=''; C_GRN=''; C_YEL=''; C_BLU=''; C_RST=''; C_BLD=''
+  C_RED=''; C_GRN=''; C_YEL=''; C_BLU=''; C_RST=''; C_BLD=''; C_CYN=''
 fi
 
 info()  { echo "${C_BLU}ℹ${C_RST} $*"; }
@@ -38,7 +35,7 @@ die()   { err "$*"; exit 1; }
 step()  { echo; echo "${C_BLD}${C_BLU}==>${C_RST} $*"; }
 
 # ---------------------------------------------------------------------------
-# Параметры
+# Параметры (с дефолтами; перекрываются TUI или флагами)
 # ---------------------------------------------------------------------------
 WS_DIR="/root/hermes-workspace"
 REPO_URL="https://github.com/outsourc-e/hermes-workspace.git"
@@ -46,33 +43,101 @@ GIT_REF="main"
 DO_BUILD=1
 UPDATE=0
 DRY_RUN=0
-MODE="systemd"
+MODE=""
 DOMAIN=""
 DASH_DOMAIN=""
 GW_DOMAIN=""
+NONINTERACTIVE=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --dir)             WS_DIR="$2"; shift 2 ;;
-    --repo)            REPO_URL="$2"; shift 2 ;;
-    --ref)             GIT_REF="$2"; shift 2 ;;
-    --mode)            MODE="$2"; shift 2 ;;
-    --domain)          DOMAIN="$2"; shift 2 ;;
-    --dashboard-domain) DASH_DOMAIN="$2"; shift 2 ;;
-    --gateway-domain)  GW_DOMAIN="$2"; shift 2 ;;
-    --no-build)        DO_BUILD=0; shift ;;
-    --update)          UPDATE=1; shift ;;
-    --dry-run)         DRY_RUN=1; shift ;;
+    --dir)               WS_DIR="$2"; shift 2 ;;
+    --repo)              REPO_URL="$2"; shift 2 ;;
+    --ref)               GIT_REF="$2"; shift 2 ;;
+    --mode)              MODE="$2"; shift 2 ;;
+    --domain)            DOMAIN="$2"; shift 2 ;;
+    --dashboard-domain)  DASH_DOMAIN="$2"; shift 2 ;;
+    --gateway-domain)    GW_DOMAIN="$2"; shift 2 ;;
+    --no-build)          DO_BUILD=0; shift ;;
+    --update)            UPDATE=1; shift ;;
+    --dry-run)           DRY_RUN=1; shift ;;
+    --yes|-y)            NONINTERACTIVE=1; shift ;;
     -h|--help)
       grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) die "Неизвестный аргумент: $1" ;;
   esac
 done
 
-[[ "$MODE" == "systemd" || "$MODE" == "docker" ]] || die "Неизвестный --mode: $MODE (systemd|docker)"
 run() { if [[ "$DRY_RUN" -eq 1 ]]; then info "[dry-run] $*"; else eval "$@"; fi; }
 [[ "$(id -u)" -eq 0 ]] || die "Запускай от root: sudo bash $0"
 [[ "${BASH_VERSINFO:-0}" -ge 4 ]] || die "Нужен bash 4+ (у тебя ${BASH_VERSION})"
+
+# ---------------------------------------------------------------------------
+# TUI-помощники
+# ---------------------------------------------------------------------------
+# ask_choice <вопрос> <дефолт> <вариант1> [вариант2] ...  -> пишет ответ в $REPLY
+ask_choice() {
+  local q="$1"; local def="${2:-}"; shift 2; local opts=("$@")
+  local n=${#opts[@]}
+  echo "${C_BLD}${C_CYN}$q${C_RST}"
+  local i
+  for i in "${!opts[@]}"; do
+    printf "  %d) %s%s\n" "$((i+1))" "${opts[$i]}" "$([[ "$def" == "${opts[$i]}" ]] && echo " ${C_GRN}(по умолчанию)${C_RST}")"
+  done
+  local ans=""
+  if [[ -t 0 ]]; then
+    read -r -p "  Выбор [1-$n${def:+, $def}]: " ans
+  else
+    read -r ans   # читаем из stdin (пайп/автотест)
+  fi
+  if [[ -z "$ans" && -n "$def" ]]; then REPLY="$def"; return; fi
+  if [[ "$ans" =~ ^[0-9]+$ ]] && (( ans>=1 && ans<=n )); then
+    REPLY="${opts[$((ans-1))]}"; return
+  fi
+  for i in "${!opts[@]}"; do
+    [[ "$ans" == "${opts[$i]}" ]] && { REPLY="${opts[$i]}"; return; }
+  done
+  REPLY="${def:-${opts[0]}}"
+}
+
+# ask_text <вопрос> <дефолт>  -> $REPLY
+ask_text() {
+  local q="$1"; local def="${2:-}"
+  local hint=""; [[ -n "$def" ]] && hint="${C_YEL} [${def}]${C_RST}"
+  read -r -p "  $q$hint: " REPLY </dev/tty 2>&1 || REPLY=""
+  [[ -z "$REPLY" ]] && REPLY="$def"
+}
+
+# ---------------------------------------------------------------------------
+# TUI-опрос (только если не заданы флагами / не --yes)
+# ---------------------------------------------------------------------------
+tui_configure() {
+  clear 2>/dev/null || true
+  echo "${C_BLD}${C_GRN}╔════════════════════════════════════════════════════════════╗${C_RST}"
+  echo "${C_BLD}${C_GRN}║        Установка Hermes Workspace — мастер настройки        ║${C_RST}"
+  echo "${C_BLD}${C_GRN}╚════════════════════════════════════════════════════════════╝${C_RST}"
+  echo
+
+  [[ -z "$MODE" ]] && { ask_choice "Режим рантайма:" "systemd" "systemd" "docker"; MODE="$REPLY"; }
+  [[ -z "$DOMAIN" ]] && {
+    ask_text "Домен для Workspace (оставь пустым — доступ по IP:3000)" ""; DOMAIN="$REPLY"
+  }
+  # dashboard отдельным доменом?
+  if [[ -z "$DASH_DOMAIN" ]]; then
+    ask_choice "Отдельный домен для Dashboard (как hermes.dktunnel.xyz)?" "нет" "нет" "да"; local d="$REPLY"
+    if [[ "$d" == "да" ]]; then
+      ask_text "Домен dashboard (напр. hermes.твой-домен.com)" ""; DASH_DOMAIN="$REPLY"
+    fi
+  fi
+  echo
+  ok "Конфигурация принята: режим=$MODE, domain=${DOMAIN:-<IP>}, dashboard=${DASH_DOMAIN:-<нет>}"
+}
+
+# Запуск TUI, если не все ключевые параметры заданы флагами и не --yes
+if [[ "$NONINTERACTIVE" -eq 0 && ( -z "$MODE" || -z "$DOMAIN" && -z "$DASH_DOMAIN" ) ]]; then
+  tui_configure
+fi
+[[ -n "$MODE" ]] || MODE="systemd"   # fallback если вообще ничего не задано
 
 ENV_FILE="/root/.hermes/workspace_env.conf"
 CADDY_FILE="/etc/caddy/Caddyfile"

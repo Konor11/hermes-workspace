@@ -66,30 +66,35 @@ cd /root/hermes-workspace
 
 Скрипт: [`scripts/install.sh`](https://github.com/Konor11/hermes-workspace/blob/main/scripts/install.sh)
 
+Просто запусти его — он сам задаст понятные вопросы в интерактивном меню
+(режим рантайма, домен workspace, отдельный домен для dashboard, секреты).
+Enter принимает значение по умолчанию.
+
 ```bash
-# Минимум: systemd-режим, workspace на твоём домене
-sudo bash scripts/install.sh --domain dp.mydomain.com
+# Интерактивный мастер (рекомендуется)
+sudo bash scripts/install.sh
 
-# С отдельным доменом для dashboard (как у оригинала hermes.dktunnel.xyz)
-sudo bash scripts/install.sh \
-  --domain dp.mydomain.com \
-  --dashboard-domain hermes.mydomain.com
-
-# Всё в Docker-контейнерах вместо systemd
+# Или сразу с параметрами (неинтерактивно)
+sudo bash scripts/install.sh --domain dp.mydomain.com --dashboard-domain hermes.mydomain.com
 sudo bash scripts/install.sh --mode docker --domain dp.mydomain.com
 
 # Проверить, что всё пройдёт без ошибок, ничего не меняя
-sudo bash scripts/install.sh --dry-run --domain dp.mydomain.com
+sudo bash scripts/install.sh --dry-run
 ```
 
+Интерактивное меню спросит:
+- **Режим рантайма** — `systemd` (по умолчанию) или `docker`.
+- **Домен для Workspace** — введи свой (напр. `dp.mydomain.com`) или оставь пустым (доступ по IP).
+- **Отдельный домен для Dashboard** — `нет` (по умолчанию) или `да` + ввод домена (как `hermes.dktunnel.xyz`).
+- **Секреты** (пароль workspace, basic-auth дашборда, API-токен гейтвея — подставляется авто).
+
 Скрипт сам:
-1. проверит зависимости (bash 4+, Node 22+, curl, git, python3);
-2. установит Hermes Agent (если ещё нет);
+1. проверит зависимости (bash 4+, Node 22+, curl, git, python3) и доустановит build-пакеты;
+2. установит Hermes Agent **0.20.4** (если ещё нет);
 3. поднимет **Gateway** (`:8642`) и **Dashboard** (`:9119`) — как systemd-юниты или контейнеры;
 4. соберёт Workspace (`npm install` + `npm run build`);
-5. спросит интерактивно 4 секрета и запишет их в `/root/.hermes/workspace_env.conf` (chmod 600);
-6. запустит Workspace (порт `3000`, либо `3001`/`3002`/… если занят);
-7. установит **Caddy** и настроит reverse-proxy с авто-TLS (Let's Encrypt) на твой домен.
+5. запустит Workspace (порт `3000`, либо `3001`/`3002`/… если занят);
+6. установит **Caddy** и настроит reverse-proxy с авто-TLS (Let's Encrypt) на твой домен.
 
 ### Шаг 4. Настрой DNS и открой порты
 
