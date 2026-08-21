@@ -42,8 +42,9 @@
 # Обнови систему
 apt-get update && apt-get -y upgrade
 
-# Установи curl, git, python3 (нужны скрипту)
-apt-get install -y curl git python3
+# Системные пакеты сборки (нужны pip при установке hermes-agent и node-gyp в workspace)
+apt-get install -y curl git python3 build-essential python3-dev \
+  python3-venv libssl-dev libffi-dev libsqlite3-dev ca-certificates gnupg
 
 # Установи Node.js 22+ (пример — NodeSource; можно свой способ)
 curl -fsSL https://deb.nodesource.com/setup_22.x | bash -

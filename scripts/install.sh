@@ -108,6 +108,31 @@ next_free_port() {
 step "Проверка зависимостей"
 need() { command -v "$1" >/dev/null 2>&1 || die "Не найдено: $1"; }
 need curl; need git; need python3
+
+# Системные пакеты, нужные для сборки hermes-agent (pip) и workspace (node-gyp):
+# gcc/g++/make, заголовки python и openssl, а также базовые утилиты.
+ensure_build_deps() {
+  if command -v apt-get >/dev/null 2>&1; then
+    info "Ставлю системные зависимости сборки (apt) …"
+    run "apt-get update -y"
+    run "DEBIAN_FRONTEND=noninteractive apt-get install -y \
+      build-essential python3-dev python3-venv python3-pip \
+      libssl-dev libffi-dev libsqlite3-dev \
+      curl git ca-certificates gnupg lsb-release"
+  elif command -v dnf >/dev/null 2>&1; then
+    info "Ставлю системные зависимости сборки (dnf) …"
+    run "dnf -y install gcc gcc-c++ make python3-devel openssl-devel \
+      libffi-devel sqlite-devel curl git"
+  elif command -v apk >/dev/null 2>&1; then
+    info "Ставлю системные зависимости сборки (apk) …"
+    run "apk add --no-cache build-base python3-dev openssl-dev libffi-dev \
+      sqlite-dev curl git"
+  else
+    warn "Неизвестный пакетный менеджер — пропускаю установку системных зависимостей."
+    warn "Убедись, что установлены: gcc, g++, make, python3-dev, libssl-dev."
+  fi
+}
+
 if ! command -v node >/dev/null 2>&1; then
   die "Node.js не установлен. Поставь Node 22+ и повтори."
 fi
@@ -135,6 +160,7 @@ if command -v hermes >/dev/null 2>&1 && hermes --version >/dev/null 2>&1; then
   ok "Hermes Agent уже установлен: $(hermes --version 2>/dev/null || echo present)"
 else
   warn "Hermes Agent не найден. Ставлю …"
+  ensure_build_deps
   if curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/install.sh -o /tmp/hermes-install.sh 2>/dev/null; then
     run bash /tmp/hermes-install.sh || true
   fi
