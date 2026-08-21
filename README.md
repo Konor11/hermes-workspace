@@ -26,13 +26,97 @@
 > **Это форк ([Konor11/hermes-workspace](https://github.com/Konor11/hermes-workspace)).**
 > Добавлено поверх upstream `outsourc-e/hermes-workspace`:
 > - 🇷🇺 **Полная русская локализация UI** — интерфейс переключается на русский автоматически (по `navigator.language` / `localStorage['hermes-locale']`).
-> - 🛠️ **Скрипт автоустановки** [`scripts/install.sh`](./scripts/install.sh) — ставит Hermes Agent, Gateway, Dashboard, Workspace и Caddy (reverse-proxy + HTTPS) одной командой. Поддерживает режимы `systemd` и `docker`, авто-подбор свободных портов и произвольные домены.
+> - 🛠️ **Скрипт автоустановки** [`scripts/install.sh`](https://github.com/Konor11/hermes-workspace/blob/main/scripts/install.sh) — ставит Hermes Agent, Gateway, Dashboard, Workspace и Caddy (reverse-proxy + HTTPS) одной командой. Поддерживает режимы `systemd` и `docker`, авто-подбор свободных портов и произвольные домены.
 >
 > Остальное — ванильный upstream (zero-fork behavior сохранён).
 
 ---
 
 ## 🚀 Быстрая установка (этот форк)
+
+Полная инструкция для чистого сервера (Ubuntu/Debian, доступ по SSH как root).
+
+### Шаг 1. Подготовка сервера
+
+```bash
+# Обнови систему
+apt-get update && apt-get -y upgrade
+
+# Установи curl, git, python3 (нужны скрипту)
+apt-get install -y curl git python3
+
+# Установи Node.js 22+ (пример — NodeSource; можно свой способ)
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+apt-get install -y nodejs
+node --version   # должно быть v22.x
+```
+
+> Если будешь ставить в режиме `--mode docker`, дополнительно поставь Docker
+> (с `docker compose` v2): https://docs.docker.com/engine/install/
+
+### Шаг 2. Клонируй форк
+
+```bash
+git clone https://github.com/Konor11/hermes-workspace.git /root/hermes-workspace
+cd /root/hermes-workspace
+```
+
+### Шаг 3. Запусти скрипт установки
+
+Скрипт: [`scripts/install.sh`](https://github.com/Konor11/hermes-workspace/blob/main/scripts/install.sh)
+
+```bash
+# Минимум: systemd-режим, workspace на твоём домене
+sudo bash scripts/install.sh --domain dp.mydomain.com
+
+# С отдельным доменом для dashboard (как у оригинала hermes.dktunnel.xyz)
+sudo bash scripts/install.sh \
+  --domain dp.mydomain.com \
+  --dashboard-domain hermes.mydomain.com
+
+# Всё в Docker-контейнерах вместо systemd
+sudo bash scripts/install.sh --mode docker --domain dp.mydomain.com
+
+# Проверить, что всё пройдёт без ошибок, ничего не меняя
+sudo bash scripts/install.sh --dry-run --domain dp.mydomain.com
+```
+
+Скрипт сам:
+1. проверит зависимости (bash 4+, Node 22+, curl, git, python3);
+2. установит Hermes Agent (если ещё нет);
+3. поднимет **Gateway** (`:8642`) и **Dashboard** (`:9119`) — как systemd-юниты или контейнеры;
+4. соберёт Workspace (`npm install` + `npm run build`);
+5. спросит интерактивно 4 секрета и запишет их в `/root/.hermes/workspace_env.conf` (chmod 600);
+6. запустит Workspace (порт `3000`, либо `3001`/`3002`/… если занят);
+7. установит **Caddy** и настроит reverse-proxy с авто-TLS (Let's Encrypt) на твой домен.
+
+### Шаг 4. Настрой DNS и открой порты
+
+- Направь DNS-запись **A** твоего домена (например `dp.mydomain.com`) на IP сервера.
+- Открой в фаерволе порты **80** и **443** (Caddy использует их для выпуска TLS-сертификата).
+- Если задал `--dashboard-domain` — и его тоже направь на тот же IP.
+
+Через ~30 секунд после запуска Caddy выпустит сертификат, и Workspace откроется по `https://dp.mydomain.com`.
+
+### Шаг 5. Вход
+
+- Открой `https://dp.mydomain.com` в браузере.
+- Войди под паролем, который ввёл на шаге 3 (секрет `HERMES_PASSWORD`).
+- Dashboard (если задал `--dashboard-domain`): `https://hermes.mydomain.com` — basic-auth из шага 3.
+
+### Полезные команды
+
+```bash
+# Логи Workspace (systemd-режим)
+journalctl -u hermes-workspace -f
+
+# Перезапуск после правок
+sudo bash scripts/install.sh --update --domain dp.mydomain.com
+
+# Docker-режим: логи и перезапуск
+docker compose -f /root/hermes-workspace/docker-compose.yml logs -f
+docker compose -f /root/hermes-workspace/docker-compose.yml up -d
+```
 
 ## Swarm Mode
 
@@ -876,7 +960,7 @@ PRs are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
-## 🛠️ Скрипт автоустановки (`scripts/install.sh`)
+## 🛠️ Скрипт автоустановки ([`scripts/install.sh`](https://github.com/Konor11/hermes-workspace/blob/main/scripts/install.sh))
 
 Одной командой поднимает полный стек на чистом Ubuntu/Debian-сервере: **Hermes Agent → Gateway → Dashboard → Workspace**, плюс **Caddy** как reverse-proxy с авто-TLS (Let's Encrypt).
 
