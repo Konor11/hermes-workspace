@@ -189,6 +189,7 @@ if [[ "$MODE" == "systemd" ]]; then
     GEN_KEY=$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 32)
     cat > "$HERMES_ENV" <<EOF
 HOME=/root
+HERMES_HOME=/root
 API_SERVER_ENABLED=true
 API_SERVER_KEY=$GEN_KEY
 API_SERVER_HOST=0.0.0.0
@@ -241,7 +242,7 @@ Wants=hermes-gateway.service
 Type=simple
 User=root
 Environment="HOME=/root"
-EnvironmentFile=/root/.hermes/dashboard_auth_env.conf
+EnvironmentFile=-/root/.hermes/dashboard_auth_env.conf
 ExecStart=/usr/local/bin/hermes dashboard --host 0.0.0.0 --port $DASH_PORT --no-open --tui
 Restart=always
 RestartSec=5
@@ -361,6 +362,22 @@ echo "(HERMES_API_TOKEN = API_SERVER_KEY гейтвея; basic-auth — из das
     fi
 [[ "$DRY_RUN" -eq 0 ]] && chmod 600 "$ENV_FILE"
 ok "Записано: $ENV_FILE (chmod 600)"
+
+# Файл basic-auth для дашборда (читается unit'ом hermes-dashboard.service через
+# EnvironmentFile). Если не создать — systemd считает отсутствующий файл фатальным.
+DASH_AUTH="/root/.hermes/dashboard_auth_env.conf"
+if [[ "$DRY_RUN" -eq 0 ]]; then
+  # вытащим значения из только что записанного ENV_FILE
+  bu=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_USERNAME=' "$ENV_FILE" | cut -d= -f2-)
+  bp=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=' "$ENV_FILE" | cut -d= -f2-)
+  : "${bu:=admin}"; : "${bp:=admin}"
+  cat > "$DASH_AUTH" <<EOF
+HERMES_DASHBOARD_BASIC_AUTH_USERNAME=$bu
+HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=$bp
+EOF
+  chmod 600 "$DASH_AUTH"
+  ok "Записано: $DASH_AUTH (basic-auth дашборда)"
+fi
 
 # ---------------------------------------------------------------------------
 # 7. Workspace unit / контейнер
