@@ -303,21 +303,42 @@ if [[ "$MODE" == "systemd" ]]; then
   GW_UNIT="/etc/systemd/system/hermes-gateway.service"
   DASH_UNIT="/etc/systemd/system/hermes-dashboard.service"
 
-  # /root/.hermes/.env — нужен gateway для запуска API-сервера (API_SERVER_KEY)
+  # /root/.hermes/.env — нужен gateway для запуска API-сервера (API_SERVER_KEY).
+  # Генерим ключ один раз и переиспользуем для workspace (HERMES_API_TOKEN),
+  # чтобы пользователю не приходилось вводить его вручную.
   HERMES_ENV="/root/.hermes/.env"
-  if [[ ! -f "$HERMES_ENV" && "$DRY_RUN" -eq 0 ]]; then
+  GEN_KEY=""
+  if [[ "$DRY_RUN" -eq 0 ]]; then
     mkdir -p /root/.hermes
-    # Сгенерируем ключ, если ещё нет (используем для gateway API + workspace)
-    GEN_KEY=$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 32)
-    cat > "$HERMES_ENV" <<EOF
+    # если в существующем .env уже есть API_SERVER_KEY — берём его
+    if [[ -f "$HERMES_ENV" ]]; then
+      GEN_KEY=$(grep -E '^API_SERVER_KEY=' "$HERMES_ENV" | cut -d= -f2- | head -c 64)
+    fi
+    # иначе генерим новый и дописываем/создаём .env
+    if [[ -z "$GEN_KEY" ]]; then
+      GEN_KEY=$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 32)
+      if [[ -f "$HERMES_ENV" ]]; then
+        # дописать недостающие ключи, не затирая существующие
+        grep -q '^API_SERVER_ENABLED=' "$HERMES_ENV" || echo "API_SERVER_ENABLED=true" >> "$HERMES_ENV"
+        grep -q '^API_SERVER_KEY=' "$HERMES_ENV"    || echo "API_SERVER_KEY=$GEN_KEY" >> "$HERMES_ENV"
+        grep -q '^API_SERVER_HOST=' "$HERMES_ENV"   || echo "API_SERVER_HOST=0.0.0.0" >> "$HERMES_ENV"
+        grep -q '^HOME=' "$HERMES_ENV"              || echo "HOME=/root" >> "$HERMES_ENV"
+        grep -q '^HERMES_HOME=' "$HERMES_ENV"       || echo "HERMES_HOME=/root" >> "$HERMES_ENV"
+        ok ".env дополнен API_SERVER_KEY (переиспользуется для workspace)"
+      else
+        cat > "$HERMES_ENV" <<EOF
 HOME=/root
 HERMES_HOME=/root
 API_SERVER_ENABLED=true
 API_SERVER_KEY=$GEN_KEY
 API_SERVER_HOST=0.0.0.0
 EOF
-    chmod 600 "$HERMES_ENV"
-    ok ".env gateway записан (API_SERVER_KEY сгенерирован)"
+        ok ".env gateway записан (API_SERVER_KEY сгенерирован)"
+      fi
+      chmod 600 "$HERMES_ENV"
+    else
+      ok "API_SERVER_KEY уже есть в .env — переиспользуется"
+    fi
   elif [[ "$DRY_RUN" -eq 1 ]]; then
     info "[dry-run] пропускаю запись $HERMES_ENV"
   fi
@@ -465,9 +486,16 @@ cur_bu=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_USERNAME=' "$ENV_FILE" 2>/dev/nul
 cur_bp=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
 
 echo "Введи параметры подключения к Hermes Gateway/Dashboard."
-echo "(HERMES_API_TOKEN = API_SERVER_KEY гейтвея; basic-auth — из dashboard_auth_env.conf)"
+echo "(HERMES_API_TOKEN = API_SERVER_KEY гейтвея — подставляется автоматически; basic-auth — из dashboard_auth_env.conf)"
 {
-  prompt_secret "HERMES_API_TOKEN" "Bearer-токен гейтвея (API_SERVER_KEY)" "$cur_token"
+  # HERMES_API_TOKEN: не спрашиваем, если GEN_KEY сгенерирован (берём его),
+  # чтобы пользователю не нужно было вводить ключ вручную.
+  if [[ -n "${GEN_KEY:-}" ]]; then
+    printf '%s=%s\n' "HERMES_API_TOKEN" "$GEN_KEY"
+    info "HERMES_API_TOKEN = сгенерированный API_SERVER_KEY (авто, без ввода)"
+  else
+    prompt_secret "HERMES_API_TOKEN" "Bearer-токен гейтвея (API_SERVER_KEY)" "$cur_token"
+  fi
   prompt_secret "HERMES_PASSWORD" "пароль входа в Workspace" "$cur_pw"
   prompt_secret "HERMES_DASHBOARD_BASIC_AUTH_USERNAME" "basic-auth user дашборда" "$cur_bu"
   prompt_secret "HERMES_DASHBOARD_BASIC_AUTH_PASSWORD" "basic-auth пароль дашборда" "$cur_bp"
