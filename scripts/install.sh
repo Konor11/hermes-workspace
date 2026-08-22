@@ -275,21 +275,33 @@ else
   warn "Hermes Agent не найден. Ставлю …"
   # ensure_build_deps уже вызван в блоке 1 (ставит gcc/g++/make/python-dev, Node 22, Caddy).
   # Официальный инсталлятор (https://hermes-agent.nousresearch.com/install.sh)
-  run "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
-  # Убедимся, что 'hermes' доступен в PATH
+  run "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- </dev/null"
+  hash -r 2>/dev/null || true
+  # Убедимся, что 'hermes' доступен. Ищем в типичных местах + широкий find.
   if ! command -v hermes >/dev/null 2>&1; then
-    for p in /usr/local/bin/hermes /root/.local/bin/hermes /usr/bin/hermes; do
-      [[ -x "$p" ]] && { ln -sf "$p" /usr/local/bin/hermes; break; }
+    warn "hermes не в PATH после инсталлятора — ищу бинарь …"
+    found=""
+    for p in /usr/local/bin/hermes /root/.local/bin/hermes /usr/bin/hermes /opt/hermes/bin/hermes /root/bin/hermes; do
+      [[ -x "$p" ]] && { found="$p"; break; }
     done
+    if [[ -z "$found" ]]; then
+      found=$(find /usr/local /opt /root/.local -maxdepth 4 -name hermes -type f 2>/dev/null | head -1)
+    fi
+    if [[ -n "$found" ]]; then
+      ln -sf "$found" /usr/local/bin/hermes
+      ok "Симлинк hermes → $found"
+    fi
   fi
+  hash -r 2>/dev/null || true
   if ! command -v hermes >/dev/null 2>&1; then
     warn "Официальный инсталлятор не добавил hermes в PATH — пробую pip fallback"
     run "python3 -m venv /usr/local/lib/hermes-agent/venv"
     run "/usr/local/lib/hermes-agent/venv/bin/pip install -U pip"
     run "/usr/local/lib/hermes-agent/venv/bin/pip install hermes-agent"
     run "ln -sf /usr/local/lib/hermes-agent/venv/bin/hermes /usr/local/bin/hermes"
+    hash -r 2>/dev/null || true
   fi
-  command -v hermes >/dev/null 2>&1 || die "Не удалось установить Hermes Agent."
+  command -v hermes >/dev/null 2>&1 || die "Не удалось установить Hermes Agent. Проверь 'which hermes' и /root/.local/bin в PATH."
   ok "Hermes Agent $(hermes --version 2>/dev/null || echo установлен)"
 fi
 
@@ -374,7 +386,9 @@ After=network-online.target
 [Service]
 Type=simple
 User=root
+WorkingDirectory=/root
 Environment="HOME=/root"
+Environment="PATH=/usr/local/bin:/usr/local/lib/hermes-agent/venv/bin:/usr/bin:/bin"
 EnvironmentFile=/root/.hermes/.env
 ExecStart=/usr/local/bin/hermes gateway run
 Restart=always
@@ -401,7 +415,9 @@ Wants=hermes-gateway.service
 [Service]
 Type=simple
 User=root
+WorkingDirectory=/root
 Environment="HOME=/root"
+Environment="PATH=/usr/local/bin:/usr/local/lib/hermes-agent/venv/bin:/usr/bin:/bin"
 EnvironmentFile=-/root/.hermes/dashboard_auth_env.conf
 ExecStart=/usr/local/bin/hermes dashboard --host ${DASH_BIND:-127.0.0.1} --port $DASH_PORT --no-open --tui${DASH_PUBLIC:+ --public-bind}
 Restart=always
@@ -416,12 +432,25 @@ EOF
   run systemctl daemon-reload
   run systemctl enable hermes-gateway.service
   run systemctl enable hermes-dashboard.service
-  run systemctl restart hermes-gateway.service
-  run systemctl restart hermes-dashboard.service
+  # restart не должен убивать скрипт (set -e) — при ошибке покажем логи
+  step "Запуск Gateway"
+  if systemctl restart hermes-gateway.service 2>/dev/null; then
+    ok "Gateway перезапущен"
+  else
+    warn "Gateway не стартует — диагностика:"
+    journalctl -u hermes-gateway.service -n 30 --no-pager 2>/dev/null | sed 's/^/    /' || true
+  fi
+  step "Запуск Dashboard"
+  if systemctl restart hermes-dashboard.service 2>/dev/null; then
+    ok "Dashboard перезапущен"
+  else
+    warn "Dashboard не стартует — диагностика:"
+    journalctl -u hermes-dashboard.service -n 30 --no-pager 2>/dev/null | sed 's/^/    /' || true
+  fi
   if [[ "$DRY_RUN" -eq 0 ]]; then
-    sleep 5
-    curl -fsS --max-time 5 "http://127.0.0.1:$GW_PORT/health" >/dev/null 2>&1 && ok "Gateway :$GW_PORT ✅" || warn "Gateway :$GW_PORT не отвечает"
-    curl -fsS --max-time 5 "http://127.0.0.1:$DASH_PORT/" >/dev/null 2>&1 && ok "Dashboard :$DASH_PORT ✅" || warn "Dashboard :$DASH_PORT не отвечает"
+    sleep 8
+    curl -fsS --max-time 5 "http://127.0.0.1:$GW_PORT/health" >/dev/null 2>&1 && ok "Gateway :$GW_PORT ✅" || warn "Gateway :$GW_PORT не отвечает — см. журнал выше"
+    curl -fsS --max-time 5 "http://127.0.0.1:$DASH_PORT/" >/dev/null 2>&1 && ok "Dashboard :$DASH_PORT ✅" || warn "Dashboard :$DASH_PORT не отвечает — см. журнал выше"
   fi
 else
   step "Gateway + Dashboard (docker)"
