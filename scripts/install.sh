@@ -90,22 +90,27 @@ ask_choice() {
   else
     read -r ans   # читаем из stdin (пайп/автотест)
   fi
-  if [[ -z "$ans" && -n "$def" ]]; then REPLY="$def"; return; fi
-  if [[ "$ans" =~ ^[0-9]+$ ]] && (( ans>=1 && ans<=n )); then
-    REPLY="${opts[$((ans-1))]}"; return
+  if [[ -z "$ans" && -n "$def" ]]; then REPLY="$def"
+  elif [[ "$ans" =~ ^[0-9]+$ ]] && (( ans>=1 && ans<=n )); then
+    REPLY="${opts[$((ans-1))]}"
+  else
+    # совпал ли ввод с одним из вариантов (строкой) — принимаем, иначе дефолт/первый
+    REPLY="$def"
+    local j
+    for j in "${!opts[@]}"; do
+      [[ "$ans" == "${opts[$j]}" ]] && { REPLY="${opts[$j]}"; break; }
+    done
   fi
-  for i in "${!opts[@]}"; do
-    [[ "$ans" == "${opts[$i]}" ]] && { REPLY="${opts[$i]}"; return; }
-  done
-  REPLY="${def:-${opts[0]}}"
+  return 0
 }
 
 # ask_text <вопрос> <дефолт>  -> $REPLY
 ask_text() {
   local q="$1"; local def="${2:-}"
   local hint=""; [[ -n "$def" ]] && hint="${C_YEL} [${def}]${C_RST}"
-  read -r -p "  $q$hint: " REPLY </dev/tty 2>&1 || REPLY=""
+  read -r -p "  $q$hint: " REPLY || REPLY=""
   [[ -z "$REPLY" ]] && REPLY="$def"
+  return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -391,11 +396,7 @@ prompt_secret() {
   if [[ -n "$cur" ]]; then
     hint="$hint ${C_YEL}(текущее задано, Enter — оставить)${C_RST}"
   fi
-  if [[ -t 0 ]]; then
-    read -r -p "  $key — $hint: " val </dev/tty 2>&1 || true
-  else
-    read -r -p "  $key — $hint: " val || true
-  fi
+  read -r -p "  $key — $hint: " val || true
   [[ -z "$val" && -n "$cur" ]] && val="$cur"
   printf '%s=%s\n' "$key" "$val"
 }
