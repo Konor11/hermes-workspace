@@ -231,12 +231,21 @@ if command -v hermes >/dev/null 2>&1 && hermes --version >/dev/null 2>&1; then
 else
   warn "Hermes Agent не найден. Ставлю …"
   ensure_build_deps
-  # НЕ используем официальный one-liner install.sh — он тянет устаревший
-  # релиз (0.19.0). Ставим свежую версию через pip (как на рабочем сервере).
-  run "python3 -m venv /usr/local/lib/hermes-agent/venv"
-  run "/usr/local/lib/hermes-agent/venv/bin/pip install -U pip"
-  run "/usr/local/lib/hermes-agent/venv/bin/pip install 'hermes-agent==0.20.4'"
-  run "ln -sf /usr/local/lib/hermes-agent/venv/bin/hermes /usr/local/bin/hermes"
+  # Официальный инсталлятор (https://hermes-agent.nousresearch.com/install.sh)
+  run "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
+  # Убедимся, что 'hermes' доступен в PATH
+  if ! command -v hermes >/dev/null 2>&1; then
+    for p in /usr/local/bin/hermes /root/.local/bin/hermes /usr/bin/hermes; do
+      [[ -x "$p" ]] && { ln -sf "$p" /usr/local/bin/hermes; break; }
+    done
+  fi
+  if ! command -v hermes >/dev/null 2>&1; then
+    warn "Официальный инсталлятор не добавил hermes в PATH — пробую pip fallback"
+    run "python3 -m venv /usr/local/lib/hermes-agent/venv"
+    run "/usr/local/lib/hermes-agent/venv/bin/pip install -U pip"
+    run "/usr/local/lib/hermes-agent/venv/bin/pip install hermes-agent"
+    run "ln -sf /usr/local/lib/hermes-agent/venv/bin/hermes /usr/local/bin/hermes"
+  fi
   command -v hermes >/dev/null 2>&1 || die "Не удалось установить Hermes Agent."
   ok "Hermes Agent $(hermes --version 2>/dev/null || echo установлен)"
 fi

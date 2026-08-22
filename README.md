@@ -90,7 +90,7 @@ sudo bash scripts/install.sh --dry-run
 
 Скрипт сам:
 1. проверит зависимости (bash 4+, Node 22+, curl, git, python3) и доустановит build-пакеты;
-2. установит Hermes Agent **0.20.4** (если ещё нет);
+2. установит **Hermes Agent** через официальный инсталлятор (`https://hermes-agent.nousresearch.com/install.sh`);
 3. поднимет **Gateway** (`:8642`) и **Dashboard** (`:9119`) — как systemd-юниты или контейнеры;
 4. соберёт Workspace (`npm install` + `npm run build`);
 5. запустит Workspace (порт `3000`, либо `3001`/`3002`/… если занят);
@@ -970,7 +970,7 @@ PRs are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 Одной командой поднимает полный стек на чистом Ubuntu/Debian-сервере: **Hermes Agent → Gateway → Dashboard → Workspace**, плюс **Caddy** как reverse-proxy с авто-TLS (Let's Encrypt).
 
-> **Версия Hermes Agent:** скрипт ставит проверенную `hermes-agent==0.20.4` (официальный one-liner `install.sh` тянет устаревшую `0.19.0` — поэтому он не используется). При необходимости версию можно поднять в `scripts/install.sh`.
+> **Установка Hermes Agent:** скрипт использует официальный one-liner `curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash`. Если бинарь не попадает в PATH — есть fallback на `pip install hermes-agent`. При необходимости инсталлятор/версию можно поменять в `scripts/install.sh`.
 
 **Режимы (`--mode`):**
 
