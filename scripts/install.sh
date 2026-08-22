@@ -456,7 +456,7 @@ WorkingDirectory=/root
 Environment="HOME=/root"
 Environment="PATH=/usr/local/bin:/usr/local/lib/hermes-agent/venv/bin:/usr/bin:/bin"
 EnvironmentFile=-/root/.hermes/dashboard_auth_env.conf
-ExecStart=/usr/local/bin/hermes dashboard --host ${DASH_BIND:-127.0.0.1} --port $DASH_PORT --no-open --tui${DASH_PUBLIC:+ --public-bind}
+ExecStart=/usr/local/bin/hermes dashboard --host ${DASH_BIND:-127.0.0.1} --port $DASH_PORT --no-open --tui
 Restart=always
 RestartSec=5
 
@@ -592,7 +592,7 @@ echo "(HERMES_API_TOKEN = API_SERVER_KEY гейтвея — подставляе
   # чтобы пользователю не нужно было вводить ключ вручную.
   if [[ -n "${GEN_KEY:-}" ]]; then
     printf '%s=%s\n' "HERMES_API_TOKEN" "$GEN_KEY"
-    info "HERMES_API_TOKEN = сгенерированный API_SERVER_KEY (авто, без ввода)"
+    echo "HERMES_API_TOKEN = сгенерированный API_SERVER_KEY (авто, без ввода)"
   else
     prompt_secret "HERMES_API_TOKEN" "Bearer-токен гейтвея (API_SERVER_KEY)" "$cur_token"
   fi
@@ -637,6 +637,10 @@ if [[ "$MODE" == "systemd" ]]; then
     info "[dry-run] пропускаю запись $UNIT"
   else
     info "Устанавливаю $UNIT …"
+    # Путь к node: на чистом сервере NodeSource apt ставит в /usr/bin/node,
+    # а не /usr/local/bin/node. Берём реальный путь, иначе 203/EXEC.
+    NODE_BIN="$(command -v node || true)"
+    [[ -z "$NODE_BIN" ]] && NODE_BIN="/usr/bin/node"
     cat > "$UNIT" <<EOF
 [Unit]
 Description=Hermes Workspace
@@ -654,9 +658,9 @@ Environment="COOKIE_SECURE=1"
 Environment="HERMES_HOME=/root/.hermes"
 Environment="HERMES_API_URL=http://127.0.0.1:$GW_PORT"
 Environment="HERMES_DASHBOARD_URL=http://127.0.0.1:$DASH_PORT"
-EnvironmentFile=$ENV_FILE
+EnvironmentFile=-$ENV_FILE
 ExecStartPre=/bin/bash -c "for i in \$(seq 1 30); do /usr/bin/curl -sf http://127.0.0.1:$GW_PORT/health >/dev/null 2>&1 && break; sleep 1; done" || true
-ExecStart=/usr/local/bin/node server-entry.js
+ExecStart=$NODE_BIN server-entry.js
 Restart=always
 RestartSec=5
 
