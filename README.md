@@ -89,7 +89,7 @@ sudo bash scripts/install.sh --dry-run
 - **Секреты** (пароль workspace, basic-auth дашборда, API-токен гейтвея — подставляется авто).
 
 Скрипт сам:
-1. проверит зависимости (bash 4+, Node 22+, curl, git, python3) и доустановит build-пакеты;
+1. проверит зависимости и доустановит всё необходимое: build-пакеты (gcc/g++/make, python-dev, libssl-dev), **Node.js 22+** (через NodeSource, если нет), **Caddy** (в systemd-режиме, для reverse-proxy + авто-TLS);
 2. установит **Hermes Agent** через официальный инсталлятор (`https://hermes-agent.nousresearch.com/install.sh`);
 3. поднимет **Gateway** (`:8642`) и **Dashboard** (`:9119`) — как systemd-юниты или контейнеры;
 4. соберёт Workspace (`npm install` + `npm run build`);

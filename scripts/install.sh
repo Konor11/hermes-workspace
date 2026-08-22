@@ -35,6 +35,71 @@ die()   { err "$*"; exit 1; }
 step()  { echo; echo "${C_BLD}${C_BLU}==>${C_RST} $*"; }
 
 # ---------------------------------------------------------------------------
+# Системные зависимости (build-tools, Node 22, Caddy) — ставит всё само
+# ---------------------------------------------------------------------------
+# Полный набор системных зависимостей:
+#  - сборка hermes-agent (pip) и workspace (node-gyp): gcc/g++/make, заголовки python/openssl;
+#  - базовые утилиты: curl, git, ca-certificates, gnupg, lsb-release, systemd, sqlite;
+#  - Node.js 22+ (через NodeSource, если нет в системе);
+#  - Caddy (только для systemd-режима, для reverse-proxy + авто-TLS).
+ensure_build_deps() {
+  if command -v apt-get >/dev/null 2>&1; then
+    info "Ставлю системные зависимости (apt) …"
+    run "apt-get update -y"
+    run "DEBIAN_FRONTEND=noninteractive apt-get install -y \
+      build-essential python3-dev python3-venv python3-pip \
+      libssl-dev libffi-dev libsqlite3-dev \
+      curl git ca-certificates gnupg lsb-release systemd \
+      software-properties-common unzip"
+    # Node.js 22+ (если нет или старее 22)
+    if ! command -v node >/dev/null 2>&1 || [[ "$(node -v 2>/dev/null | sed -E 's/v([0-9]+).*/\1/')" -lt 22 ]]; then
+      info "Ставлю Node.js 22 (NodeSource) …"
+      run "curl -fsSL https://deb.nodesource.com/setup_22.x | bash -"
+      run "DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs"
+    fi
+    # Caddy (systemd-режим)
+    if [[ "$MODE" == "systemd" ]] && ! command -v caddy >/dev/null 2>&1; then
+      info "Ставлю Caddy (apt) …"
+      run "install -m 0755 -d /etc/apt/keyrings"
+      run "curl -fsSL https://dl.cloudflare.com/apt/caddy.key | gpg --dearmor -o /etc/apt/keyrings/caddy.gpg 2>/dev/null || true"
+      if [[ -f /etc/apt/keyrings/caddy.gpg ]]; then
+        run "echo \"deb [signed-by=/etc/apt/keyrings/caddy.gpg] https://dl.cloudflare.com/apt/caddy stable main\" > /etc/apt/sources.list.d/caddy.list"
+        run "apt-get update -y"
+        run "DEBIAN_FRONTEND=noninteractive apt-get install -y caddy"
+      else
+        warn "Не удалось добавить репу Caddy — пропускаю (reverse-proxy настроишь вручную)."
+      fi
+    fi
+  elif command -v dnf >/dev/null 2>&1; then
+    info "Ставлю системные зависимости (dnf) …"
+    run "dnf -y install gcc gcc-c++ make python3-devel openssl-devel \
+      libffi-devel sqlite-devel curl git systemd"
+    if ! command -v node >/dev/null 2>&1 || [[ "$(node -v 2>/dev/null | sed -E 's/v([0-9]+).*/\1/')" -lt 22 ]]; then
+      info "Ставлю Node.js 22 (NodeSource) …"
+      run "curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -"
+      run "dnf -y install nodejs"
+    fi
+    if [[ "$MODE" == "systemd" ]] && ! command -v caddy >/dev/null 2>&1; then
+      info "Ставлю Caddy (dnf) …"
+      run "dnf -y install 'dnf-command(copr)' && dnf -y copr enable @caddy/caddy && dnf -y install caddy" || warn "Caddy не установлен — настрой reverse-proxy вручную."
+    fi
+  elif command -v apk >/dev/null 2>&1; then
+    info "Ставлю системные зависимости (apk) …"
+    run "apk add --no-cache build-base python3-dev openssl-dev libffi-dev \
+      sqlite-dev curl git gcompat"
+    if ! command -v node >/dev/null 2>&1; then
+      run "apk add --no-cache nodejs npm"
+    fi
+    if [[ "$MODE" == "systemd" ]] && ! command -v caddy >/dev/null 2>&1; then
+      run "apk add --no-cache caddy" || warn "Caddy не установлен — настрой reverse-proxy вручную."
+    fi
+  else
+    warn "Неизвестный пакетный менеджер — пропускаю установку системных зависимостей."
+    warn "Убедись, что установлены: gcc, g++, make, python3-dev, libssl-dev, Node.js 22+."
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # Параметры (с дефолтами; перекрываются TUI или флагами)
 # ---------------------------------------------------------------------------
 WS_DIR="/root/hermes-workspace"
@@ -88,7 +153,7 @@ ask_choice() {
   if [[ -t 0 ]]; then
     read -r -p "  Выбор [1-$n${def:+, $def}]: " ans
   else
-    read -r ans   # читаем из stdin (пайп/автотест)
+    read -r ans || true   # читаем из stdin (пайп/автотест); EOF не должен убивать скрипт
   fi
   if [[ -z "$ans" && -n "$def" ]]; then REPLY="$def"
   elif [[ "$ans" =~ ^[0-9]+$ ]] && (( ans>=1 && ans<=n )); then
@@ -178,30 +243,8 @@ next_free_port() {
 step "Проверка зависимостей"
 need() { command -v "$1" >/dev/null 2>&1 || die "Не найдено: $1"; }
 need curl; need git; need python3
-
-# Системные пакеты, нужные для сборки hermes-agent (pip) и workspace (node-gyp):
-# gcc/g++/make, заголовки python и openssl, а также базовые утилиты.
-ensure_build_deps() {
-  if command -v apt-get >/dev/null 2>&1; then
-    info "Ставлю системные зависимости сборки (apt) …"
-    run "apt-get update -y"
-    run "DEBIAN_FRONTEND=noninteractive apt-get install -y \
-      build-essential python3-dev python3-venv python3-pip \
-      libssl-dev libffi-dev libsqlite3-dev \
-      curl git ca-certificates gnupg lsb-release"
-  elif command -v dnf >/dev/null 2>&1; then
-    info "Ставлю системные зависимости сборки (dnf) …"
-    run "dnf -y install gcc gcc-c++ make python3-devel openssl-devel \
-      libffi-devel sqlite-devel curl git"
-  elif command -v apk >/dev/null 2>&1; then
-    info "Ставлю системные зависимости сборки (apk) …"
-    run "apk add --no-cache build-base python3-dev openssl-dev libffi-dev \
-      sqlite-dev curl git"
-  else
-    warn "Неизвестный пакетный менеджер — пропускаю установку системных зависимостей."
-    warn "Убедись, что установлены: gcc, g++, make, python3-dev, libssl-dev."
-  fi
-}
+# Ставим ВСЕ системные зависимости сразу (build-tools, Node 22, Caddy и т.д.)
+ensure_build_deps
 
 if ! command -v node >/dev/null 2>&1; then
   die "Node.js не установлен. Поставь Node 22+ и повтори."
@@ -230,7 +273,7 @@ if command -v hermes >/dev/null 2>&1 && hermes --version >/dev/null 2>&1; then
   ok "Hermes Agent уже установлен: $(hermes --version 2>/dev/null || echo present)"
 else
   warn "Hermes Agent не найден. Ставлю …"
-  ensure_build_deps
+  # ensure_build_deps уже вызван в блоке 1 (ставит gcc/g++/make/python-dev, Node 22, Caddy).
   # Официальный инсталлятор (https://hermes-agent.nousresearch.com/install.sh)
   run "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash"
   # Убедимся, что 'hermes' доступен в PATH
