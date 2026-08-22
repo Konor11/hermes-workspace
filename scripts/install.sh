@@ -351,6 +351,25 @@ EOF
     else
       ok "API_SERVER_KEY уже есть в .env — переиспользуется"
     fi
+
+    # Базовые MCP-серверы в config.yaml (filesystem + github), чтобы на
+    # hermes-agent >=0.20.5 MCP сразу работал в Workspace (native /api/mcp
+    # убран, Workspace читает mcp_servers из config.yaml через `hermes config`).
+    # Не перезаписываем, если mcp_servers уже заданы пользователем.
+    if [[ "$DRY_RUN" -eq 0 ]]; then
+      if ! hermes config get mcp_servers >/dev/null 2>&1 || [[ -z "$(hermes config get mcp_servers --json 2>/dev/null | tr -d '{} ')" ]]; then
+        hermes config set mcp_servers.filesystem.command npx >/dev/null 2>&1 || true
+        hermes config set mcp_servers.filesystem.args '["-y","@modelcontextprotocol/server-filesystem","/root"]' >/dev/null 2>&1 || true
+        hermes config set mcp_servers.filesystem.enabled true >/dev/null 2>&1 || true
+        hermes config set mcp_servers.github.command npx >/dev/null 2>&1 || true
+        hermes config set mcp_servers.github.args '["-y","@modelcontextprotocol/server-github"]' >/dev/null 2>&1 || true
+        hermes config set mcp_servers.github.enabled true >/dev/null 2>&1 || true
+        ok "Добавлены базовые MCP-серверы (filesystem, github) в config.yaml"
+      else
+        ok "mcp_servers уже заданы в config.yaml — оставляем как есть"
+      fi
+    fi
+
     # HERMES_DASHBOARD_PUBLIC_URL — без него дашборд отказывается биндиться на 0.0.0.0.
     # Берём домен дашборда, либо основной домен workspace; иначе не задаём (127.0.0.1).
     DASH_PUBLIC=""
