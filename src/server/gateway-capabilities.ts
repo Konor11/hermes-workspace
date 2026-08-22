@@ -634,10 +634,24 @@ async function probeMcp(): Promise<boolean> {
       headers: authHeaders(),
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
     })
-    return await validate(res)
+    if (await validate(res)) return true
   } catch {
-    return false
+    // fall through to config.yaml fallback
   }
+  // Vanilla hermes-agent ≥0.20.5 removed the native /api/mcp/servers route.
+  // MCP servers are still configured locally in config.yaml and reachable
+  // via the `hermes config` CLI, so treat their presence as a working MCP
+  // capability (the GET /api/mcp handler reads config.yaml directly).
+  try {
+    const { readMcpServersCli } = await import('./mcp-config-cli')
+    const servers = readMcpServersCli()
+    if (servers && typeof servers === 'object' && Object.keys(servers).length > 0) {
+      return true
+    }
+  } catch {
+    // ignore — leave capability false
+  }
+  return false
 }
 
 /**

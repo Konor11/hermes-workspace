@@ -25,13 +25,13 @@ const FEATURE_LABELS: Record<EnhancedFeature, string> = {
 
 const FEATURE_PROBES: Record<EnhancedFeature, Array<string>> = {
   sessions: ['/api/sessions'],
-  skills: ['/api/gateway-status', '/api/skills'],
-  memory: ['/api/gateway-status', '/api/memory/list'],
-  config: ['/api/gateway-status', '/api/claude-config'],
-  jobs: ['/api/gateway-status', '/api/claude-jobs'],
-  mcp: ['/api/gateway-status', '/api/mcp'],
-  mcpFallback: ['/api/gateway-status', '/api/mcp'],
-  kanban: ['/api/gateway-status', '/api/swarm-kanban'],
+  skills: ['/v1/skills', '/api/skills'],
+  memory: ['/api/memory/list', '/v1/memory'],
+  config: ['/api/claude-config', 'config.yaml mcp_servers'],
+  jobs: ['/api/claude-jobs', '/v1/jobs'],
+  mcp: ['config.yaml mcp_servers', '/api/mcp'],
+  mcpFallback: ['config.yaml mcp_servers', '/api/mcp'],
+  kanban: ['/api/swarm-kanban', '/api/plugins/kanban/board'],
 }
 
 function normalizeFeature(
