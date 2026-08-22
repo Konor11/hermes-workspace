@@ -274,8 +274,20 @@ if command -v hermes >/dev/null 2>&1 && hermes --version >/dev/null 2>&1; then
 else
   warn "Hermes Agent не найден. Ставлю …"
   # ensure_build_deps уже вызван в блоке 1 (ставит gcc/g++/make/python-dev, Node 22, Caddy).
-  # Официальный инсталлятор (https://hermes-agent.nousresearch.com/install.sh)
-  run "curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- </dev/null"
+  # Официальный инсталлятор (https://hermes-agent.nousresearch.com/install.sh).
+  # НЕ пайпим в bash и НЕ даём </dev/null — инсталлятор бывает интерактивным и
+  # падает в pipe (curl: (23) Failure writing output to destination на мобильном
+  # терминале). Качаем во временный файл, проверяем запись, затем запускаем.
+  INSTALLER_TMP="$(mktemp -t hermes-install.XXXXXX.sh 2>/dev/null || echo /tmp/hermes-install.sh)"
+  if [[ "$DRY_RUN" -eq 0 ]]; then
+    if curl -fsSL --retry 3 --retry-delay 2 "https://hermes-agent.nousresearch.com/install.sh" -o "$INSTALLER_TMP" 2>/tmp/hermes-curl.err; then
+      ok "Инсталлятор скачан ($(wc -c < "$INSTALLER_TMP" 2>/dev/null || echo ?) байт)"
+      bash "$INSTALLER_TMP" || warn "Инсталлятор завершился с ошибкой — перейдём к поиску бинаря / pip fallback"
+    else
+      warn "Не удалось скачать инсталлятор: $(cat /tmp/hermes-curl.err 2>/dev/null | head -1)"
+    fi
+    rm -f "$INSTALLER_TMP" 2>/dev/null || true
+  fi
   hash -r 2>/dev/null || true
   # Убедимся, что 'hermes' доступен. Ищем в типичных местах + широкий find.
   if ! command -v hermes >/dev/null 2>&1; then
