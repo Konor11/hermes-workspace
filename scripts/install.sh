@@ -124,7 +124,7 @@ tui_configure() {
   }
   # dashboard отдельным доменом?
   if [[ -z "$DASH_DOMAIN" ]]; then
-    ask_choice "Отдельный домен для Dashboard (как hermes.dktunnel.xyz)?" "нет" "нет" "да"; local d="$REPLY"
+    ask_choice "Отдельный домен для Dashboard (напр. dash.mydomain.com)?" "нет" "нет" "да"; local d="$REPLY"
     if [[ "$d" == "да" ]]; then
       ask_text "Домен dashboard (напр. hermes.твой-домен.com)" ""; DASH_DOMAIN="$REPLY"
     fi
