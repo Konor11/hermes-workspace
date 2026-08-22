@@ -15,7 +15,7 @@
 #   sudo bash scripts/install.sh --domain ws.example.com --mode docker
 #   sudo bash scripts/install.sh --dry-run
 #
-set -euo pipefail
+set -uo pipefail
 
 # ---------------------------------------------------------------------------
 # Цветной вывод
@@ -320,6 +320,10 @@ fi
 # ---------------------------------------------------------------------------
 # 3. Gateway + Dashboard
 # ---------------------------------------------------------------------------
+# Блок 3 выполняется БЕЗ set -e: некоторые команды (hermes config, systemctl
+# enable при уже-существующем юните) могут вернуть не-0 и молча убить скрипт
+# под set -uo pipefail. Ловим ошибки явно, продолжаем установку.
+set +e
 if [[ "$MODE" == "systemd" ]]; then
   step "Gateway + Dashboard (systemd)"
 
@@ -368,14 +372,16 @@ EOF
     # hermes-agent >=0.20.5 MCP сразу работал в Workspace (native /api/mcp
     # убран, Workspace читает mcp_servers из config.yaml через `hermes config`).
     # Не перезаписываем, если mcp_servers уже заданы пользователем.
+    # ВАЖНО: `hermes config get/set` может быть интерактивным/зависать на чистом
+    # сервере — оборачиваем в timeout и || true, чтобы не убить скрипт.
     if [[ "$DRY_RUN" -eq 0 ]]; then
-      if ! hermes config get mcp_servers >/dev/null 2>&1 || [[ -z "$(hermes config get mcp_servers --json 2>/dev/null | tr -d '{} ')" ]]; then
-        hermes config set mcp_servers.filesystem.command npx >/dev/null 2>&1 || true
-        hermes config set mcp_servers.filesystem.args '["-y","@modelcontextprotocol/server-filesystem","/root"]' >/dev/null 2>&1 || true
-        hermes config set mcp_servers.filesystem.enabled true >/dev/null 2>&1 || true
-        hermes config set mcp_servers.github.command npx >/dev/null 2>&1 || true
-        hermes config set mcp_servers.github.args '["-y","@modelcontextprotocol/server-github"]' >/dev/null 2>&1 || true
-        hermes config set mcp_servers.github.enabled true >/dev/null 2>&1 || true
+      if ! timeout 20 hermes config get mcp_servers >/dev/null 2>&1; then
+        timeout 20 hermes config set mcp_servers.filesystem.command npx >/dev/null 2>&1 || true
+        timeout 20 hermes config set mcp_servers.filesystem.args '["-y","@modelcontextprotocol/server-filesystem","/root"]' >/dev/null 2>&1 || true
+        timeout 20 hermes config set mcp_servers.filesystem.enabled true >/dev/null 2>&1 || true
+        timeout 20 hermes config set mcp_servers.github.command npx >/dev/null 2>&1 || true
+        timeout 20 hermes config set mcp_servers.github.args '["-y","@modelcontextprotocol/server-github"]' >/dev/null 2>&1 || true
+        timeout 20 hermes config set mcp_servers.github.enabled true >/dev/null 2>&1 || true
         ok "Добавлены базовые MCP-серверы (filesystem, github) в config.yaml"
       else
         ok "mcp_servers уже заданы в config.yaml — оставляем как есть"
