@@ -460,10 +460,18 @@ EOF
     ok "Dashboard unit записан"
   fi
 
-  run systemctl daemon-reload
-  run systemctl enable hermes-gateway.service
-  run systemctl enable hermes-dashboard.service
-  # restart не должен убивать скрипт (set -e) — при ошибке покажем логи
+  # daemon-reload / enable не должны убивать скрипт (set -e) — ловим ошибки
+  systemctl daemon-reload 2>/dev/null || warn "daemon-reload вернул ошибку (не критично)"
+  if systemctl enable hermes-gateway.service 2>/dev/null; then
+    ok "Gateway enabled"
+  else
+    warn "Gateway enable не удался — проверь юнит /etc/systemd/system/hermes-gateway.service"
+  fi
+  if systemctl enable hermes-dashboard.service 2>/dev/null; then
+    ok "Dashboard enabled"
+  else
+    warn "Dashboard enable не удался — проверь юнит /etc/systemd/system/hermes-dashboard.service"
+  fi
   step "Запуск Gateway"
   if systemctl restart hermes-gateway.service 2>/dev/null; then
     ok "Gateway перезапущен"
@@ -522,10 +530,17 @@ ok "Репозиторий: $WS_DIR"
 if [[ "$DO_BUILD" -eq 1 ]]; then
   step "npm install + build"
   info "npm install (это может занять несколько минут) …"
-  run "npm install"
+  if npm install 2>&1 | tail -5; then
+    ok "npm install завершён"
+  else
+    warn "npm install вернул ошибку — продолжаем (возможно, warnings некритичны)"
+  fi
   info "npm run build (NODE_OPTIONS=--max-old-space-size=3072) …"
-  run "NODE_OPTIONS=\"--max-old-space-size=3072\" npm run build"
-  [[ "$DRY_RUN" -eq 0 ]] && ok "Сборка завершена"
+  if NODE_OPTIONS="--max-old-space-size=3072" npm run build 2>&1 | tail -8; then
+    ok "Сборка завершена"
+  else
+    warn "npm run build не удался — проверь 'npm run build' вручную в $WS_DIR"
+  fi
 else
   warn "Сборка пропущена (--no-build). Убедись, что dist/ уже собран."
 fi
