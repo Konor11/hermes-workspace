@@ -659,9 +659,17 @@ WantedBy=multi-user.target
 EOF
     ok "Unit записан"
   fi
-  run systemctl daemon-reload
-  run systemctl enable hermes-workspace.service
-  run systemctl restart hermes-workspace.service
+  systemctl daemon-reload 2>/dev/null || warn "daemon-reload вернул ошибку (не критично)"
+  if systemctl enable hermes-workspace.service 2>/dev/null; then
+    ok "Workspace enabled"
+  else
+    warn "Workspace enable не удался — проверь юнит /etc/systemd/system/hermes-workspace.service"
+  fi
+  if systemctl restart hermes-workspace.service 2>/dev/null; then
+    ok "Workspace перезапущен"
+  else
+    warn "Workspace не стартует — диагностика: journalctl -u hermes-workspace.service -n 50"
+  fi
   if [[ "$DRY_RUN" -eq 0 ]]; then
     up=0
     for i in $(seq 1 30); do
@@ -724,9 +732,17 @@ if [[ "$MODE" == "systemd" ]]; then
     } > "$CADDY_FILE"
     ok "Caddyfile записан"
   fi
-  run systemctl daemon-reload
-  run systemctl enable caddy
-  run systemctl restart caddy
+  systemctl daemon-reload 2>/dev/null || warn "daemon-reload вернул ошибку (не критично)"
+  if systemctl enable caddy 2>/dev/null; then
+    ok "Caddy enabled"
+  else
+    warn "Caddy enable не удался"
+  fi
+  if systemctl restart caddy 2>/dev/null; then
+    ok "Caddy перезапущен"
+  else
+    warn "Caddy не стартует — проверь Caddyfile и 'journalctl -u caddy -n 30'"
+  fi
   if [[ "$DRY_RUN" -eq 0 && -n "$DOMAIN" ]]; then
     sleep 3
     curl -fsS --max-time 5 "https://$DOMAIN/" >/dev/null 2>&1 && ok "Caddy $DOMAIN (HTTPS) ✅" || warn "Caddy $DOMAIN не отвечает (DNS + 80/443 открыты?)"
