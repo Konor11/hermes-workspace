@@ -339,6 +339,23 @@ EOF
     else
       ok "API_SERVER_KEY уже есть в .env — переиспользуется"
     fi
+    # HERMES_DASHBOARD_PUBLIC_URL — без него дашборд отказывается биндиться на 0.0.0.0.
+    # Берём домен дашборда, либо основной домен workspace; иначе не задаём (127.0.0.1).
+    DASH_PUBLIC=""
+    if [[ -n "$DASH_DOMAIN" ]]; then DASH_PUBLIC="https://$DASH_DOMAIN"
+    elif [[ -n "$DOMAIN" ]]; then DASH_PUBLIC="https://$DOMAIN"; fi
+    if [[ -n "$DASH_PUBLIC" ]]; then
+      if grep -q '^HERMES_DASHBOARD_PUBLIC_URL=' "$HERMES_ENV"; then
+        sed -i "s#^HERMES_DASHBOARD_PUBLIC_URL=.*#HERMES_DASHBOARD_PUBLIC_URL=$DASH_PUBLIC#" "$HERMES_ENV"
+      else
+        echo "HERMES_DASHBOARD_PUBLIC_URL=$DASH_PUBLIC" >> "$HERMES_ENV"
+      fi
+      DASH_BIND="0.0.0.0"
+      ok "Dashboard: OAuth (PUBLIC_URL=$DASH_PUBLIC) + Basic Auth, bind 0.0.0.0 --public-bind"
+    else
+      DASH_BIND="0.0.0.0"
+      ok "Dashboard: Basic Auth только, bind 0.0.0.0 (задай --dashboard-domain для OAuth)"
+    fi
   elif [[ "$DRY_RUN" -eq 1 ]]; then
     info "[dry-run] пропускаю запись $HERMES_ENV"
   fi
@@ -386,7 +403,7 @@ Type=simple
 User=root
 Environment="HOME=/root"
 EnvironmentFile=-/root/.hermes/dashboard_auth_env.conf
-ExecStart=/usr/local/bin/hermes dashboard --host 0.0.0.0 --port $DASH_PORT --no-open --tui
+ExecStart=/usr/local/bin/hermes dashboard --host ${DASH_BIND:-127.0.0.1} --port $DASH_PORT --no-open --tui${DASH_PUBLIC:+ --public-bind}
 Restart=always
 RestartSec=5
 
@@ -484,6 +501,8 @@ fi
 cur_pw=$(grep -E '^HERMES_PASSWORD='      "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
 cur_bu=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_USERNAME=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
 cur_bp=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
+# Basic Auth дашборда: дефолт admin/admin (Enter — оставить), либо введи свои
+: "${cur_bu:=admin}"; : "${cur_bp:=admin}"
 
 echo "Введи параметры подключения к Hermes Gateway/Dashboard."
 echo "(HERMES_API_TOKEN = API_SERVER_KEY гейтвея — подставляется автоматически; basic-auth — из dashboard_auth_env.conf)"
