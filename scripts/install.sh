@@ -351,12 +351,12 @@ if [[ "$MODE" == "systemd" ]]; then
         grep -q '^API_SERVER_KEY=' "$HERMES_ENV"    || echo "API_SERVER_KEY=$GEN_KEY" >> "$HERMES_ENV"
         grep -q '^API_SERVER_HOST=' "$HERMES_ENV"   || echo "API_SERVER_HOST=0.0.0.0" >> "$HERMES_ENV"
         grep -q '^HOME=' "$HERMES_ENV"              || echo "HOME=/root" >> "$HERMES_ENV"
-        grep -q '^HERMES_HOME=' "$HERMES_ENV"       || echo "HERMES_HOME=/root" >> "$HERMES_ENV"
+        # HERMES_HOME сюда НЕ пишем: значение в .env переопределяет home hermes
+        # и создаёт петлю (.env начинает читаться из другого места). См. #petlya.
         ok ".env дополнен API_SERVER_KEY (переиспользуется для workspace)"
       else
         cat > "$HERMES_ENV" <<EOF
 HOME=/root
-HERMES_HOME=/root
 API_SERVER_ENABLED=true
 API_SERVER_KEY=$GEN_KEY
 API_SERVER_HOST=0.0.0.0
