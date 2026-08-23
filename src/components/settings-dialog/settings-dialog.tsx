@@ -960,7 +960,7 @@ function HermesContent() {
               return (
                 <div className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={cardStyle}>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium">Base URL</div>
+                    <div className="text-sm font-medium">Базовый URL</div>
                     <div className="text-[11px] font-mono" style={mutedStyle}>
                       {isEditing ? (
                         <input
@@ -986,8 +986,8 @@ function HermesContent() {
                     <span className={cn('size-2 rounded-full', hasValue ? 'bg-green-500' : 'bg-neutral-500')} />
                     {isEditing ? (
                       <>
-                        <button type="button" onClick={() => { save({ config: { model: { provider: 'manifest' }, providers: { manifest: { type: 'openai', base_url: customBaseUrl, key_env: 'CUSTOM_API_KEY' } } } }).then(() => setEditingKey(null)) }} className="text-xs font-medium text-green-400">Save</button>
-                        <button type="button" onClick={() => setEditingKey(null)} className="text-xs" style={mutedStyle}>Cancel</button>
+                        <button type="button" onClick={() => { save({ config: { model: { provider: 'manifest' }, providers: { manifest: { type: 'openai', base_url: customBaseUrl, key_env: 'CUSTOM_API_KEY' } } } }).then(() => setEditingKey(null)) }} className="text-xs font-medium text-green-400">Сохранить</button>
+                        <button type="button" onClick={() => setEditingKey(null)} className="text-xs" style={mutedStyle}>Отмена</button>
                       </>
                     ) : (
                       <button type="button" onClick={() => setEditingKey('custom_base_url')} className="text-xs font-medium" style={{ color: 'var(--theme-accent)' }}>
@@ -1007,7 +1007,7 @@ function HermesContent() {
                   style={cardStyle}
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium">Model</div>
+                    <div className="text-sm font-medium">Модель</div>
                     <div
                       className="text-[11px] font-mono"
                       style={mutedStyle}
@@ -1219,7 +1219,7 @@ function HermesContent() {
             style={cardStyle}
           >
             <div>
-              <div className="text-sm font-medium">Memory</div>
+              <div className="text-sm font-medium">Память</div>
               <div className="text-[11px]" style={mutedStyle}>
                 Store & recall memories across sessions
               </div>
@@ -1237,7 +1237,7 @@ function HermesContent() {
             style={cardStyle}
           >
             <div>
-              <div className="text-sm font-medium">User Profile</div>
+              <div className="text-sm font-medium">Профиль пользователя</div>
               <div className="text-[11px]" style={mutedStyle}>
                 Remember preferences & context
               </div>
@@ -1265,15 +1265,15 @@ function HermesContent() {
           </span>
         </div>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
-          <span style={mutedStyle}>Model</span>
+          <span style={mutedStyle}>Модель</span>
           <span className="font-mono font-medium">{activeModel || '—'}</span>
-          <span style={mutedStyle}>Provider</span>
+          <span style={mutedStyle}>Провайдер</span>
           <span className="font-mono font-medium">
             {PROVIDER_CARDS.find((p) => p.id === activeProvider)?.name ||
               activeProvider ||
               '—'}
           </span>
-          <span style={mutedStyle}>Config</span>
+          <span style={mutedStyle}>Конфиг</span>
           <span className="font-mono font-medium">~/.hermes/config.yaml</span>
         </div>
       </div>
@@ -1877,7 +1877,7 @@ function ChatContent() {
           >
             <option value="comfortable">Comfortable (900px)</option>
             <option value="wide">Wide (1200px)</option>
-            <option value="full">Full width</option>
+            <option value="full">На всю ширину</option>
           </select>
         </Row>
         <Row
@@ -2165,9 +2165,9 @@ function AgentBehaviorContent() {
             onChange={(e) => save('tool_use_enforcement', e.target.value)}
             className="h-8 rounded-lg border border-primary-200 bg-primary-50 px-2 text-sm text-primary-900 outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
           >
-            <option value="auto">Auto</option>
-            <option value="required">Required</option>
-            <option value="none">None</option>
+            <option value="auto">Авто</option>
+            <option value="required">Обязательно</option>
+            <option value="none">Нет</option>
           </select>
         </Row>
       </div>
@@ -2402,10 +2402,10 @@ function DisplayContent() {
             onChange={(e) => save('personality', e.target.value)}
             className="h-8 rounded-lg border border-primary-200 bg-primary-50 px-2 text-sm text-primary-900 outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
           >
-            <option value="default">Default</option>
-            <option value="concise">Concise</option>
-            <option value="verbose">Verbose</option>
-            <option value="creative">Creative</option>
+            <option value="default">По умолчанию</option>
+            <option value="concise">Кратко</option>
+            <option value="verbose">Подробно</option>
+            <option value="creative">Творческий</option>
           </select>
         </Row>
         <Row label="Streaming" description="Stream responses in real-time">

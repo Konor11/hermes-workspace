@@ -217,7 +217,7 @@ export function ApprovalsPage({ approvals, onApprove, onDeny }: ApprovalsPagePro
         <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 shadow-sm dark:border-neutral-800 dark:bg-[var(--theme-panel,#111520)]">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="text-sm font-semibold text-neutral-900 dark:text-white">Approvals</h2>
+              <h2 className="text-sm font-semibold text-neutral-900 dark:text-white">Подтверждения</h2>
               <p className="text-xs text-neutral-500 dark:text-neutral-400">Live gateway queue with local approval history</p>
             </div>
             <div className="flex items-center gap-2">
@@ -239,7 +239,7 @@ export function ApprovalsPage({ approvals, onApprove, onDeny }: ApprovalsPagePro
         <div className="grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(300px,1fr)]">
           <section className="min-h-0 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-[var(--theme-panel,#111520)]">
             <div className="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Pending Queue</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Очередь ожидания</h3>
             </div>
 
             <div className="h-full max-h-full overflow-y-auto p-3 sm:p-4">
@@ -250,8 +250,8 @@ export function ApprovalsPage({ approvals, onApprove, onDeny }: ApprovalsPagePro
               {!loading && pendingRows.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-14 text-center">
                   <span className="text-3xl">✅</span>
-                  <p className="mt-2 text-sm font-medium text-neutral-700 dark:text-neutral-200">No pending approvals</p>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400">Agents can continue without intervention</p>
+                  <p className="mt-2 text-sm font-medium text-neutral-700 dark:text-neutral-200">Нет ожидающих подтверждений</p>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">Агенты продолжают без вмешательства</p>
                 </div>
               ) : null}
 
@@ -324,13 +324,13 @@ export function ApprovalsPage({ approvals, onApprove, onDeny }: ApprovalsPagePro
 
           <section className="min-h-0 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-[var(--theme-panel,#111520)]">
             <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">History</h3>
-              <span className="text-[10px] text-neutral-400">From approvals store</span>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">История</h3>
+              <span className="text-[10px] text-neutral-400">Из хранилища подтверждений</span>
             </div>
 
             <div className="h-full max-h-full overflow-y-auto p-3 sm:p-4">
               {historyRows.length === 0 ? (
-                <p className="py-10 text-center text-xs text-neutral-500">No approvals resolved yet</p>
+                <p className="py-10 text-center text-xs text-neutral-500">Подтверждений пока не было</p>
               ) : (
                 <div className="space-y-2">
                   {historyRows.map((entry) => {

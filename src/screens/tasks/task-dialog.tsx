@@ -102,7 +102,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, assignees,
             </div>
 
             <div>
-              <label className={labelClass}>Description</label>
+              <label className={labelClass}>Описание</label>
               <textarea
                 className={cn(inputClass, 'resize-none')}
                 rows={3}
@@ -114,7 +114,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, assignees,
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelClass}>Column</label>
+                <label className={labelClass}>Колонка</label>
                 <select
                   className={inputClass}
                   style={{ colorScheme: 'dark' }}
@@ -127,15 +127,15 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, assignees,
                 </select>
               </div>
               <div>
-                <label className={labelClass}>Priority</label>
+                <label className={labelClass}>Приоритет</label>
                 <select
                   className={inputClass}
                   style={{ colorScheme: 'dark' }}
                   value={priority}
                   onChange={e => setPriority(e.target.value as TaskPriority)}
                 >
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
+                  <option value="high">Высокий</option>
+                  <option value="medium">Средний</option>
                   <option value="low">Low</option>
                 </select>
               </div>
@@ -143,14 +143,14 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, assignees,
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={labelClass}>Assignee</label>
+                <label className={labelClass}>Исполнитель</label>
                 <select
                   className={inputClass}
                   style={{ colorScheme: 'dark' }}
                   value={assignee}
                   onChange={e => setAssignee(e.target.value)}
                 >
-                  <option value="">Unassigned</option>
+                  <option value="">Не назначен</option>
                   {assignees.map(({ id, label }) => (
                     <option key={id} value={id}>{label}</option>
                   ))}
@@ -160,7 +160,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, assignees,
                 </p>
               </div>
               <div>
-                <label className={labelClass}>Due Date</label>
+                <label className={labelClass}>Срок</label>
                 <input
                   type="date"
                   className={inputClass}

@@ -380,7 +380,7 @@ export function AgentWizardModal({
       <div className="px-6 py-5 space-y-4">
         {/* Row 1: NAME (full width, prominent) */}
         <div>
-          <FieldLabel>Name</FieldLabel>
+          <FieldLabel>Имя</FieldLabel>
           <input
             value={member.name}
             onChange={(e) => onUpdate({ name: e.target.value })}
@@ -392,7 +392,7 @@ export function AgentWizardModal({
         {/* Row 2: MODEL (half) + ROLE (half) */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <FieldLabel>Model</FieldLabel>
+            <FieldLabel>Модель</FieldLabel>
             <select value={member.modelId} onChange={(e) => onUpdate({ modelId: e.target.value })} className={SELECT_CLS}>
               <optgroup label="Presets">
                 {modelPresets.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
@@ -405,7 +405,7 @@ export function AgentWizardModal({
             </select>
           </div>
           <div>
-            <FieldLabel>Role</FieldLabel>
+            <FieldLabel>Роль</FieldLabel>
             <input value={member.roleDescription} onChange={(e) => onUpdate({ roleDescription: e.target.value })} className={INPUT_CLS} />
           </div>
         </div>
@@ -413,7 +413,7 @@ export function AgentWizardModal({
         {/* Row 3: Memory Path + Skill Allowlist */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <FieldLabel>Memory Path <span className="text-[9px] text-neutral-400 font-normal">(optional)</span></FieldLabel>
+            <FieldLabel>Путь к памяти <span className="text-[9px] text-neutral-400 font-normal">(optional)</span></FieldLabel>
             <input
               value={member.memoryPath ?? ''}
               onChange={(e) => onUpdate({ memoryPath: e.target.value || undefined } as Partial<typeof member>)}
@@ -423,7 +423,7 @@ export function AgentWizardModal({
             <p className="mt-0.5 text-[9px] text-neutral-400">Custom memory/workspace directory for this agent</p>
           </div>
           <div>
-            <FieldLabel>Skill Allowlist <span className="text-[9px] text-neutral-400 font-normal">(optional)</span></FieldLabel>
+            <FieldLabel>Разрешённые навыки <span className="text-[9px] text-neutral-400 font-normal">(optional)</span></FieldLabel>
             <input
               value={(member.skillAllowlist ?? []).join(', ')}
               onChange={(e) => {
@@ -440,7 +440,7 @@ export function AgentWizardModal({
         {/* System Prompt */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <FieldLabel>System Prompt</FieldLabel>
+            <FieldLabel>Системный промпт</FieldLabel>
             <div className="flex gap-1.5">
               <span className={cn('rounded-md border px-1.5 py-0.5 text-[9px] font-semibold',
                 isCustomPrompt ? 'border-violet-300 bg-violet-50 text-violet-700 dark:border-violet-700 dark:bg-violet-900/20 dark:text-violet-400'
@@ -677,13 +677,13 @@ export function TeamWizardModal({
       <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
         {/* Team name */}
         <div>
-          <FieldLabel>Team Name</FieldLabel>
+          <FieldLabel>Название команды</FieldLabel>
           <input value={name} onChange={(e) => setName(e.target.value)} className={INPUT_CLS} />
         </div>
 
         {/* Specialty */}
         <div>
-          <FieldLabel>Specialty</FieldLabel>
+          <FieldLabel>Специализация</FieldLabel>
           <input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -721,7 +721,7 @@ export function TeamWizardModal({
           <div>
             <div className="flex items-center gap-2 my-1">
               <div className="flex-1 h-px bg-neutral-100 dark:bg-neutral-800" />
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-neutral-400">Add Agents</span>
+              <span className="text-[9px] font-semibold uppercase tracking-widest text-neutral-400">Добавить агентов</span>
               <div className="flex-1 h-px bg-neutral-100 dark:bg-neutral-800" />
             </div>
             <div className="space-y-1.5">
@@ -864,7 +864,7 @@ export function AddTeamModal({ currentTeam, quickStartTemplates, existingIcons =
           {teamIcon}
         </div>
         <div className="flex-1">
-          <p className="text-base font-bold text-neutral-900 dark:text-white">New Team</p>
+          <p className="text-base font-bold text-neutral-900 dark:text-white">Новая команда</p>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">{stepLabel}</p>
         </div>
         {/* Step dots */}
@@ -883,7 +883,7 @@ export function AddTeamModal({ currentTeam, quickStartTemplates, existingIcons =
       {step === 1 ? (
         <>
           <div className="px-6 py-8">
-            <p className="mb-5 text-xl font-bold text-neutral-900 dark:text-white">Name your team</p>
+            <p className="mb-5 text-xl font-bold text-neutral-900 dark:text-white">Назовите команду</p>
             <input
               ref={nameInputRef}
               value={teamName}
@@ -911,7 +911,7 @@ export function AddTeamModal({ currentTeam, quickStartTemplates, existingIcons =
       {step === 2 ? (
         <>
           <div className="px-6 py-6">
-            <p className="mb-4 text-xl font-bold text-neutral-900 dark:text-white">Choose a picture</p>
+            <p className="mb-4 text-xl font-bold text-neutral-900 dark:text-white">Выбрать картинку</p>
             <div className="grid grid-cols-6 gap-2">
               {INLINE_TEAM_ICONS.map((ic) => (
                 <button
@@ -955,7 +955,7 @@ export function AddTeamModal({ currentTeam, quickStartTemplates, existingIcons =
           <div className="px-6 py-5 max-h-[65vh] overflow-y-auto space-y-4">
             {/* Templates section */}
             <div>
-              <p className="mb-2 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">Start from a template</p>
+              <p className="mb-2 text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wide">Начать с шаблона</p>
               <div className="grid grid-cols-2 gap-2">
                 {quickStartTemplates.map((tpl) => (
                   <button
@@ -995,14 +995,14 @@ export function AddTeamModal({ currentTeam, quickStartTemplates, existingIcons =
             {/* Agent checklist */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <FieldLabel>Agents to Include</FieldLabel>
+                <FieldLabel>Агенты для включения</FieldLabel>
                 <span className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400">
                   {selectedAgents.size} of {currentTeam.length} selected
                 </span>
               </div>
               <div className="space-y-1.5">
                 {currentTeam.length === 0 ? (
-                  <p className="text-center text-xs text-neutral-400 py-3">No agents configured yet</p>
+                  <p className="text-center text-xs text-neutral-400 py-3">Агенты ещё не настроены</p>
                 ) : currentTeam.map((m) => {
                   const checked = selectedAgents.has(m.id)
                   const modelParts = m.modelId.split('/')
@@ -1036,7 +1036,7 @@ export function AddTeamModal({ currentTeam, quickStartTemplates, existingIcons =
                   )
                 })}
                 {selectedAgents.size === 0 ? (
-                  <p className="text-[10px] text-red-500 text-center pt-1">Select at least one agent</p>
+                  <p className="text-[10px] text-red-500 text-center pt-1">Выберите хотя бы одного агента</p>
                 ) : null}
               </div>
             </div>
@@ -1110,7 +1110,7 @@ export function ProviderEditModal({ provider, currentModels, availableModels, on
         {/* Current models list */}
         {currentModels.length > 0 ? (
           <div>
-            <FieldLabel>Available Models</FieldLabel>
+            <FieldLabel>Доступные модели</FieldLabel>
             <div className="rounded-lg border border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-800/50 p-2 max-h-36 overflow-y-auto">
               {currentModels.map((m) => (
                 <div key={m.value} className="flex items-center gap-2 px-1 py-1">
@@ -1137,7 +1137,7 @@ export function ProviderEditModal({ provider, currentModels, availableModels, on
                 ) : null}
               </FieldLabel>
               <select value={defaultModel} onChange={(e) => setDefaultModel(e.target.value)} className={SELECT_CLS}>
-                <option value="">Use gateway default</option>
+                <option value="">Использовать настройки gateway</option>
                 {combined.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
               </select>
             </div>

@@ -297,7 +297,7 @@ function CoffeeMachineSVG({ x, y }: { x: number; y: number }) {
       <circle cx="0" cy="-14" r="6" fill="#dc2626" opacity="0.8" />
       <text x="0" y="-11" fontSize="6" fill="white" textAnchor="middle">☕</text>
       <rect x="-16" y="20" width="32" height="6" rx="2" fill="#a8a29e" />
-      <text x="0" y="38" fontSize="8" fill="#78716c" textAnchor="middle">Coffee</text>
+      <text x="0" y="38" fontSize="8" fill="#78716c" textAnchor="middle">Кофе</text>
     </g>
   )
 }
@@ -309,7 +309,7 @@ function WaterCoolerSVG({ x, y }: { x: number; y: number }) {
       <circle cx="0" cy="-26" r="10" fill="#bfdbfe" stroke="#93c5fd" strokeWidth="1.5" />
       <circle cx="-5" cy="0" r="2" fill="#0ea5e9" />
       <circle cx="5" cy="0" r="2" fill="#ef4444" />
-      <text x="0" y="32" fontSize="8" fill="#64748b" textAnchor="middle">Water</text>
+      <text x="0" y="32" fontSize="8" fill="#64748b" textAnchor="middle">Вода</text>
     </g>
   )
 }
@@ -319,7 +319,7 @@ function SnackBarSVG({ x, y }: { x: number; y: number }) {
     <g transform={`translate(${x} ${y})`}>
       <rect x="-24" y="-16" width="48" height="28" rx="4" fill="#fef3c7" stroke="#fbbf24" strokeWidth="1" />
       <text x="0" y="2" fontSize="14" textAnchor="middle">🍪</text>
-      <text x="0" y="24" fontSize="8" fill="#92400e" textAnchor="middle">Snacks</text>
+      <text x="0" y="24" fontSize="8" fill="#92400e" textAnchor="middle">Перекус</text>
     </g>
   )
 }
@@ -489,7 +489,7 @@ export function OfficeView({
       <div className={cn('flex items-center justify-center p-8', compact ? 'h-full' : 'min-h-[320px]')}>
         <div className="text-center">
           <p className="mb-3 text-4xl">🏢</p>
-          <p className="text-sm font-semibold text-neutral-600 dark:text-neutral-300">Empty office</p>
+          <p className="text-sm font-semibold text-neutral-600 dark:text-neutral-300">Офис пуст</p>
           <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Add agents in Configure to fill the office.</p>
         </div>
       </div>
@@ -847,7 +847,7 @@ export function OfficeView({
                   <span className="size-1 animate-pulse rounded-full bg-emerald-500" />
                   <span className="size-1 animate-pulse rounded-full bg-emerald-500 [animation-delay:120ms]" />
                   <span className="size-1 animate-pulse rounded-full bg-emerald-500 [animation-delay:240ms]" />
-                  <span className="ml-0.5">Working</span>
+                  <span className="ml-0.5">Работает</span>
                 </span>
               ) : isIdle && !pos.atDesk && !compact ? (
                 <span className="mt-1 rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-600 dark:bg-blue-900/40 dark:text-blue-400">

@@ -528,7 +528,7 @@ export function ClaudeOnboarding() {
                   filter: 'drop-shadow(0 8px 24px rgba(99,102,241,0.3))',
                 }}
               />
-              <h2 className="text-xl font-bold">Welcome to Hermes Workspace</h2>
+              <h2 className="text-xl font-bold">Добро пожаловать в Hermes Workspace</h2>
               <p className="text-sm" style={mutedStyle}>
                 Works with any OpenAI-compatible backend. Hermes Agent gateway APIs
                 unlock sessions, memory, skills, and other extras automatically.
@@ -551,7 +551,7 @@ export function ClaudeOnboarding() {
           {step === 'connect' && (
             <div className="space-y-4 text-center">
               <div className="text-4xl">🔌</div>
-              <h2 className="text-lg font-bold">Connect Your Backend</h2>
+              <h2 className="text-lg font-bold">Подключите ваш бэкенд</h2>
               <p className="text-sm" style={mutedStyle}>
                 Start by verifying that Hermes Workspace can reach your
                 OpenAI-compatible backend.
@@ -806,7 +806,7 @@ export function ClaudeOnboarding() {
                     className="space-y-2 rounded-xl p-4 text-left"
                     style={{ ...cardStyle, borderColor: 'var(--theme-border)' }}
                   >
-                    <p className="text-sm font-medium">Run in your terminal</p>
+                    <p className="text-sm font-medium">Выполните в терминале</p>
                     <div
                       className="rounded-lg px-3 py-2 font-mono text-xs"
                       style={{ background: 'rgba(0,0,0,0.2)' }}
@@ -976,7 +976,7 @@ export function ClaudeOnboarding() {
           {step === 'test' && (
             <div className="space-y-4 text-center">
               <div className="text-4xl">🧪</div>
-              <h2 className="text-lg font-bold">Test Chat</h2>
+              <h2 className="text-lg font-bold">Тестовый чат</h2>
               <p className="text-sm" style={mutedStyle}>
                 Verify that core chat works first. Enhanced Hermes Agent features are
                 optional and appear automatically when supported.
@@ -1094,7 +1094,7 @@ export function ClaudeOnboarding() {
           {step === 'done' && (
             <div className="space-y-4 text-center">
               <div className="text-5xl">🎉</div>
-              <h2 className="text-xl font-bold">Workspace Ready</h2>
+              <h2 className="text-xl font-bold">Workspace готов</h2>
               <p className="text-sm" style={mutedStyle}>
                 Core chat is set up.{' '}
                 {enhancedFeatures.length > 0

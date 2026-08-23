@@ -143,7 +143,7 @@ function MissionCostSection({ totalTokens, workers, expanded, onToggle }: { tota
     <div className="overflow-hidden rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg)] px-5 py-4">
       <button type="button" onClick={onToggle} aria-expanded={expanded} className="flex w-full items-start justify-between gap-4 text-left">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Mission Cost</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Стоимость миссии</p>
           <p className="mt-1 text-sm text-[var(--theme-muted-2)]">Approximate at $5 / 1M tokens blended from input/output pricing.</p>
         </div>
         <span className="inline-flex items-center gap-2 rounded-xl border border-[var(--theme-border)] bg-[var(--theme-card2)] px-3 py-2 text-xs font-medium text-[var(--theme-text)]">
@@ -156,19 +156,19 @@ function MissionCostSection({ totalTokens, workers, expanded, onToggle }: { tota
         <div className="mt-4 space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--theme-muted)]">Total Tokens</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--theme-muted)]">Всего токенов</p>
               <p className="mt-2 text-2xl font-semibold text-[var(--theme-text)]">{totalTokens.toLocaleString()}</p>
             </div>
             <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg)] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--theme-muted)]">Estimated Cost</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--theme-muted)]">Оценка стоимости</p>
               <p className="mt-2 text-2xl font-semibold text-[var(--theme-text)]">{formatUsd(estimatedCost)}</p>
             </div>
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg)]">
             <div className="flex items-center justify-between border-b border-[var(--theme-border)] px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--theme-muted)]">
-              <span>Workers</span>
-              <span>Cost</span>
+              <span>Воркеры</span>
+              <span>Стоимость</span>
             </div>
             {workers.length > 0 ? (
               <div className="divide-y divide-[var(--theme-border)]">
@@ -219,7 +219,7 @@ function CyclingStatus({ steps, intervalMs = 3000, isPaused = false }: { steps: 
     return (
       <div className="flex items-center gap-3 py-3">
         <div className="flex size-3.5 items-center justify-center rounded-full border border-amber-400/60 bg-amber-500/10 text-[9px] text-amber-300">||</div>
-        <p className="text-sm text-[var(--theme-muted)]">Paused</p>
+        <p className="text-sm text-[var(--theme-muted)]">Пауза</p>
       </div>
     )
   }
@@ -363,19 +363,19 @@ function WorkerCard({
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-card2)] px-3 py-2">
-          <p className="text-[var(--theme-muted)]">Model</p>
+          <p className="text-[var(--theme-muted)]">Модель</p>
           <p className="mt-1 truncate text-[var(--theme-text)]">{getShortModelName(worker.model)}</p>
         </div>
         <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-card2)] px-3 py-2">
-          <p className="text-[var(--theme-muted)]">Tokens</p>
+          <p className="text-[var(--theme-muted)]">Токены</p>
           <p className="mt-1 text-[var(--theme-text)]">{worker.tokenUsageLabel}</p>
         </div>
         <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-card2)] px-3 py-2">
-          <p className="text-[var(--theme-muted)]">Elapsed</p>
+          <p className="text-[var(--theme-muted)]">Прошло</p>
           <p className="mt-1 text-[var(--theme-text)]">{formatElapsedTime(workerStartedAt, workerEndTime)}</p>
         </div>
         <div className="rounded-xl border border-[var(--theme-border)] bg-[var(--theme-card2)] px-3 py-2">
-          <p className="text-[var(--theme-muted)]">Last update</p>
+          <p className="text-[var(--theme-muted)]">Обновлено</p>
           <p className="mt-1 text-[var(--theme-text)]">{formatRelativeTime(worker.updatedAt, now)}</p>
         </div>
       </div>
@@ -1173,7 +1173,7 @@ export function Conductor() {
                 <section className="overflow-hidden rounded-3xl border border-[var(--theme-border)] bg-[var(--theme-card)] p-6 shadow-[0_24px_80px_var(--theme-shadow)]">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Output Preview</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Предпросмотр вывода</p>
                       <p className="mt-1 text-xs text-[var(--theme-muted-2)]">{selectedHistoryOutputLabel}</p>
                     </div>
                     <a
@@ -1205,7 +1205,7 @@ export function Conductor() {
               <section className="overflow-hidden rounded-3xl border border-[var(--theme-border)] bg-[var(--theme-card)] p-6 shadow-[0_24px_80px_var(--theme-shadow)]">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Agent Summary</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Сводка агента</p>
                   </div>
                   <span className={cn('rounded-full px-3 py-1 text-xs font-medium', historyStatusClasses)}>{historyStatusLabel}</span>
                 </div>
@@ -1244,7 +1244,7 @@ export function Conductor() {
                 )}
                 {selectedHistoryEntry.streamText && selectedHistoryEntry.completeSummary && (
                   <details className="mt-4 overflow-hidden rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg)] px-5 py-4">
-                    <summary className="cursor-pointer text-xs font-medium text-[var(--theme-muted)]">Raw Agent Output</summary>
+                    <summary className="cursor-pointer text-xs font-medium text-[var(--theme-muted)]">Сырой вывод агента</summary>
                     <div className="mt-4 border-t border-[var(--theme-border)] pt-4">
                       <Markdown className="max-h-[400px] max-w-none overflow-auto text-sm text-[var(--theme-text)]">{selectedHistoryEntry.streamText}</Markdown>
                     </div>
@@ -1256,7 +1256,7 @@ export function Conductor() {
                 <section className="overflow-hidden rounded-3xl border border-[var(--theme-border)] bg-[var(--theme-card)] p-6 shadow-[0_24px_80px_var(--theme-shadow)]">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Output</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Вывод</p>
                       <p className="mt-1 text-xs text-[var(--theme-muted-2)]">
                         Preview unavailable
                         {selectedHistoryOutputPath ? ` for ${selectedHistoryOutputLabel}` : ''}.
@@ -1269,7 +1269,7 @@ export function Conductor() {
                 </section>
               ) : historyOutputText ? (
                 <section className="overflow-hidden rounded-3xl border border-[var(--theme-border)] bg-[var(--theme-card)] p-6 shadow-[0_24px_80px_var(--theme-shadow)]">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Worker Output</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Вывод воркера</p>
                   <div className="mt-4 overflow-hidden rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg)] px-5 py-4">
                     <Markdown className="max-h-[600px] max-w-none overflow-auto text-sm text-[var(--theme-text)]">{historyOutputText}</Markdown>
                   </div>
@@ -1299,7 +1299,7 @@ export function Conductor() {
               <div className="flex items-center gap-2">
                 <div className="hidden md:block flex-1" />
                 <div className="hidden md:inline-flex shrink-0 items-center gap-2.5 rounded-full border border-[var(--theme-border)] bg-[var(--theme-card)] px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.24em] text-[var(--theme-muted)]">
-                  <span>Conductor</span>
+                  <span>Кондуктор</span>
                   <span className="size-2.5 shrink-0 rounded-full bg-emerald-400" />
                 </div>
                 <div className="flex md:flex-1 items-center justify-end gap-2 ml-auto md:ml-0">
@@ -1367,7 +1367,7 @@ export function Conductor() {
             {hasMissionHistory || conductor.recentSessions.length > 0 ? (
               <section className="mt-6 w-full space-y-3">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--theme-muted)]">Recent Missions</h2>
+                  <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--theme-muted)]">Последние миссии</h2>
                   {activityTotalPages > 1 && (
                     <div className="ml-auto flex items-center gap-1.5">
                       <span className="text-[10px] text-[var(--theme-muted-2)]">
@@ -1506,7 +1506,7 @@ export function Conductor() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-semibold tracking-tight text-[var(--theme-text)]">New Mission</h2>
+                    <h2 className="text-lg font-semibold tracking-tight text-[var(--theme-text)]">Новая миссия</h2>
                     <p className="mt-1 text-sm text-[var(--theme-muted-2)]">Describe the mission, constraints, and desired outcome.</p>
                   </div>
                   <button
@@ -1576,8 +1576,8 @@ export function Conductor() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Mission Defaults</p>
-                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--theme-text)]">Conductor settings</h2>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Настройки миссии по умолчанию</p>
+                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--theme-text)]">Настройки Кондуктора</h2>
                     <p className="mt-2 text-sm text-[var(--theme-muted-2)]">Set the models and defaults every new mission should inherit.</p>
                   </div>
                   <button
@@ -1606,7 +1606,7 @@ export function Conductor() {
                   />
 
                   <div className="space-y-2">
-                    <span className="text-sm font-medium text-[var(--theme-text)]">Project Directory</span>
+                    <span className="text-sm font-medium text-[var(--theme-text)]">Каталог проекта</span>
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -1627,7 +1627,7 @@ export function Conductor() {
                   </div>
 
                   <label className="block space-y-2">
-                    <span className="text-sm font-medium text-[var(--theme-text)]">Max Parallel Workers</span>
+                    <span className="text-sm font-medium text-[var(--theme-text)]">Макс. параллельных воркеров</span>
                     <input
                       type="number"
                       min={1}
@@ -1650,8 +1650,8 @@ export function Conductor() {
                       className="mt-1 size-4 rounded border-[var(--theme-border2)] accent-[var(--theme-accent)]"
                     />
                     <span className="min-w-0">
-                      <span className="block text-sm font-medium text-[var(--theme-text)]">Supervised Mode</span>
-                      <span className="mt-1 block text-sm text-[var(--theme-muted-2)]">Require approval before each task</span>
+                      <span className="block text-sm font-medium text-[var(--theme-text)]">Режим с подтверждением</span>
+                      <span className="mt-1 block text-sm text-[var(--theme-muted-2)]">Требовать подтверждение перед каждой задачей</span>
                     </span>
                   </label>
 
@@ -1987,7 +1987,7 @@ export function Conductor() {
               <section className="overflow-hidden rounded-3xl border border-[var(--theme-border)] bg-[var(--theme-card)] p-6 shadow-[0_24px_80px_var(--theme-shadow)]">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Output Preview</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Предпросмотр вывода</p>
                     <p className="mt-1 text-xs text-[var(--theme-muted-2)]">{completePhaseProjectPath.split('/').pop() || 'index.html'}</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -2047,7 +2047,7 @@ export function Conductor() {
                   <section className="overflow-hidden rounded-3xl border border-[var(--theme-border)] bg-[var(--theme-card)] p-6 shadow-[0_24px_80px_var(--theme-shadow)]">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Output</p>
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Вывод</p>
                         <p className="mt-1 text-xs text-[var(--theme-muted-2)]">{completePhaseProjectPath ? `Preview unavailable for ${completePhaseOutputLabel}` : 'Agent work output'}</p>
                       </div>
                     </div>
@@ -2100,7 +2100,7 @@ export function Conductor() {
             <section className="overflow-hidden rounded-3xl border border-[var(--theme-border)] bg-[var(--theme-card)] p-6 shadow-[0_24px_80px_var(--theme-shadow)]">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Agent Summary</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--theme-muted)]">Сводка агента</p>
                 </div>
                 <span
                   className={cn(
@@ -2147,7 +2147,7 @@ export function Conductor() {
               )}
               {conductor.streamText && completeSummary && (
                 <details className="mt-4 overflow-hidden rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg)] px-5 py-4">
-                  <summary className="cursor-pointer text-xs font-medium text-[var(--theme-muted)]">Raw Agent Output</summary>
+                  <summary className="cursor-pointer text-xs font-medium text-[var(--theme-muted)]">Сырой вывод агента</summary>
                   <div className="mt-4 border-t border-[var(--theme-border)] pt-4">
                     <Markdown className="max-h-[400px] max-w-none overflow-auto text-sm text-[var(--theme-text)]">{conductor.streamText}</Markdown>
                   </div>

@@ -831,7 +831,7 @@ export function RunConsole({
         {activeTab === 'timeline' ? (
           <div className="rounded-xl border border-primary-800/80 bg-primary-950/50 p-4 sm:p-5">
             {timelineBuckets.length === 0 ? (
-              <p className="text-sm text-primary-300">No timeline events yet</p>
+              <p className="text-sm text-primary-300">События на таймлайне отсутствуют</p>
             ) : (
               <ol className="space-y-4">
                 {timelineBuckets.map((bucket) => (
@@ -877,7 +877,7 @@ export function RunConsole({
         {activeTab === 'artifacts' ? (
           <div className="rounded-xl border border-primary-800/80 bg-primary-950/50 p-4 sm:p-5">
             {!artifacts || artifacts.length === 0 ? (
-              <p className="text-sm text-primary-300">No artifacts collected yet</p>
+              <p className="text-sm text-primary-300">Артефакты ещё не собраны</p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {artifacts
@@ -981,12 +981,12 @@ export function RunConsole({
             ) : (
               <div className="space-y-4">
                 <section className="rounded-lg border border-primary-800/80 bg-primary-900/50 p-3">
-                  <h3 className="text-sm font-semibold text-primary-100">Summary</h3>
+                  <h3 className="text-sm font-semibold text-primary-100">Сводка</h3>
                   <p className="mt-2 text-sm leading-relaxed text-primary-300">{report.summary}</p>
                 </section>
 
                 <section className="rounded-lg border border-primary-800/80 bg-primary-900/50 p-3">
-                  <h3 className="text-sm font-semibold text-primary-100">Key Findings</h3>
+                  <h3 className="text-sm font-semibold text-primary-100">Ключевые выводы</h3>
                   {report.keyFindings.length > 0 ? (
                     <ul className="mt-2 space-y-2">
                       {report.keyFindings.map((finding, index) => (
@@ -997,33 +997,33 @@ export function RunConsole({
                       ))}
                     </ul>
                   ) : (
-                    <p className="mt-2 text-sm text-primary-400">No key findings available</p>
+                    <p className="mt-2 text-sm text-primary-400">Ключевых выводов пока нет</p>
                   )}
                 </section>
 
                 <section className="grid gap-2 rounded-lg border border-primary-800/80 bg-primary-900/50 p-3 text-xs sm:grid-cols-3">
                   <div className="rounded-md border border-primary-800 bg-primary-950/70 px-2 py-1.5">
-                    <p className="text-primary-400">Duration</p>
+                    <p className="text-primary-400">Длительность</p>
                     <p className="mt-0.5 text-sm font-semibold text-primary-100">{report.duration}</p>
                   </div>
                   <div className="rounded-md border border-primary-800 bg-primary-950/70 px-2 py-1.5">
-                    <p className="text-primary-400">Total Tokens</p>
+                    <p className="text-primary-400">Всего токенов</p>
                     <p className="mt-0.5 text-sm font-semibold text-primary-100">{report.totalTokens.toLocaleString()}</p>
                   </div>
                   <div className="rounded-md border border-primary-800 bg-primary-950/70 px-2 py-1.5">
-                    <p className="text-primary-400">Total Cost</p>
+                    <p className="text-primary-400">Общая стоимость</p>
                     <p className="mt-0.5 text-sm font-semibold text-primary-100">${report.totalCost.toFixed(2)}</p>
                   </div>
                 </section>
 
                 <section className="overflow-hidden rounded-lg border border-primary-800/80 bg-primary-900/50">
-                  <h3 className="border-b border-primary-800/80 px-3 py-2 text-sm font-semibold text-primary-100">Agent Breakdown</h3>
+                  <h3 className="border-b border-primary-800/80 px-3 py-2 text-sm font-semibold text-primary-100">Разбивка по агентам</h3>
                   <table className="w-full text-left text-xs">
                     <thead className="bg-primary-950/70 text-primary-300">
                       <tr>
-                        <th className="px-3 py-2 font-medium">Agent</th>
-                        <th className="px-3 py-2 font-medium">Tasks Completed</th>
-                        <th className="px-3 py-2 font-medium">Tokens Used</th>
+                        <th className="px-3 py-2 font-medium">Агент</th>
+                        <th className="px-3 py-2 font-medium">Выполнено задач</th>
+                        <th className="px-3 py-2 font-medium">Использовано токенов</th>
                       </tr>
                     </thead>
                     <tbody>
