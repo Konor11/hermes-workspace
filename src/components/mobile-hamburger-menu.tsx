@@ -14,6 +14,7 @@ import {
   Menu01Icon,
   PuzzleIcon,
   Rocket01Icon,
+  Logout03Icon,
   Settings01Icon,
   UserGroupIcon,
   UserMultipleIcon,
@@ -356,6 +357,24 @@ export function MobileHamburgerMenu() {
             >
               <HugeiconsIcon
                 icon={Settings01Icon}
+                size={20}
+                strokeWidth={1.5}
+              />
+            </button>
+
+            {/* Logout */}
+            <button
+              type="button"
+              onClick={async () => {
+                try { await fetch('/api/auth/logout', { method: 'POST' }) } catch {}
+                window.location.assign('/login')
+              }}
+              className="flex items-center justify-center size-9 rounded-xl active:bg-white/10 transition-colors"
+              aria-label="Log out"
+              style={{ color: '#e05252' }}
+            >
+              <HugeiconsIcon
+                icon={Logout03Icon}
                 size={20}
                 strokeWidth={1.5}
               />

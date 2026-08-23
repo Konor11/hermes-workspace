@@ -5,6 +5,7 @@ import {
   Edit02Icon,
   Moon02Icon,
   PuzzleIcon,
+  Logout03Icon,
   Settings02Icon,
   Sun02Icon,
 } from '@hugeicons/core-free-icons'
@@ -1012,6 +1013,28 @@ export function DashboardScreen() {
           >
             <HugeiconsIcon
               icon={Settings02Icon}
+              size={15}
+              strokeWidth={1.7}
+            />
+          </button>
+          <button
+            type="button"
+            aria-label="Выйти"
+            title="Выйти"
+            onClick={async () => {
+              try { await fetch('/api/auth/logout', { method: 'POST' }) } catch {}
+              window.location.assign('/login')
+            }}
+            className="inline-flex size-9 items-center justify-center rounded-lg border transition-all hover:scale-[1.05] hover:bg-[var(--theme-card)]/70 hover:text-red-300"
+            style={{
+              borderColor: 'var(--theme-border)',
+              color: 'var(--theme-muted)',
+              background:
+                'linear-gradient(135deg, color-mix(in srgb, var(--theme-card) 80%, transparent), transparent)',
+            }}
+          >
+            <HugeiconsIcon
+              icon={Logout03Icon}
               size={15}
               strokeWidth={1.7}
             />
