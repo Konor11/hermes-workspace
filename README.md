@@ -75,8 +75,8 @@ Enter принимает значение по умолчанию.
 sudo bash scripts/install.sh
 
 # Или сразу с параметрами (неинтерактивно)
-sudo bash scripts/install.sh --domain dp.mydomain.com --dashboard-domain hermes.mydomain.com
-sudo bash scripts/install.sh --mode docker --domain dp.mydomain.com
+sudo bash scripts/install.sh --domain ws.mydomen.com --dashboard-domain dash.mydomen.com
+sudo bash scripts/install.sh --mode docker --domain ws.mydomen.com
 
 # Проверить, что всё пройдёт без ошибок, ничего не меняя
 sudo bash scripts/install.sh --dry-run
@@ -84,8 +84,10 @@ sudo bash scripts/install.sh --dry-run
 
 Интерактивное меню спросит:
 - **Режим рантайма** — `systemd` (по умолчанию) или `docker`.
-- **Домен для Workspace** — введи свой (напр. `dp.mydomain.com`) или оставь пустым (доступ по IP).
-- **Отдельный домен для Dashboard** — `нет` (по умолчанию) или `да` + ввод домена (напр. `dash.mydomain.com`).
+- **Куда устанавливаем?** — `vps` (по умолчанию) или `local` для локальной машины (без доменов и firewall).
+- **Firewall (ufw)** — только для VPS: `да` (по умолчанию) откроет наружу только 22/80/443.
+- **Домен для Workspace** — введи свой (напр. `ws.mydomen.com`) или оставь пустым (доступ по IP).
+- **Отдельный домен для Dashboard** — `нет` (по умолчанию) или `да` + ввод домена (напр. `dash.mydomen.com`).
 - **Секреты** (пароль workspace, basic-auth дашборда, API-токен гейтвея — подставляется авто).
 
 Скрипт сам:
@@ -98,17 +100,17 @@ sudo bash scripts/install.sh --dry-run
 
 ### Шаг 4. Настрой DNS и открой порты
 
-- Направь DNS-запись **A** твоего домена (например `dp.mydomain.com`) на IP сервера.
+- Направь DNS-запись **A** твоего домена (например `ws.mydomen.com`) на IP сервера.
 - Открой в фаерволе порты **80** и **443** (Caddy использует их для выпуска TLS-сертификата).
 - Если задал `--dashboard-domain` — и его тоже направь на тот же IP.
 
-Через ~30 секунд после запуска Caddy выпустит сертификат, и Workspace откроется по `https://dp.mydomain.com`.
+Через ~30 секунд после запуска Caddy выпустит сертификат, и Workspace откроется по `https://ws.mydomen.com`.
 
 ### Шаг 5. Вход
 
-- Открой `https://dp.mydomain.com` в браузере.
+- Открой `https://ws.mydomen.com` в браузере.
 - Войди под паролем, который ввёл на шаге 3 (секрет `HERMES_PASSWORD`).
-- Dashboard (если задал `--dashboard-domain`): `https://hermes.mydomain.com` — basic-auth из шага 3.
+- Dashboard (если задал `--dashboard-domain`): `https://dash.mydomen.com` — basic-auth из шага 3.
 
 ### Полезные команды
 
@@ -117,7 +119,7 @@ sudo bash scripts/install.sh --dry-run
 journalctl -u hermes-workspace -f
 
 # Перезапуск после правок
-sudo bash scripts/install.sh --update --domain dp.mydomain.com
+sudo bash scripts/install.sh --update --domain ws.mydomen.com
 
 # Docker-режим: логи и перезапуск
 docker compose -f /root/hermes-workspace/docker-compose.yml logs -f
@@ -984,16 +986,16 @@ PRs are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 **Домены:** любые FQDN, без ограничений на префикс.
 
 ```bash
-# systemd + Caddy, workspace на https://dp.mydomain.com, dashboard на https://hermes.mydomain.com
+# systemd + Caddy, workspace на https://ws.mydomen.com, dashboard на https://dash.mydomen.com
 sudo bash scripts/install.sh \
-  --domain dp.mydomain.com \
-  --dashboard-domain hermes.mydomain.com
+  --domain ws.mydomen.com \
+  --dashboard-domain dash.mydomen.com
 
 # или всё в Docker
-sudo bash scripts/install.sh --mode docker --domain dp.mydomain.com
+sudo bash scripts/install.sh --mode docker --domain ws.mydomen.com
 
 # сухой прогон (только проверки, без изменений)
-sudo bash scripts/install.sh --dry-run --domain dp.mydomain.com
+sudo bash scripts/install.sh --dry-run --domain ws.mydomen.com
 ```
 
 Скрипт интерактивно спросит 4 секрета (API-токен гейтвея, пароль Workspace, basic-auth дашборда) и запишет их в `/root/.hermes/workspace_env.conf` (chmod 600, вне репо).
