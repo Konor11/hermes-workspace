@@ -103,7 +103,7 @@ ensure_build_deps() {
 # Параметры (с дефолтами; перекрываются TUI или флагами)
 # ---------------------------------------------------------------------------
 WS_DIR="/root/hermes-workspace"
-REPO_URL="https://github.com/outsourc-e/hermes-workspace.git"
+REPO_URL="https://github.com/Konor11/hermes-workspace.git"
 GIT_REF="main"
 DO_BUILD=1
 UPDATE=0
@@ -527,12 +527,14 @@ else
   fi
 fi
 ok "Репозиторий: $WS_DIR"
-[[ "$DRY_RUN" -eq 0 ]] && cd "$WS_DIR"
+[[ "$DRY_RUN" -eq 0 ]] && { cd "$WS_DIR" || die "не удалось войти в $WS_DIR"; }
 
 # ---------------------------------------------------------------------------
 # 5. Сборка
 # ---------------------------------------------------------------------------
-if [[ "$DO_BUILD" -eq 1 ]]; then
+if [[ "$DO_BUILD" -eq 1 && "$DRY_RUN" -eq 1 ]]; then
+  info "[dry-run] пропускаю npm install + build"
+elif [[ "$DO_BUILD" -eq 1 ]]; then
   step "npm install + build"
   info "npm install (это может занять несколько минут) …"
   if npm install 2>&1 | tail -5; then
