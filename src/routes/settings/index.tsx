@@ -1761,6 +1761,13 @@ function ClaudeConfigSection({
               <div className="flex w-full max-w-sm items-center gap-2">
                 {provider.envKeys.map((envKey) => (
                   <div key={envKey} className="flex-1">
+                    <div
+                      className="mb-1 text-[10px] font-mono uppercase tracking-wide"
+                      style={{ color: 'var(--theme-muted)' }}
+                      title={envKey}
+                    >
+                      {envKey}
+                    </div>
                     {editingKey === envKey ? (
                       <div className="flex gap-2">
                         <Input
