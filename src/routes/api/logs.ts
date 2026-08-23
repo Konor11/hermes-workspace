@@ -37,6 +37,9 @@ export const Route = createFileRoute('/api/logs')({
           .filter((l) => l.length > 0)
           // Match on the actual log LEVEL token (e.g. "...,201 ERROR" / "FATAL"),
           // not on the word "error" appearing inside an INFO/WARNING message.
+          // Ignore systemd unit lifecycle noise (restarts are normal under
+          // Restart=always): only genuine agent errors should raise the banner.
+          .filter((l) => !/systemd\[1\]/.test(l))
           .filter((l) => /\b(ERROR|FATAL|CRITICAL|TRACEBACK)\b\s/.test(l) ||
                           /\b(ERROR|FATAL|CRITICAL|TRACEBACK)\b$/.test(l))
           // Keep only entries within the time window (parse the embedded

@@ -97,6 +97,10 @@ export function AttentionMarquee({
               if (item.source === 'cron') navigate({ to: '/jobs' })
               else if (item.source === 'config')
                 navigate({ to: '/settings', search: {} })
+              else if (item.source === 'log')
+                // Log attention: keep the user on the dashboard where
+                // the Logs Tail card shows the matching lines.
+                navigate({ to: '/dashboard', search: {} })
               else navigate({ to: '/jobs' })
             }
             return (
