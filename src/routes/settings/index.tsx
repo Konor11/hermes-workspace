@@ -371,8 +371,8 @@ function SettingsRoute() {
           {activeSection === 'appearance' && (
             <>
               <SettingsSection
-                title="Appearance"
-                description="Choose a workspace theme and accent color."
+                title="Внешний вид"
+                description="Тема Workspace и акцентный цвет."
                 icon={PaintBoardIcon}
               >
                 <div className="space-y-2">
@@ -400,10 +400,10 @@ function SettingsRoute() {
                         }
                         className="w-full rounded-xl border border-primary-200 bg-primary-50 px-3 py-2 text-sm text-primary-900 outline-none"
                       >
-                        <option value="system">System sans</option>
+                        <option value="system">Системный sans</option>
                         <option value="inter">Inter-style sans</option>
-                        <option value="serif">Serif</option>
-                        <option value="mono">Monospace</option>
+                        <option value="serif">С засечками</option>
+                        <option value="mono">Моноширинный</option>
                       </select>
                     </label>
                     <label className="block text-sm">
@@ -419,9 +419,9 @@ function SettingsRoute() {
                         }
                         className="w-full rounded-xl border border-primary-200 bg-primary-50 px-3 py-2 text-sm text-primary-900 outline-none"
                       >
-                        <option value="compact">Compact</option>
-                        <option value="comfortable">Comfortable</option>
-                        <option value="spacious">Spacious</option>
+                        <option value="compact">Компактный</option>
+                        <option value="comfortable">Просторный</option>
+                        <option value="spacious">Просторный</option>
                       </select>
                     </label>
                   </div>
@@ -429,20 +429,20 @@ function SettingsRoute() {
               </SettingsSection>
 
               <SettingsSection
-                title="Labs (experimental)"
-                description="Early/unfinished features. May change or be removed. Off by default."
+                title="Лаборатория (эксперимент)"
+                description="Ранние функции. Могут измениться. По умолчанию выключены."
                 icon={Settings02Icon}
               >
                 <SettingsRow
                   label="Echo Studio"
-                  description="Show the Echo Studio dashboard builder (scaffold) in the nav. Experimental."
+                  description="Конструктор Echo Studio в меню. Эксперимент."
                 >
                   <Switch
                     checked={settings.experimentalEchoStudio}
                     onCheckedChange={(checked) =>
                       updateSettings({ experimentalEchoStudio: checked })
                     }
-                    aria-label="Enable Echo Studio (experimental)"
+                    aria-label="Включить Echo Studio (эксперимент)"
                   />
                 </SettingsRow>
               </SettingsSection>
@@ -455,13 +455,13 @@ function SettingsRoute() {
           {/* ── Editor ──────────────────────────────────────────── */}
           {activeSection === ('editor' as SettingsSectionId) && (
             <SettingsSection
-              title="Editor"
-              description="Configure Monaco defaults for the files workspace."
+              title="Редактор"
+              description="Настройки редактора Monaco для файлов."
               icon={SourceCodeSquareIcon}
             >
               <SettingsRow
-                label="Font size"
-                description="Adjust editor font size between 12 and 20."
+                label="Размер шрифта"
+                description="Размер шрифта редактора от 12 до 20."
               >
                 <div className="flex w-full items-center gap-2 md:max-w-xs">
                   <input
@@ -484,27 +484,27 @@ function SettingsRoute() {
                 </div>
               </SettingsRow>
               <SettingsRow
-                label="Word wrap"
-                description="Wrap long lines in the editor by default."
+                label="Перенос строк"
+                description="Переносить длинные строки в редакторе."
               >
                 <Switch
                   checked={settings.editorWordWrap}
                   onCheckedChange={(checked) =>
                     updateSettings({ editorWordWrap: checked })
                   }
-                  aria-label="Word wrap"
+                  aria-label="Перенос строк"
                 />
               </SettingsRow>
               <SettingsRow
-                label="Minimap"
-                description="Show minimap preview in Monaco editor."
+                label="Миникарта"
+                description="Миникарта в редакторе Monaco."
               >
                 <Switch
                   checked={settings.editorMinimap}
                   onCheckedChange={(checked) =>
                     updateSettings({ editorMinimap: checked })
                   }
-                  aria-label="Show minimap"
+                  aria-label="Миникарта"
                 />
               </SettingsRow>
             </SettingsSection>
@@ -513,13 +513,13 @@ function SettingsRoute() {
           {/* ── Notifications ───────────────────────────────────── */}
           {activeSection === ('language' as SettingsSectionId) && (
             <SettingsSection
-              title="Language"
-              description="Choose the display language for the workspace UI."
+              title="Язык"
+              description="Язык интерфейса Workspace."
               icon={Settings02Icon}
             >
               <SettingsRow
-                label="Interface Language"
-                description="Translates navigation, labels, and buttons. Content from the agent remains in the agent's language."
+                label="Язык интерфейса"
+                description="Переводит навигацию и кнопки. Ответы агента остаются на языке агента."
               >
                 <select
                   value={getLocale()}
@@ -544,25 +544,25 @@ function SettingsRoute() {
           {activeSection === 'notifications' && (
             <>
               <SettingsSection
-                title="Notifications"
-                description="Control alert delivery and usage warning threshold."
+                title="Уведомления"
+                description="Уведомления и порог предупреждения по использованию."
                 icon={Notification03Icon}
               >
                 <SettingsRow
-                  label="Enable alerts"
-                  description="Show usage and system alert notifications."
+                  label="Включить уведомления"
+                  description="Уведомления об использовании и системные оповещения."
                 >
                   <Switch
                     checked={settings.notificationsEnabled}
                     onCheckedChange={(checked) =>
                       updateSettings({ notificationsEnabled: checked })
                     }
-                    aria-label="Enable alerts"
+                    aria-label="Включить уведомления"
                   />
                 </SettingsRow>
                 <SettingsRow
-                  label="Usage threshold"
-                  description="Set usage warning trigger between 50% and 100%."
+                  label="Порог использования"
+                  description="Порог предупреждения 50–100%."
                 >
                   <div className="flex w-full items-center gap-2 md:max-w-xs">
                     <input
@@ -590,25 +590,25 @@ function SettingsRoute() {
               </SettingsSection>
 
               <SettingsSection
-                title="Smart Suggestions"
-                description="Get proactive model suggestions to optimize cost and quality."
+                title="Умные подсказки"
+                description="Проактивные подсказки моделей для экономии и качества."
                 icon={Settings02Icon}
               >
                 <SettingsRow
-                  label="Enable smart suggestions"
-                  description="Suggest cheaper models for simple tasks or better models for complex work."
+                  label="Умные подсказки"
+                  description="Дешевле для простых задач, мощнее для сложных."
                 >
                   <Switch
                     checked={settings.smartSuggestionsEnabled}
                     onCheckedChange={(checked) =>
                       updateSettings({ smartSuggestionsEnabled: checked })
                     }
-                    aria-label="Enable smart suggestions"
+                    aria-label="Умные подсказки"
                   />
                 </SettingsRow>
                 <SettingsRow
-                  label="Preferred budget model"
-                  description="Default model for cheaper suggestions (leave empty for auto-detect)."
+                  label="Предпочтительная бюджетная модель"
+                  description="Модель для дешёвых подсказок (пусто — автоопределение)."
                 >
                   <select
                     value={settings.preferredBudgetModel}
@@ -616,11 +616,11 @@ function SettingsRoute() {
                       updateSettings({ preferredBudgetModel: e.target.value })
                     }
                     className="h-9 w-full rounded-lg border border-primary-200 dark:border-gray-600 bg-primary-50 dark:bg-gray-800 px-3 text-sm text-primary-900 dark:text-gray-100 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary-400 dark:focus-visible:ring-primary-500 md:max-w-xs"
-                    aria-label="Preferred budget model"
+                    aria-label="Предпочтительная бюджетная модель"
                   >
                     <option value="">Auto-detect</option>
                     {modelsError && (
-                      <option disabled>Failed to load models</option>
+                      <option disabled>Не удалось загрузить модели</option>
                     )}
                     {availableModels.map((model) => (
                       <option key={model.id} value={model.id}>
@@ -630,8 +630,8 @@ function SettingsRoute() {
                   </select>
                 </SettingsRow>
                 <SettingsRow
-                  label="Preferred premium model"
-                  description="Default model for upgrade suggestions (leave empty for auto-detect)."
+                  label="Предпочтительная премиум-модель"
+                  description="Модель для апгрейд-подсказок (пусто — автоопределение)."
                 >
                   <select
                     value={settings.preferredPremiumModel}
@@ -639,11 +639,11 @@ function SettingsRoute() {
                       updateSettings({ preferredPremiumModel: e.target.value })
                     }
                     className="h-9 w-full rounded-lg border border-primary-200 dark:border-gray-600 bg-primary-50 dark:bg-gray-800 px-3 text-sm text-primary-900 dark:text-gray-100 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary-400 dark:focus-visible:ring-primary-500 md:max-w-xs"
-                    aria-label="Preferred premium model"
+                    aria-label="Предпочтительная премиум-модель"
                   >
                     <option value="">Auto-detect</option>
                     {modelsError && (
-                      <option disabled>Failed to load models</option>
+                      <option disabled>Не удалось загрузить модели</option>
                     )}
                     {availableModels.map((model) => (
                       <option key={model.id} value={model.id}>
@@ -653,15 +653,15 @@ function SettingsRoute() {
                   </select>
                 </SettingsRow>
                 <SettingsRow
-                  label="Only suggest cheaper models"
-                  description="Never suggest upgrades, only suggest cheaper alternatives."
+                  label="Только более дешёвые модели"
+                  description="Не предлагать апгрейды, только более дешёвые варианты."
                 >
                   <Switch
                     checked={settings.onlySuggestCheaper}
                     onCheckedChange={(checked) =>
                       updateSettings({ onlySuggestCheaper: checked })
                     }
-                    aria-label="Only suggest cheaper models"
+                    aria-label="Только более дешёвые модели"
                   />
                 </SettingsRow>
               </SettingsSection>
@@ -754,8 +754,8 @@ function _ProfileSection() {
 
   return (
     <SettingsSection
-      title="Profile"
-      description="Your display name and avatar for chat."
+      title="Профиль"
+      description="Ваше имя и аватар в чате."
       icon={UserIcon}
     >
       <div className="flex items-center gap-4">
@@ -771,15 +771,15 @@ function _ProfileSection() {
           </p>
         </div>
       </div>
-      <SettingsRow label="Display name" description="Leave blank for default.">
+      <SettingsRow label="Отображаемое имя" description="Пусто — значение по умолчанию.">
         <div className="w-full md:max-w-xs">
           <Input
             value={chatSettings.displayName}
             onChange={(e) => handleNameChange(e.target.value)}
-            placeholder="User"
+            placeholder="Пользователь"
             className="h-9 w-full"
             maxLength={50}
-            aria-label="Display name"
+            aria-label="Отображаемое имя"
             aria-invalid={!!nameError}
             aria-describedby={nameError ? 'profile-name-error' : undefined}
           />
@@ -795,8 +795,8 @@ function _ProfileSection() {
         </div>
       </SettingsRow>
       <SettingsRow
-        label="Profile picture"
-        description="Resized to 128×128, stored locally."
+        label="Аватар"
+        description="Уменьшено до 128×128, хранится локально."
       >
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
@@ -806,7 +806,7 @@ function _ProfileSection() {
                 accept="image/*"
                 onChange={handleAvatarUpload}
                 disabled={profileProcessing}
-                aria-label="Upload profile picture"
+                aria-label="Загрузить аватар"
                 className="block w-full cursor-pointer text-xs text-primary-700 dark:text-gray-300 md:max-w-xs file:mr-2 file:cursor-pointer file:rounded-md file:border file:border-primary-200 dark:file:border-gray-600 file:bg-primary-100 dark:file:bg-gray-700 file:px-2.5 file:py-1.5 file:text-xs file:font-medium file:text-primary-900 dark:file:text-gray-100 file:transition-colors hover:file:bg-primary-200 dark:hover:file:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </label>
@@ -840,48 +840,48 @@ function ChatDisplaySection() {
   return (
     <>
       <SettingsSection
-        title="Chat Display"
-        description="Control what's visible in chat messages."
+        title="Отображение чата"
+        description="Что показывать в сообщениях чата."
         icon={MessageMultiple01Icon}
       >
         <SettingsRow
-          label="Show tool messages"
-          description="Display tool call details when the agent uses tools."
+          label="Показывать сообщения инструментов"
+          description="Показывать детали вызова инструментов."
         >
           <Switch
             checked={chatSettings.showToolMessages}
             onCheckedChange={(checked) =>
               updateChatSettings({ showToolMessages: checked })
             }
-            aria-label="Show tool messages"
+            aria-label="Показывать сообщения инструментов"
           />
         </SettingsRow>
         <SettingsRow
-          label="Show reasoning blocks"
-          description="Display model thinking and reasoning process."
+          label="Блоки рассуждений"
+          description="Показывать размышления модели."
         >
           <Switch
             checked={chatSettings.showReasoningBlocks}
             onCheckedChange={(checked) =>
               updateChatSettings({ showReasoningBlocks: checked })
             }
-            aria-label="Show reasoning blocks"
+            aria-label="Блоки рассуждений"
           />
         </SettingsRow>
         <SettingsRow
-          label="Sound on response complete"
-          description="Play a short sound in the browser when the agent finishes replying."
+          label="Звук по завершении ответа"
+          description="Короткий звук по завершении ответа."
         >
           <Switch
             checked={chatSettings.soundOnChatComplete}
             onCheckedChange={(checked) =>
               updateChatSettings({ soundOnChatComplete: checked })
             }
-            aria-label="Sound on response complete"
+            aria-label="Звук по завершении ответа"
           />
         </SettingsRow>
         <SettingsRow
-          label="Enter key behavior"
+          label="Поведение клавиши Enter"
           description={
             chatSettings.enterBehavior === 'newline'
               ? 'Enter inserts a newline. Use ⌘/Ctrl+Enter to send.'
@@ -895,12 +895,12 @@ function ChatDisplaySection() {
                 enterBehavior: checked ? 'newline' : 'send',
               })
             }
-            aria-label="Enter inserts newline instead of sending"
+            aria-label="Enter переносит строку вместо отправки"
           />
         </SettingsRow>
         <SettingsRow
-          label="Chat content width"
-          description="Controls the max-width of the message column on wide screens."
+          label="Ширина чата"
+          description="Максимальная ширина колонки сообщений на широких экранах."
         >
           <select
             value={chatSettings.chatWidth}
@@ -910,15 +910,15 @@ function ChatDisplaySection() {
               })
             }
             className="h-8 rounded-md border border-primary-200 bg-primary-50 px-2 text-sm text-primary-900 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary-400"
-            aria-label="Chat content width"
+            aria-label="Ширина чата"
           >
             <option value="comfortable">Comfortable (900px)</option>
             <option value="wide">Wide (1200px)</option>
-            <option value="full">Full width</option>
+            <option value="full">На всю ширину</option>
           </select>
         </SettingsRow>
         <SettingsRow
-          label="Expand sidebar on hover"
+          label="Раскрывать сайдбар при наведении"
           description={
             chatSettings.sidebarHoverExpand
               ? 'Collapsed sidebar expands temporarily when you hover over it.'
@@ -930,19 +930,19 @@ function ChatDisplaySection() {
             onCheckedChange={(checked) =>
               updateChatSettings({ sidebarHoverExpand: checked })
             }
-            aria-label="Expand sidebar on hover"
+            aria-label="Раскрывать сайдбар при наведении"
           />
         </SettingsRow>
         <SettingsRow
-          label="Show usage meter"
-          description="Show the floating usage/provider pill in chat. Off by default to keep the composer clean."
+          label="Индикатор использования"
+          description="Плавающий индикатор использования в чате. Выключено по умолчанию."
         >
           <Switch
             checked={settings.showUsageMeter}
             onCheckedChange={(checked) =>
               updateSettings({ showUsageMeter: checked })
             }
-            aria-label="Show usage meter"
+            aria-label="Индикатор использования"
           />
         </SettingsRow>
       </SettingsSection>
@@ -1001,8 +1001,8 @@ function _LoaderStyleSection() {
 
   return (
     <SettingsSection
-      title="Loading Animation"
-      description="Choose the animation while the assistant is streaming."
+      title="Анимация загрузки"
+      description="Анимация при потоковом ответе ассистента."
       icon={Settings02Icon}
     >
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -1380,7 +1380,7 @@ function ClaudeConfigSection({
     return (
       <SettingsSection
         title="Hermes Agent"
-        description="Loading configuration..."
+        description="Загрузка конфигурации…"
         icon={Settings02Icon}
       >
         <div
@@ -1395,7 +1395,7 @@ function ClaudeConfigSection({
     return (
       <SettingsSection
         title="Hermes Agent"
-        description="Could not load Hermes configuration."
+        description="Не удалось загрузить конфигурацию Hermes."
         icon={Settings02Icon}
       >
         <p className="text-sm" style={{ color: 'var(--theme-muted)' }}>
@@ -1559,13 +1559,13 @@ function ClaudeConfigSection({
   const renderClaudeOverview = () => (
     <>
       <SettingsSection
-        title="Model & Provider"
-        description="Configure the default AI model for Hermes Agent."
+        title="Модель и провайдер"
+        description="Модель по умолчанию для Hermes Agent."
         icon={SourceCodeSquareIcon}
       >
         <SettingsRow
-          label="Provider"
-          description="Select the inference provider."
+          label="Провайдер"
+          description="Выберите провайдера инференса."
         >
           <div className="flex w-full max-w-sm gap-2">
             {availableProviders.length > 0 ? (
@@ -1600,7 +1600,7 @@ function ClaudeConfigSection({
         </SettingsRow>
         <SettingsRow
           label="Model"
-          description="The model Claude uses for conversations."
+          description="Модель Claude для диалогов."
         >
           <div className="flex w-full max-w-sm gap-2">
             {availableModels.length > 0 ? (
@@ -1635,8 +1635,8 @@ function ClaudeConfigSection({
           </div>
         </SettingsRow>
         <SettingsRow
-          label="Base URL"
-          description="For local providers (Ollama, LM Studio, MLX). Leave blank for cloud."
+          label="Базовый URL"
+          description="Для локальных провайдеров (Ollama, LM Studio, MLX). Для облака оставьте пустым."
         >
           <div className="flex w-full max-w-sm gap-2">
             <Input
@@ -1675,7 +1675,7 @@ function ClaudeConfigSection({
             <div className="mt-3 space-y-3 border-t border-primary-200 pt-3">
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="space-y-1">
-                  <span className="text-xs font-medium text-primary-600">Fallback provider</span>
+                  <span className="text-xs font-medium text-primary-600">Резервный провайдер</span>
                   <Input
                     value={fallbackProviderInput}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -1686,25 +1686,25 @@ function ClaudeConfigSection({
                   />
                 </label>
                 <label className="space-y-1">
-                  <span className="text-xs font-medium text-primary-600">Fallback model id</span>
+                  <span className="text-xs font-medium text-primary-600">Резервная модель</span>
                   <Input
                     value={fallbackModelInput}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setFallbackModelInput(e.target.value)
                     }
-                    placeholder="provider/model or model id"
+                    placeholder="провайдер/модель или ID модели"
                     className="font-mono text-sm"
                   />
                 </label>
               </div>
               <label className="block space-y-1">
-                <span className="text-xs font-medium text-primary-600">Fallback base URL</span>
+                <span className="text-xs font-medium text-primary-600">Резервный URL</span>
                 <Input
                   value={fallbackBaseUrlInput}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setFallbackBaseUrlInput(e.target.value)
                   }
-                  placeholder="Leave blank for hosted APIs"
+                  placeholder="Пусто для облачных API"
                   className="font-mono text-sm"
                 />
               </label>
@@ -1744,8 +1744,8 @@ function ClaudeConfigSection({
       </SettingsSection>
 
       <SettingsSection
-        title="API Keys"
-        description="Manage provider API keys stored in ~/.hermes/.env"
+        title="API-ключи"
+        description="Управление API-ключами из ~/.hermes/.env"
         icon={CloudIcon}
       >
         {data.providers
@@ -1828,13 +1828,13 @@ function ClaudeConfigSection({
       </SettingsSection>
 
       <SettingsSection
-        title="Memory"
-        description="Configure Hermes Agent memory and user profiles."
+        title="Память"
+        description="Память Hermes Agent и профили пользователя."
         icon={UserIcon}
       >
         <SettingsRow
-          label="Memory enabled"
-          description="Store and recall memories across sessions."
+          label="Память включена"
+          description="Хранить память между сессиями."
         >
           <Switch
             checked={memoryConfig.memory_enabled !== false}
@@ -1846,8 +1846,8 @@ function ClaudeConfigSection({
           />
         </SettingsRow>
         <SettingsRow
-          label="User profile"
-          description="Remember user preferences and context."
+          label="Профиль пользователя"
+          description="Запоминать предпочтения и контекст."
         >
           <Switch
             checked={memoryConfig.user_profile_enabled !== false}
@@ -1861,11 +1861,11 @@ function ClaudeConfigSection({
       </SettingsSection>
 
       <SettingsSection
-        title="Terminal"
-        description="Shell execution settings."
+        title="Терминал"
+        description="Настройки выполнения команд оболочки."
         icon={SourceCodeSquareIcon}
       >
-        <SettingsRow label="Backend" description="Terminal execution backend.">
+        <SettingsRow label="Бэкенд" description="Бэкенд выполнения команд.">
           <span
             className="text-sm font-mono"
             style={{ color: 'var(--theme-muted)' }}
@@ -1874,8 +1874,8 @@ function ClaudeConfigSection({
           </span>
         </SettingsRow>
         <SettingsRow
-          label="Timeout"
-          description="Max seconds for terminal commands."
+          label="Таймаут"
+          description="Максимальное время терминальных команд (сек)."
         >
           <Input
             type="number"
@@ -1890,24 +1890,24 @@ function ClaudeConfigSection({
       </SettingsSection>
 
       <SettingsSection
-        title="Custom Providers"
-        description="Configure a custom OpenAI-compatible endpoint. Add named rows (with a title like Qwen3.6.Eclipse) to custom_providers; optional manifest env key and URL below only apply if you use that path."
+        title="Свои провайдеры"
+        description="Свой OpenAI-совместимый эндпоинт. Добавьте именованные строки (напр. Qwen3.6.Eclipse) в custom_providers; ключ манифеста и URL ниже — только для этого пути."
         icon={CloudIcon}
       >
         <div className="space-y-4 rounded-xl border border-primary-200 bg-primary-50/80 p-4">
           <div>
-            <p className="text-sm font-medium text-primary-900">Add custom provider</p>
+            <p className="text-sm font-medium text-primary-900">Добавить свой провайдер</p>
             <p className="mt-1 text-xs text-primary-600">
-              <span className="font-medium">Title</span> is for your list only (e.g.{' '}
+              <span className="font-medium">Заголовок</span> is for your list only (e.g.{' '}
               <span className="font-mono">Qwen3.6.Eclipse</span> = model + host).{' '}
-              <span className="font-medium">Provider id</span> is the config name Hermes uses — leave
+              <span className="font-medium">ID провайдера</span> is the config name Hermes uses — leave
               blank to derive a safe id from the title. Optional row API key is stored on this
               provider entry, not in .env.
             </p>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <label className="space-y-1 md:col-span-2">
-              <span className="text-xs font-medium text-primary-600">Title</span>
+              <span className="text-xs font-medium text-primary-600">Заголовок</span>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Input
                   value={addCpTitle}
@@ -1947,7 +1947,7 @@ function ClaudeConfigSection({
               />
             </label>
             <label className="space-y-1">
-              <span className="text-xs font-medium text-primary-600">Base URL</span>
+              <span className="text-xs font-medium text-primary-600">Базовый URL</span>
               <Input
                 value={addCpBaseUrl}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -1985,7 +1985,7 @@ function ClaudeConfigSection({
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                   setAddCpYamlKey(e.target.value)
                 }
-                placeholder="Leave blank if the server needs no key"
+                placeholder="Пусто, если серверу не нужен ключ"
                 className="font-mono text-sm"
               />
             </label>
@@ -2026,11 +2026,11 @@ function ClaudeConfigSection({
           <table className="w-full min-w-[720px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-primary-200 bg-primary-100/70 text-left text-[11px] font-semibold uppercase tracking-wide text-primary-600">
-                <th className="px-3 py-2">Source</th>
-                <th className="px-3 py-2">Title</th>
-                <th className="px-3 py-2">Provider id</th>
-                <th className="px-3 py-2">Base URL</th>
-                <th className="px-3 py-2 text-right">Actions</th>
+                <th className="px-3 py-2">Источник</th>
+                <th className="px-3 py-2">Заголовок</th>
+                <th className="px-3 py-2">ID провайдера</th>
+                <th className="px-3 py-2">Базовый URL</th>
+                <th className="px-3 py-2 text-right">Действия</th>
               </tr>
             </thead>
             <tbody>
@@ -2044,7 +2044,7 @@ function ClaudeConfigSection({
                   >
                     No rows in <span className="font-mono">custom_providers</span> yet, and no
                     primary base URL or manifest URL was detected. Use{' '}
-                    <span className="font-medium">Add custom provider</span>, or set Model &amp;
+                    <span className="font-medium">Добавить свой провайдер</span>, or set Model &amp;
                     Provider and click &quot;Save current model setup to list&quot;.
                   </td>
                 </tr>
@@ -2057,7 +2057,7 @@ function ClaudeConfigSection({
                     key={`saved-${key}-${index}`}
                     className="border-b border-primary-100 odd:bg-primary-50/40"
                   >
-                    <td className="px-3 py-2 align-top text-xs text-primary-600">Saved</td>
+                    <td className="px-3 py-2 align-top text-xs text-primary-600">Сохранено</td>
                     <td className="max-w-[160px] px-3 py-2 align-top text-xs font-medium text-primary-900 break-words">
                       {entry.title || '—'}
                     </td>
@@ -2147,7 +2147,7 @@ function ClaudeConfigSection({
               ) : null}
               {extraManifestNotInList ? (
                 <tr className="border-b border-primary-100 bg-sky-50/50">
-                  <td className="px-3 py-2 align-top text-xs text-sky-900">Manifest block</td>
+                  <td className="px-3 py-2 align-top text-xs text-sky-900">Блок манифеста</td>
                   <td className="max-w-[160px] px-3 py-2 align-top text-xs text-primary-800 break-words">
                     {(() => {
                       try {
@@ -2196,7 +2196,7 @@ function ClaudeConfigSection({
         </div>
 
         <SettingsRow
-          label="Manifest: CUSTOM_API_KEY"
+          label="Манифест: CUSTOM_API_KEY"
           description={
             customApiKeyConfigured
               ? '✅ Saved in ~/.hermes/.env for the manifest OpenAI provider.'
@@ -2219,7 +2219,7 @@ function ClaudeConfigSection({
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setCustomApiKey(e.target.value)
                       }
-                      placeholder="Leave blank to clear saved key"
+                      placeholder="Оставьте пустым, чтобы удалить сохранённый ключ"
                       className="min-w-[12rem] flex-1"
                     />
                     <Button
@@ -2270,7 +2270,7 @@ function ClaudeConfigSection({
           </div>
         </SettingsRow>
         <SettingsRow
-          label="Manifest: base URL"
+          label="Манифест: базовый URL"
           description={
             manifestBaseUrlOnly
               ? `✅ ${manifestBaseUrlOnly}`
@@ -2358,13 +2358,13 @@ function ClaudeConfigSection({
       </SettingsSection>
 
       <SettingsSection
-        title="About"
-        description="Hermes Agent runtime information."
+        title="О программе"
+        description="Информация о рантайме Hermes Agent."
         icon={Notification03Icon}
       >
         <SettingsRow
-          label="Config location"
-          description="Where Claude stores its configuration."
+          label="Расположение конфига"
+          description="Где Claude хранит конфигурацию."
         >
           <span
             className="text-xs font-mono"
@@ -2374,8 +2374,8 @@ function ClaudeConfigSection({
           </span>
         </SettingsRow>
         <SettingsRow
-          label="Active provider"
-          description="Current inference provider."
+          label="Активный провайдер"
+          description="Текущий провайдер инференса."
         >
           <span
             className="text-sm font-medium"
@@ -2391,13 +2391,13 @@ function ClaudeConfigSection({
 
   const renderAgentBehavior = () => (
     <SettingsSection
-      title="Agent Behavior"
-      description="Control agent execution limits and tool access."
+      title="Поведение агента"
+      description="Лимиты выполнения и доступ к инструментам."
       icon={Settings02Icon}
     >
       <SettingsRow
-        label="Max turns"
-        description="Maximum agent turns per request (1-100)."
+        label="Макс. ходов"
+        description="Максимум ходов агента на запрос (1–100)."
       >
         <Input
           type="number"
@@ -2411,8 +2411,8 @@ function ClaudeConfigSection({
         />
       </SettingsRow>
       <SettingsRow
-        label="Gateway timeout"
-        description="Seconds before gateway times out a request."
+        label="Таймаут gateway"
+        description="Секунд до таймаута запроса gateway."
       >
         <Input
           type="number"
@@ -2426,8 +2426,8 @@ function ClaudeConfigSection({
         />
       </SettingsRow>
       <SettingsRow
-        label="Tool use enforcement"
-        description="Whether the agent must use tools when available."
+        label="Обязательные инструменты"
+        description="Обязан ли агент использовать инструменты."
       >
         <select
           value={(agentConfig.tool_use_enforcement as string) || 'auto'}
@@ -2448,13 +2448,13 @@ function ClaudeConfigSection({
 
   const renderSmartRouting = () => (
     <SettingsSection
-      title="Smart Model Routing"
-      description="Automatically route simple queries to cheaper models."
+      title="Умная маршрутизация моделей"
+      description="Автоматически направлять простые запросы на более дешёвую модель."
       icon={SparklesIcon}
     >
       <SettingsRow
-        label="Enable smart routing"
-        description="Route simple queries to a cheaper model automatically."
+        label="Умная маршрутизация"
+        description="Автоматически направлять простые запросы на дешёвую модель."
       >
         <Switch
           checked={readBoolean(smartRouting.enabled, false)}
@@ -2466,8 +2466,8 @@ function ClaudeConfigSection({
         />
       </SettingsRow>
       <SettingsRow
-        label="Cheap model"
-        description="Model to use for simple queries."
+        label="Дешёвая модель"
+        description="Модель для простых запросов."
       >
         <select
           value={(smartRouting.cheap_model as string) || ''}
@@ -2478,7 +2478,7 @@ function ClaudeConfigSection({
           }
           className={selectClassName}
         >
-          <option value="">Select model</option>
+          <option value="">Выбрать модель</option>
           {availableModels.map((model) => (
             <option key={model.id} value={model.id}>
               {model.id}
@@ -2487,8 +2487,8 @@ function ClaudeConfigSection({
         </select>
       </SettingsRow>
       <SettingsRow
-        label="Max simple chars"
-        description="Messages shorter than this use the cheap model."
+        label="Макс. символов для простых"
+        description="Сообщения короче этого — дешёвая модель."
       >
         <Input
           type="number"
@@ -2506,8 +2506,8 @@ function ClaudeConfigSection({
         />
       </SettingsRow>
       <SettingsRow
-        label="Max simple words"
-        description="Messages with fewer words use the cheap model."
+        label="Макс. слов для простых"
+        description="Сообщения с меньшим числом слов — дешёвая модель."
       >
         <Input
           type="number"
@@ -2530,13 +2530,13 @@ function ClaudeConfigSection({
   const renderVoice = () => (
     <div className="space-y-4">
       <SettingsSection
-        title="Text-to-Speech"
-        description="Configure voice output for agent responses."
+        title="Синтез речи"
+        description="Настройка озвучивания ответов."
         icon={VolumeHighIcon}
       >
         <SettingsRow
-          label="TTS provider"
-          description="Which TTS engine to use."
+          label="Провайдер TTS"
+          description="Движок синтеза речи."
         >
           <select
             value={ttsProvider}
@@ -2553,7 +2553,7 @@ function ClaudeConfigSection({
         </SettingsRow>
 
         {ttsProvider === 'edge' && (
-          <SettingsRow label="Voice" description="Edge voice name.">
+          <SettingsRow label="Voice" description="Имя голоса Edge.">
             <Input
               value={(ttsEdge.voice as string) || ''}
               onChange={(e) =>
@@ -2569,7 +2569,7 @@ function ClaudeConfigSection({
 
         {ttsProvider === 'elevenlabs' && (
           <>
-            <SettingsRow label="Voice ID" description="ElevenLabs voice_id.">
+            <SettingsRow label="ID голоса" description="ElevenLabs voice_id.">
               <Input
                 value={(ttsElevenLabs.voice_id as string) || ''}
                 onChange={(e) =>
@@ -2637,11 +2637,11 @@ function ClaudeConfigSection({
       </SettingsSection>
 
       <SettingsSection
-        title="Speech-to-Text"
-        description="Configure voice input recognition."
+        title="Распознавание речи"
+        description="Настройка распознавания голоса."
         icon={Mic01Icon}
       >
-        <SettingsRow label="Enable STT" description="Turn on voice input.">
+        <SettingsRow label="Включить распознавание речи" description="Включить голосовой ввод.">
           <Switch
             checked={readBoolean(sttConfig.enabled, false)}
             onCheckedChange={(checked) =>
@@ -2650,8 +2650,8 @@ function ClaudeConfigSection({
           />
         </SettingsRow>
         <SettingsRow
-          label="STT provider"
-          description="Which speech engine to use."
+          label="Провайдер STT"
+          description="Движок распознавания речи."
         >
           <select
             value={sttProvider}
@@ -2669,7 +2669,7 @@ function ClaudeConfigSection({
         </SettingsRow>
         {sttProvider === 'local' && (
           <SettingsRow
-            label="Model size"
+            label="Размер модели"
             description="tiny, base, small, medium, large"
           >
             <select
@@ -2692,8 +2692,8 @@ function ClaudeConfigSection({
         {sttProvider === 'groq' && (
           <>
             <SettingsRow
-              label="Groq model"
-              description="Choose the Whisper model Groq should run."
+              label="Модель Groq"
+              description="Модель Whisper для Groq."
             >
               <select
                 value={(sttGroq.model as string) || GROQ_STT_MODELS[0]}
@@ -2712,8 +2712,8 @@ function ClaudeConfigSection({
               </select>
             </SettingsRow>
             <SettingsRow
-              label="Language"
-              description="Optional BCP-47 code, e.g. en or en-US. Leave blank for auto-detect."
+              label="Язык"
+              description="Код BCP-47, напр. ru или ru-RU. Пусто — автоопределение."
             >
               <Input
                 value={(sttConfig.language as string) || ''}
@@ -2734,11 +2734,11 @@ function ClaudeConfigSection({
 
   const renderDisplay = () => (
     <SettingsSection
-      title="Display"
-      description="CLI display preferences reflected in the agent UI."
+      title="Отображение"
+      description="Настройки отображения CLI в интерфейсе агента."
       icon={PaintBoardIcon}
     >
-      <SettingsRow label="Personality" description="Agent response style.">
+      <SettingsRow label="Личность" description="Стиль ответов агента.">
         <select
           value={(displayConfig.personality as string) || 'default'}
           onChange={(e) =>
@@ -2756,8 +2756,8 @@ function ClaudeConfigSection({
         </select>
       </SettingsRow>
       <SettingsRow
-        label="Streaming"
-        description="Stream tokens as they arrive."
+        label="Потоковый режим"
+        description="Показывать токены по мере поступления."
       >
         <Switch
           checked={readBoolean(displayConfig.streaming, true)}
@@ -2767,8 +2767,8 @@ function ClaudeConfigSection({
         />
       </SettingsRow>
       <SettingsRow
-        label="Show reasoning"
-        description="Expose model reasoning blocks in the UI."
+        label="Рассуждения"
+        description="Показывать блоки рассуждений модели."
       >
         <Switch
           checked={readBoolean(displayConfig.show_reasoning, false)}
@@ -2779,7 +2779,7 @@ function ClaudeConfigSection({
           }
         />
       </SettingsRow>
-      <SettingsRow label="Show cost" description="Display usage cost metadata.">
+      <SettingsRow label="Показывать стоимость" description="Показывать метаданные стоимости.">
         <Switch
           checked={readBoolean(displayConfig.show_cost, false)}
           onCheckedChange={(checked) =>
@@ -2787,7 +2787,7 @@ function ClaudeConfigSection({
           }
         />
       </SettingsRow>
-      <SettingsRow label="Compact" description="Use a denser display layout.">
+      <SettingsRow label="Компактный" description="Более плотная компоновка.">
         <Switch
           checked={readBoolean(displayConfig.compact, false)}
           onCheckedChange={(checked) =>
@@ -2795,7 +2795,7 @@ function ClaudeConfigSection({
           }
         />
       </SettingsRow>
-      <SettingsRow label="Skin" description="CLI theme skin.">
+      <SettingsRow label="Скин" description="Скин темы CLI.">
         <span
           className="text-sm font-mono"
           style={{ color: 'var(--theme-muted)' }}
@@ -2928,8 +2928,8 @@ function ConnectionSection() {
 
   return (
     <SettingsSection
-      title="Connection"
-      description="Point the workspace at your Hermes Agent services. Useful for Tailscale, LAN, or remote-server setups (#101)."
+      title="Подключение"
+      description="Адреса сервисов Hermes Agent. Полезно для Tailscale, LAN или удалённого сервера (#101)."
       icon={Link01Icon}
     >
       <div className="text-xs text-primary-600">
@@ -2937,8 +2937,8 @@ function ConnectionSection() {
       </div>
 
       <SettingsRow
-        label="Gateway URL"
-        description="Core chat + completions + health. Default http://127.0.0.1:8645."
+        label="URL gateway"
+        description="Чат, completions и health. По умолчанию http://127.0.0.1:8645."
       >
         <input
           className={inputClass}
@@ -2952,8 +2952,8 @@ function ConnectionSection() {
       </SettingsRow>
 
       <SettingsRow
-        label="Dashboard URL"
-        description="Extended APIs — sessions, skills, config, jobs. Default http://127.0.0.1:9119."
+        label="URL дашборда"
+        description="Расширенные API — сессии, навыки, конфиг, задачи. По умолчанию http://127.0.0.1:9119."
       >
         <input
           className={inputClass}
