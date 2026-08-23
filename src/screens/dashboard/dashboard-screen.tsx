@@ -1023,7 +1023,7 @@ export function DashboardScreen() {
             title="Выйти"
             onClick={async () => {
               try { await fetch('/api/auth/logout', { method: 'POST' }) } catch {}
-              window.location.assign('/login')
+              window.location.assign('/')
             }}
             className="inline-flex size-9 items-center justify-center rounded-lg border transition-all hover:scale-[1.05] hover:bg-[var(--theme-card)]/70 hover:text-red-300"
             style={{

@@ -367,7 +367,7 @@ export function MobileHamburgerMenu() {
               type="button"
               onClick={async () => {
                 try { await fetch('/api/auth/logout', { method: 'POST' }) } catch {}
-                window.location.assign('/login')
+                window.location.assign('/')
               }}
               className="flex items-center justify-center size-9 rounded-xl active:bg-white/10 transition-colors"
               aria-label="Log out"

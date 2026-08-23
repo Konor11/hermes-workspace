@@ -20,6 +20,7 @@ import {
   Rocket01Icon,
   Search01Icon,
   Settings01Icon,
+  Logout03Icon,
   Sun02Icon,
   UserGroupIcon,
   UserMultipleIcon,
@@ -1222,6 +1223,22 @@ function ChatSidebarComponent({
                   Settings
                 </span>
               </MenuItem>
+              <MenuItem
+                onClick={async () => {
+                  try { await fetch('/api/auth/logout', { method: 'POST' }) } catch {}
+                  window.location.assign('/')
+                }}
+                className="justify-between text-red-500 hover:bg-red-500/10"
+              >
+                <span className="flex items-center gap-2">
+                  <HugeiconsIcon
+                    icon={Logout03Icon}
+                    size={20}
+                    strokeWidth={1.5}
+                  />
+                  Log out
+                </span>
+              </MenuItem>
             </MenuContent>
           </MenuRoot>
 
@@ -1236,6 +1253,21 @@ function ChatSidebarComponent({
               >
                 <HugeiconsIcon
                   icon={Settings01Icon}
+                  size={16}
+                  strokeWidth={1.5}
+                />
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  try { await fetch('/api/auth/logout', { method: 'POST' }) } catch {}
+                  window.location.assign('/')
+                }}
+                className="shrink-0 rounded-lg p-1.5 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+                aria-label="Log out"
+              >
+                <HugeiconsIcon
+                  icon={Logout03Icon}
                   size={16}
                   strokeWidth={1.5}
                 />
