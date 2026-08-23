@@ -14,7 +14,7 @@ import {
   UserIcon,
   VolumeHighIcon,
 } from '@hugeicons/core-free-icons'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
 import type * as React from 'react'
 import type { LoaderStyle } from '@/hooks/use-chat-settings'
@@ -49,6 +49,34 @@ import { ThreeDotsSpinner } from '@/components/ui/three-dots-spinner'
 const VALID_SECTION_IDS: ReadonlyArray<SettingsNavId> = SETTINGS_NAV_ITEMS.map(
   (item) => item.id,
 )
+
+
+function LogoutSection() {
+  const navigate = useNavigate()
+  const [busy, setBusy] = useState(false)
+  const doLogout = async () => {
+    setBusy(true)
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } finally {
+      window.location.assign('/login')
+    }
+  }
+  return (
+    <div className="rounded-xl border border-red-400/25 bg-red-400/5 p-4">
+      <h3 className="text-sm font-semibold text-[var(--theme-text)]">Выход</h3>
+      <p className="mt-1 text-xs text-[var(--theme-muted)]">Завершить сессию на этом устройстве.</p>
+      <button
+        type="button"
+        disabled={busy}
+        onClick={doLogout}
+        className="mt-3 rounded-lg border border-red-300/30 bg-red-400/10 px-4 py-2 text-sm font-medium text-red-200 hover:bg-red-400/20 disabled:opacity-50"
+      >
+        {busy ? 'Выходим…' : 'Выйти'}
+      </button>
+    </div>
+  )
+}
 
 export const Route = createFileRoute('/settings/')({
   ssr: false,
@@ -2816,6 +2844,7 @@ function ClaudeConfigSection({
 
   return (
     <>
+      <LogoutSection />
       {saveMessage && (
         <div
           className="rounded-lg px-3 py-2 text-sm font-medium"
