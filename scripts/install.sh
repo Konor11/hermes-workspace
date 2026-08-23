@@ -583,7 +583,8 @@ prompt_secret() {
   if [[ -n "$cur" ]]; then
     hint="$hint ${C_YEL}(текущее задано, Enter — оставить)${C_RST}"
   fi
-  read -r -p "  $key — $hint: " val || true
+  echo "  $key — $hint:"
+  read -r val || true
   [[ -z "$val" && -n "$cur" ]] && val="$cur"
   printf '%s=%s\n' "$key" "$val"
 }
@@ -608,7 +609,7 @@ echo "(HERMES_API_TOKEN = API_SERVER_KEY гейтвея — подставляе
   # чтобы пользователю не нужно было вводить ключ вручную.
   if [[ -n "${GEN_KEY:-}" ]]; then
     printf '%s=%s\n' "HERMES_API_TOKEN" "$GEN_KEY"
-    echo "HERMES_API_TOKEN = сгенерированный API_SERVER_KEY (авто, без ввода)"
+
   else
     prompt_secret "HERMES_API_TOKEN" "Bearer-токен гейтвея (API_SERVER_KEY)" "$cur_token"
   fi
@@ -623,6 +624,14 @@ echo "(HERMES_API_TOKEN = API_SERVER_KEY гейтвея — подставляе
       cat > "$ENV_FILE"
     fi
 [[ "$DRY_RUN" -eq 0 ]] && chmod 600 "$ENV_FILE"
+
+# Workspace отказывается стартовать с HOST=0.0.0.0 без пароля (#122).
+# Если пользователь оставил HERMES_PASSWORD пустым — генерируем надёжный.
+if grep -qE '^HERMES_PASSWORD=$' "$ENV_FILE"; then
+  GEN_PW=$(python3 -c "import secrets; print(secrets.token_urlsafe(12))")
+  sed -i "s|^HERMES_PASSWORD=$|HERMES_PASSWORD=$GEN_PW|" "$ENV_FILE"
+  ok "HERMES_PASSWORD сгенерирован: $GEN_PW"
+fi
 ok "Записано: $ENV_FILE (chmod 600)"
 
 # Файл basic-auth для дашборда (читается unit'ом hermes-dashboard.service через
