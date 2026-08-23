@@ -12,7 +12,7 @@
 #
 # Использование:
 #   sudo bash scripts/install.sh
-#   sudo bash scripts/install.sh --domain ws.example.com --mode docker
+#   sudo bash scripts/install.sh --domain ws.mydomen.com --mode docker
 #   sudo bash scripts/install.sh --dry-run
 #
 set -uo pipefail
@@ -109,6 +109,8 @@ DO_BUILD=1
 UPDATE=0
 DRY_RUN=0
 MODE=""
+TARGET=""   # local | vps
+UFW_ENABLE=0
 DOMAIN=""
 DASH_DOMAIN=""
 GW_DOMAIN=""
@@ -120,6 +122,8 @@ while [[ $# -gt 0 ]]; do
     --repo)              REPO_URL="$2"; shift 2 ;;
     --ref)               GIT_REF="$2"; shift 2 ;;
     --mode)              MODE="$2"; shift 2 ;;
+    --target)            TARGET="$2"; shift 2 ;;
+    --ufw)               UFW_ENABLE=1; TARGET="vps"; shift ;;
     --domain)            DOMAIN="$2"; shift 2 ;;
     --dashboard-domain)  DASH_DOMAIN="$2"; shift 2 ;;
     --gateway-domain)    GW_DOMAIN="$2"; shift 2 ;;
@@ -188,19 +192,30 @@ tui_configure() {
   echo "${C_BLD}${C_GRN}╚════════════════════════════════════════════════════════════╝${C_RST}"
   echo
 
+  [[ -z "$TARGET" ]] && { ask_choice "Куда устанавливаем?" "vps" "vps" "local"; TARGET="$REPLY"; }
   [[ -z "$MODE" ]] && { ask_choice "Режим рантайма:" "systemd" "systemd" "docker"; MODE="$REPLY"; }
-  [[ -z "$DOMAIN" ]] && {
-    ask_text "Домен для Workspace (оставь пустым — доступ по IP:3000)" ""; DOMAIN="$REPLY"
-  }
-  # dashboard отдельным доменом?
-  if [[ -z "$DASH_DOMAIN" ]]; then
-    ask_choice "Отдельный домен для Dashboard (напр. dash.mydomain.com)?" "нет" "нет" "да"; local d="$REPLY"
-    if [[ "$d" == "да" ]]; then
-      ask_text "Домен dashboard (напр. hermes.твой-домен.com)" ""; DASH_DOMAIN="$REPLY"
+
+  if [[ "$TARGET" == "vps" ]]; then
+    [[ -z "$DOMAIN" ]] && {
+      ask_text "Домен для Workspace (напр. ws.mydomen.com, пусто — доступ по IP:3000)" ""; DOMAIN="$REPLY"
+    }
+    if [[ -z "$DASH_DOMAIN" ]]; then
+      ask_choice "Отдельный домен для Dashboard (напр. dash.mydomen.com)?" "нет" "нет" "да"; local d="$REPLY"
+      if [[ "$d" == "да" ]]; then
+        ask_text "Домен dashboard (напр. dash.mydomen.com)" ""; DASH_DOMAIN="$REPLY"
+      fi
     fi
+    if [[ $UFW_ENABLE -eq 0 ]]; then
+      ask_choice "Настроить firewall (ufw): открыть 22/80/443, закрыть остальные?" "да" "да" "нет"
+      UFW_ENABLE=$([[ "$REPLY" == "да" ]] && echo 1 || echo 0)
+    fi
+  else
+    DOMAIN=""; DASH_DOMAIN=""
+    info "Локальная установка: домены не используются, доступ по http://localhost:${WS_PORT:-3000}"
   fi
+
   echo
-  ok "Конфигурация принята: режим=$MODE, domain=${DOMAIN:-<IP>}, dashboard=${DASH_DOMAIN:-<нет>}"
+  ok "Конфигурация принята: target=$TARGET, режим=$MODE, domain=${DOMAIN:-<нет>}, dashboard=${DASH_DOMAIN:-<нет>}, ufw=$([[ $UFW_ENABLE -eq 1 ]] && echo да || echo нет)"
 }
 
 # Запуск TUI, если не все ключевые параметры заданы флагами и не --yes
@@ -846,6 +861,20 @@ fi
 # Финал
 # ---------------------------------------------------------------------------
 echo
+# ---------------------------------------------------------------------------
+# Firewall (ufw) — только для VPS
+# ---------------------------------------------------------------------------
+if [[ "$TARGET" == "vps" && $UFW_ENABLE -eq 1 ]] && command -v ufw >/dev/null 2>&1; then
+  step "Firewall (ufw)"
+  run "ufw allow 22/tcp"   # SSH — обязательно, иначе потеряешь доступ
+  run "ufw allow 80/tcp"   # HTTP (Caddy + ACME challenge)
+  run "ufw allow 443/tcp"  # HTTPS
+  run "yes | ufw enable"
+  ok "UFW активен: наружу только 22/80/443; прямые порты закрыты (доступ через домены/Caddy)"
+elif [[ "$TARGET" == "local" ]]; then
+  info "Локальная машина: firewall не настраиваю."
+fi
+
 echo "${C_GRN}${C_BLD}Готово!${C_RST} (режим: $MODE)"
 if [[ -n "$DOMAIN" ]]; then
   echo "  Workspace : https://$DOMAIN/  (порт $WS_PORT)"
