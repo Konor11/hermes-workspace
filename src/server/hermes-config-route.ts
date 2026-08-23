@@ -184,6 +184,7 @@ function applyLegacyEnvBody(
   } catch {}
 
   for (const [key, value] of Object.entries(envUpdates)) {
+    if (key.startsWith('__envc__')) continue // reserved: preserved comments
     if (value === '' || value === null) delete current[key]
     else current[key] = value
   }

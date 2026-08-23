@@ -69,10 +69,18 @@ export function resolveHermesConfigPaths(): HermesConfigPaths {
 }
 
 export function parseEnvFile(raw: string): Record<string, string> {
+  // Preserve comments and blank lines so writeFileSync round-trips the file
+  // without destroying documentation. Comments are stored under reserved
+  // __envc__<n> keys in document order.
   const env: Record<string, string> = {}
+  let ci = 0
   for (const line of raw.split('\n')) {
     const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#')) continue
+    if (!trimmed) continue // blank lines carry no information
+    if (trimmed.startsWith('#')) {
+      env[`__envc__${ci++}`] = line // preserve comments verbatim
+      continue
+    }
     const eqIdx = trimmed.indexOf('=')
     if (eqIdx <= 0) continue
     const key = trimmed.slice(0, eqIdx).trim()
@@ -104,6 +112,22 @@ function quoteEnvValue(value: string): string {
 }
 
 export function stringifyEnv(env: Record<string, string>): string {
+  const commentKeys = Object.keys(env).filter((k) => k.startsWith('__envc__'))
+  if (commentKeys.length > 0) {
+    // Round-trip mode: emit preserved comments/blank lines and real pairs,
+    // keeping original document order via the numeric suffix.
+    const parts: { order: number; text: string }[] = []
+    let n = 0
+    for (const [k, v] of Object.entries(env)) {
+      if (k.startsWith('__envc__')) {
+        parts.push({ order: parseInt(k.slice(8), 10), text: v })
+      } else {
+        parts.push({ order: 100000 + n++, text: `${k}=${quoteEnvValue(v)}` })
+      }
+    }
+    parts.sort((a, b) => a.order - b.order)
+    return parts.map((x) => x.text).join('\n') + '\n'
+  }
   return Object.entries(env)
     .map(([k, v]) => `${k}=${quoteEnvValue(v)}`)
     .join('\n') + '\n'
