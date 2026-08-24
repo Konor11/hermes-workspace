@@ -42,7 +42,7 @@ export const defaultStudioSettings: StudioSettings = {
   claudeToken: '',
   theme: 'system',
   accentColor: 'blue',
-  showUsageMeter: false,
+  showUsageMeter: true,
   editorFontSize: 13,
   editorWordWrap: true,
   editorMinimap: false,
