@@ -91,6 +91,13 @@ export const MOBILE_NAV_TABS: Array<TabItem> = [
     match: (p) => p.startsWith('/jobs'),
   },
   {
+    id: 'tasks',
+    labelKey: 'nav.tasks',
+    icon: Task01Icon,
+    to: '/tasks',
+    match: (p) => p.startsWith('/tasks'),
+  },
+  {
     id: 'swarm',
     labelKey: 'nav.swarm',
     icon: UserGroupIcon,
@@ -132,13 +139,6 @@ export const MOBILE_NAV_TABS: Array<TabItem> = [
     icon: Settings01Icon,
     to: '/settings',
     match: (p) => p.startsWith('/settings'),
-  },
-  {
-    id: 'tasks',
-    labelKey: 'nav.tasks',
-    icon: Task01Icon,
-    to: '/tasks',
-    match: (p) => p.startsWith('/tasks'),
   },
 ]
 
@@ -282,7 +282,7 @@ export function MobileTabBar() {
           'rounded-full',
           'border border-primary-200/40',
           // Inner padding
-          'px-2 py-2',
+          'px-1 py-1.5',
           // Hide/show animation
           'transition-all duration-300 ease-in-out',
           isChatRoute
@@ -295,12 +295,12 @@ export function MobileTabBar() {
         onTouchMove={handlePillTouchMove}
         onTouchEnd={handlePillTouchEnd}
       >
-        <div className="flex items-center gap-0.5 pointer-events-auto px-1">
+        <div className="flex items-center gap-0 pointer-events-auto px-0.5">
           {MOBILE_NAV_TABS.map((tab, idx) => {
             const isActive = tab.match(pathname)
             const isCenter = tab.id === 'chat'
             const circleSize =
-              isCenter && isActive ? 'size-8' : isActive ? 'size-7' : 'size-8'
+              isCenter && isActive ? 'size-8' : 'size-7'
 
             return (
               <button
@@ -318,7 +318,7 @@ export function MobileTabBar() {
                 className={cn(
                   // 32x32 touch target (compact to fit all 9 tabs on mobile)
                   'flex items-center justify-center',
-                  'size-8 rounded-full',
+                  'size-7 rounded-full',
                   'transition-all duration-200 active:scale-90',
                   'select-none touch-manipulation',
                   'outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-0',
@@ -336,7 +336,7 @@ export function MobileTabBar() {
                 >
                   <HugeiconsIcon
                     icon={tab.icon}
-                    size={isCenter ? 18 : 16}
+                    size={isCenter ? 18 : 14}
                     strokeWidth={isActive ? 2 : 1.6}
                   />
                 </span>
