@@ -176,20 +176,20 @@ export function WorkspaceShell({ children }: WorkspaceShellProps) {
 
   // Derive active session from URL
   const mobilePageTitle = (() => {
-    if (pathname.startsWith('/terminal')) return 'Terminal'
-    if (pathname.startsWith('/files')) return 'Files'
-    if (pathname.startsWith('/jobs')) return 'Jobs'
+    if (pathname.startsWith('/terminal')) return 'Терминал'
+    if (pathname.startsWith('/files')) return 'Файлы'
+    if (pathname.startsWith('/jobs')) return 'Задания'
     if (pathname.startsWith('/conductor')) return 'Conductor'
-    if (pathname.startsWith('/operations')) return 'Operations'
+    if (pathname.startsWith('/operations')) return 'Операции'
     if (pathname.startsWith('/swarm2') || pathname === '/swarm') return 'Swarm'
     if (pathname.startsWith('/echo-studio')) return 'Echo Studio'
-    if (pathname.startsWith('/memory')) return 'Memory'
-    if (pathname.startsWith('/skills')) return 'Skills'
+    if (pathname.startsWith('/memory')) return 'Память'
+    if (pathname.startsWith('/skills')) return 'Навыки'
     if (pathname.startsWith('/mcp')) return 'MCP'
-    if (pathname.startsWith('/profiles')) return 'Profiles'
-    if (pathname.startsWith('/settings')) return 'Settings'
-    if (pathname.startsWith('/debug')) return 'Debug'
-    if (pathname.startsWith('/activity')) return 'Activity'
+    if (pathname.startsWith('/profiles')) return 'Профили'
+    if (pathname.startsWith('/settings')) return 'Настройки'
+    if (pathname.startsWith('/debug')) return 'Отладка'
+    if (pathname.startsWith('/activity')) return 'Активность'
     return null
   })()
 
