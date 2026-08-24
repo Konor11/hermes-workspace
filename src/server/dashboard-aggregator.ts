@@ -1060,10 +1060,12 @@ function normalizeLogs(
   let warnCount = 0
   for (const line of lines) {
     const lower = line.toLowerCase()
-    if (
-      /\b(error|exception|traceback|failed|fatal)\b/.test(lower) ||
-      lower.includes('errno')
-    ) {
+    // Count only genuine log LEVEL tokens (",201 ERROR" / FATAL / Traceback),
+    // not the word "failed"/"error" inside WARNING messages (e.g. Telegram
+    // "reconnect failed: Bad Gateway" is a transient network notice).
+    const isRealError = /,\d{3}\s+(ERROR|FATAL|CRITICAL)\b/.test(line) ||
+      /\bTraceback \(most recent call last\)/.test(line)
+    if (isRealError) {
       errorCount += 1
     } else if (/\b(warn|warning|deprecated)\b/.test(lower)) {
       warnCount += 1
