@@ -625,6 +625,21 @@ echo "(HERMES_API_TOKEN = API_SERVER_KEY гейтвея — подставляе
     fi
 [[ "$DRY_RUN" -eq 0 ]] && chmod 600 "$ENV_FILE"
 
+# HERMES_API_TOKEN obligatorisch: bez nego workspace slot pustoy Bearer.
+if ! grep -qE '^HERMES_API_TOKEN=.+' "$ENV_FILE"; then
+  GW_KEY=$(grep -E '^API_SERVER_KEY=' /root/.hermes/.env 2>/dev/null | cut -d= -f2- || true)
+  if [[ -n "$GW_KEY" ]]; then
+    if grep -qE '^HERMES_API_TOKEN=' "$ENV_FILE"; then
+      sed -i "s|^HERMES_API_TOKEN=.*|HERMES_API_TOKEN=$GW_KEY|" "$ENV_FILE"
+    else
+      echo "HERMES_API_TOKEN=$GW_KEY" >> "$ENV_FILE"
+    fi
+    ok "HERMES_API_TOKEN = API_SERVER_KEY (auto)"
+  else
+    warn "API_SERVER_KEY not found in /root/.hermes/.env"
+  fi
+fi
+
 # Workspace отказывается стартовать с HOST=0.0.0.0 без пароля (#122).
 # Если пользователь оставил HERMES_PASSWORD пустым — генерируем надёжный.
 if grep -qE '^HERMES_PASSWORD=$' "$ENV_FILE"; then
