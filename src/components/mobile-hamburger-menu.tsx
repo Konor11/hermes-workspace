@@ -7,6 +7,7 @@ import {
   Castle02Icon,
   Chat01Icon,
   Clock01Icon,
+  Task01Icon,
   CommandLineIcon,
   DashboardSquare01Icon,
   File01Icon,
@@ -65,6 +66,13 @@ export const MOBILE_HAMBURGER_NAV_ITEMS = [
     icon: Clock01Icon,
     to: '/jobs',
     match: (p: string) => p.startsWith('/jobs'),
+  },
+  {
+    id: 'tasks',
+    labelKey: 'nav.tasks',
+    icon: Task01Icon,
+    to: '/tasks',
+    match: (p: string) => p.startsWith('/tasks'),
   },
   {
     id: 'conductor',
