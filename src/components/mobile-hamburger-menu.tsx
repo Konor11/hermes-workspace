@@ -185,11 +185,13 @@ export function MobileHamburgerMenu() {
 
   const navigate = useNavigate()
   const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const { order: tabOrder } = useTabOrder()
   const profileDisplayName = useChatSettingsStore(selectChatProfileDisplayName)
   const echoStudioEnabled = useSettingsStore(
     (state) => state.settings.experimentalEchoStudio,
   )
-  const visibleNavItems = MOBILE_HAMBURGER_NAV_ITEMS.filter(
+  const orderedNavItems = applyTabOrder(MOBILE_HAMBURGER_NAV_ITEMS, tabOrder)
+  const visibleNavItems = orderedNavItems.filter(
     (item) => item.id !== 'echo-studio' || echoStudioEnabled,
   )
   const isChatRoute =
