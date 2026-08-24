@@ -57,7 +57,7 @@ async function resolveBackend(): Promise<BackendResolution> {
     // missing (returns -1 for non-JSON / route-not-found) or empty.
     // Default to claude when both are empty — it is the active backend after the
     // hermes-tasks → claude-tasks route rename (commit efcb7d14).
-    const useHermes = hermesCount > 0 && hermesCount >= claudeCount
+    const useHermes = claudeCount <= 0 || (hermesCount > 0 && hermesCount >= claudeCount)
     _resolved = {
       base: useHermes ? HERMES_BASE : CLAUDE_BASE,
       assigneesBase: useHermes ? '/api/hermes-tasks-assignees' : '/api/claude-tasks-assignees',

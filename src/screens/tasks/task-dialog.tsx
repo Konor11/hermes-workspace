@@ -82,15 +82,15 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, assignees,
 
         <div className="p-5">
           <DialogTitle className="text-base font-semibold text-[var(--theme-text)] mb-1">
-            {isEdit ? 'Edit Task' : 'New Task'}
+            {isEdit ? 'Edit Task' : 'Новая задача'}
           </DialogTitle>
           <DialogDescription className="text-xs text-[var(--theme-muted)] mb-4">
-            {isEdit ? 'Update the task details below.' : 'Fill in the details for your new task.'}
+            {isEdit ? 'Update the task details below.' : 'Заполните параметры новой задачи.'}
           </DialogDescription>
 
           <form onSubmit={handleSubmit} className="space-y-3">
             <div>
-              <label className={labelClass}>Title *</label>
+              <label className={labelClass}>Название *</label>
               <input
                 className={inputClass}
                 value={title}
@@ -156,7 +156,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, assignees,
                   ))}
                 </select>
                 <p className="mt-1 text-[10px] text-[var(--theme-muted)]">
-                  Assignee is separate from status. Dragging a card changes its column only.
+                  Исполнитель is separate from status. Dragging a card changes its column only.
                 </p>
               </div>
               <div>
@@ -172,7 +172,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, assignees,
             </div>
 
             <div>
-              <label className={labelClass}>Tags (comma-separated)</label>
+              <label className={labelClass}>Теги (через запятую)</label>
               <input
                 className={inputClass}
                 value={tags}
@@ -182,7 +182,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, assignees,
             </div>
 
             <div className="flex items-center justify-between pt-2">
-              <p className="text-[10px] text-[var(--theme-muted)]">Press Esc to cancel</p>
+              <p className="text-[10px] text-[var(--theme-muted)]">Esc — отмена</p>
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -191,7 +191,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, assignees,
                   onClick={() => onOpenChange(false)}
                   disabled={isSubmitting}
                 >
-                  Cancel
+                  Отмена
                 </Button>
                 <Button
                   type="submit"
@@ -199,7 +199,7 @@ export function TaskDialog({ open, onOpenChange, task, defaultColumn, assignees,
                   disabled={isSubmitting || !title.trim()}
                   style={{ background: 'var(--theme-accent)', color: 'white' }}
                 >
-                  {isSubmitting ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Task'}
+                  {isSubmitting ? 'Saving...' : isEdit ? 'Save Changes' : 'Создать задачу'}
                 </Button>
               </div>
             </div>

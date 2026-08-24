@@ -12,6 +12,7 @@ import {
   PuzzleIcon,
   Rocket01Icon,
   Settings01Icon,
+  Task01Icon,
   UserGroupIcon,
 } from '@hugeicons/core-free-icons'
 import {
@@ -131,6 +132,13 @@ export const MOBILE_NAV_TABS: Array<TabItem> = [
     icon: Settings01Icon,
     to: '/settings',
     match: (p) => p.startsWith('/settings'),
+  },
+  {
+    id: 'tasks',
+    labelKey: 'nav.tasks',
+    icon: Task01Icon,
+    to: '/tasks',
+    match: (p) => p.startsWith('/tasks'),
   },
 ]
 

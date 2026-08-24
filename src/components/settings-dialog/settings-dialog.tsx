@@ -23,7 +23,7 @@ import type { AccentColor, SettingsThemeMode } from '@/hooks/use-settings'
 import type { LoaderStyle } from '@/hooks/use-chat-settings'
 import type { BrailleSpinnerPreset } from '@/components/ui/braille-spinner'
 import type { ThemeId } from '@/lib/theme'
-import type {LocaleId} from '@/lib/i18n';
+import type {localeId} from '@/lib/i18n';
 import { GROQ_STT_MODELS, STT_PROVIDER_OPTIONS } from '@/lib/stt-config'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -75,14 +75,14 @@ type SectionId =
   | 'language'
 
 const SECTIONS: Array<{ id: SectionId; label: string; icon: any }> = [
-  { id: 'claude', label: 'Model & Provider', icon: CloudIcon },
-  { id: 'agent', label: 'Agent', icon: Settings02Icon },
-  { id: 'voice', label: 'Voice', icon: VolumeHighIcon },
-  { id: 'display', label: 'Display', icon: PaintBoardIcon },
-  { id: 'appearance', label: 'Theme', icon: PaintBoardIcon },
-  { id: 'chat', label: 'Chat', icon: MessageMultiple01Icon },
-  { id: 'notifications', label: 'Alerts', icon: Notification03Icon },
-  { id: 'language', label: 'Language', icon: MessageMultiple01Icon },
+  { id: 'claude', label: 'Модель и провайдер', icon: CloudIcon },
+  { id: 'agent', label: 'Агент', icon: Settings02Icon },
+  { id: 'voice', label: 'Голос', icon: VolumeHighIcon },
+  { id: 'display', label: 'Отображение', icon: PaintBoardIcon },
+  { id: 'appearance', label: 'Тема', icon: PaintBoardIcon },
+  { id: 'chat', label: 'Чат', icon: MessageMultiple01Icon },
+  { id: 'notifications', label: 'Оповещения', icon: Notification03Icon },
+  { id: 'language', label: 'Язык', icon: MessageMultiple01Icon },
 ]
 
 const DARK_ENTERPRISE_THEMES = new Set<ThemeId>([
@@ -208,7 +208,25 @@ const PROVIDER_CARDS: Array<{
     id: 'openrouter',
     name: 'OpenRouter',
     logo: '/providers/openrouter.png',
-    models: ['auto', 'deepseek/deepseek-r1', 'google/gemini-2.5-pro'],
+    models: [
+      'auto',
+      'deepseek/deepseek-r1',
+      'google/gemini-2.5-pro',
+      'google/gemini-2.5-flash',
+      'anthropic/claude-sonnet-4.5',
+      'anthropic/claude-opus-4.1',
+      'openai/gpt-5-mini',
+      'x-ai/grok-4',
+      'qwen/qwen3-235b-a22b',
+      'z-ai/glm-4.6',
+      'moonshotai/kimi-k2',
+      'tngtech/deepseek-r1t2-chimera:free',
+      'deepseek/deepseek-chat-v3.1:free',
+      'qwen/qwen3-coder:free',
+      'z-ai/glm-4.5-air:free',
+      'meta-llama/llama-4-maverick:free',
+      'mistralai/mistral-small-3.2-24b-instruct:free',
+    ],
     authType: 'api_key',
     envKey: 'OPENROUTER_API_KEY',
   },
@@ -646,10 +664,10 @@ function HermesContent() {
           className="mb-1 text-xs font-semibold uppercase tracking-wider"
           style={mutedStyle}
         >
-          Provider
+          Провайдер
         </p>
         <p className="mb-3 text-[11px]" style={mutedStyle}>
-          Select your AI provider. OAuth providers authenticate via browser.
+          Выберите AI-провайдера. OAuth-провайдеры входят через браузер.
         </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {PROVIDER_CARDS.map((p) => {
@@ -727,8 +745,8 @@ function HermesContent() {
                     )
                     if (disc?.online) return '🟢 Detected'
                     if (p.authType === 'oauth') return 'OAuth'
-                    if (p.authType === 'none') return 'Local'
-                    return hasKey ? 'Key set' : 'Key required'
+                    if (p.authType === 'none') return 'Локальный'
+                    return hasKey ? 'Ключ задан' : 'Нужен ключ'
                   })()}
                 </span>
               </button>
@@ -876,7 +894,7 @@ function HermesContent() {
                           size="sm"
                           onClick={() => setDefaultModel(provider.id, activeModel)}
                         >
-                          Set as default: {provider.id} · {activeModel}
+                          По умолчанию: {provider.id} · {activeModel}
                         </Button>
                       </div>
                     ) : null}
@@ -895,7 +913,7 @@ function HermesContent() {
             className="mb-1 text-xs font-semibold uppercase tracking-wider"
             style={mutedStyle}
           >
-            Model — pick one, then confirm below
+            Модель — выберите и подтвердите ниже
           </p>
           <div className="flex flex-wrap gap-2">
             {(() => {
@@ -940,7 +958,7 @@ function HermesContent() {
                 size="sm"
                 onClick={() => setDefaultModel(activeProvider, activeModel)}
               >
-                Set as default: {activeProvider} · {activeModel}
+                По умолчанию: {activeProvider} · {activeModel}
               </Button>
             </div>
           ) : null}
@@ -979,7 +997,7 @@ function HermesContent() {
                             if (e.key === 'Escape') setEditingKey(null)
                           }}
                         />
-                      ) : hasValue ? customBaseUrl : 'Not configured'}
+                      ) : hasValue ? customBaseUrl : 'Не настроено'}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -991,7 +1009,7 @@ function HermesContent() {
                       </>
                     ) : (
                       <button type="button" onClick={() => setEditingKey('custom_base_url')} className="text-xs font-medium" style={{ color: 'var(--theme-accent)' }}>
-                        {hasValue ? 'Edit' : 'Add'}
+                        {hasValue ? 'Edit' : 'Добавить'}
                       </button>
                     )}
                   </div>
@@ -1029,7 +1047,7 @@ function HermesContent() {
                       ) : hasValue ? (
                         customModel
                       ) : (
-                        'Not configured'
+                        'Не настроено'
                       )}
                     </div>
                   </div>
@@ -1055,7 +1073,7 @@ function HermesContent() {
                         className="text-xs font-medium"
                         style={{ color: 'var(--theme-accent)' }}
                       >
-                        {hasValue ? 'Edit' : 'Add'}
+                        {hasValue ? 'Edit' : 'Добавить'}
                       </button>
                     )}
                   </div>
@@ -1071,7 +1089,7 @@ function HermesContent() {
                 size="sm"
                 onClick={() => setDefaultModel('custom', customModel)}
               >
-                Set as default: custom · {customModel}
+                По умолчанию: custom · {customModel}
               </Button>
             </div>
           ) : null}
@@ -1145,7 +1163,7 @@ function HermesContent() {
                     ) : hasKey ? (
                       configuredKeys[key]
                     ) : (
-                      'Not configured'
+                      'Не настроено'
                     )}
                   </div>
                 </div>
@@ -1195,7 +1213,7 @@ function HermesContent() {
                         color: 'var(--theme-accent, var(--theme-text))',
                       }}
                     >
-                      {hasKey ? 'Update' : 'Add'}
+                      {hasKey ? 'Update' : 'Добавить'}
                     </button>
                   )}
                 </div>
@@ -2454,12 +2472,12 @@ function LanguageContent() {
         <select
           value={getLocale()}
           onChange={(e) => {
-            setLocale(e.target.value as LocaleId)
+            setLocale(e.target.value as localeId)
             window.location.reload()
           }}
           className="h-9 w-full rounded-lg border border-primary-200 dark:border-neutral-700 bg-primary-50 dark:bg-neutral-800 px-3 text-sm text-primary-900 dark:text-neutral-100 outline-none md:max-w-xs"
         >
-          {(Object.entries(LOCALE_LABELS) as Array<[LocaleId, string]>).map(
+          {(Object.entries(LOCALE_LABELS) as Array<[localeId, string]>).map(
             ([id, label]) => (
               <option key={id} value={id}>
                 {label}
@@ -2601,12 +2619,12 @@ export function SettingsDialog({
           </SettingsErrorBoundary>
 
           <div className="sticky bottom-0 z-10 border-t border-primary-200 bg-primary-50/60 px-4 py-3 text-xs text-primary-500 dark:text-neutral-400 md:rounded-b-2xl md:px-5">
-            Most changes save automatically; the default model commits only when you click Set as default.{' '}
+            Большинство изменений сохраняется автоматически; модель по умолчанию фиксируется по кнопке «По умолчанию».{' '}
             <a
               href="/settings"
               className="ml-2 font-medium underline underline-offset-2 hover:text-primary-700 dark:hover:text-neutral-200"
             >
-              All settings →
+              Все настройки →
             </a>
           </div>
         </div>
