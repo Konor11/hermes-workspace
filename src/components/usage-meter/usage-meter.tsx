@@ -881,12 +881,12 @@ export function UsageMeter({ visible = true }: { visible?: boolean }) {
         <MenuRoot>
           <MenuTrigger
             className={cn(
-              // Mobile: original position - bottom-right.
-              // Desktop: lifted above the composer/input area so it stays visible.
-              "absolute bottom-2 right-2 z-40 md:bottom-16",
-              'ml-auto rounded-full border px-3 py-1 text-xs font-medium',
-              'flex items-center gap-3 transition hover:bg-primary-100 cursor-pointer',
-              'shadow-sm',
+              // Mobile: first-fix position - lifted above input bar, compact.
+              // Desktop: even higher above composer area.
+              "absolute bottom-24 right-2 md:bottom-32",
+              'ml-auto rounded-full border px-2 py-0.5 text-[11px] font-medium md:px-3 md:py-1 md:text-xs',
+              'flex items-center gap-2 md:gap-3 transition hover:bg-primary-100 cursor-pointer',
+              'opacity-80 md:opacity-100 shadow-sm',
               alertTone,
             )}
             data-tour="usage-meter"
