@@ -26,6 +26,7 @@ import type { TouchEvent } from 'react'
 import { cn } from '@/lib/utils'
 import { hapticTap } from '@/lib/haptics'
 import { useSettings } from '@/hooks/use-settings'
+import { useTabOrder, applyTabOrder } from '@/hooks/use-tab-order'
 import { __hermesT, type TranslationKey, type LocaleId, getLocale } from '@/lib/i18n'
 
 /** Height constant for consistent bottom insets on mobile routes with tab bar */
@@ -153,6 +154,9 @@ export function MobileTabBar() {
   const [isDragging, setIsDragging] = useState(false)
 
   const { settings } = useSettings()
+  const { order: tabOrder } = useTabOrder()
+  const orderedTabs = applyTabOrder(MOBILE_NAV_TABS, tabOrder)
+
   void settings.mobileChatNavMode // reserved for future use
   const isOnChat =
     pathname.startsWith('/chat') || pathname === '/new' || pathname === '/'
@@ -296,7 +300,7 @@ export function MobileTabBar() {
         onTouchEnd={handlePillTouchEnd}
       >
         <div className="flex items-center gap-0 pointer-events-auto px-0.5">
-          {MOBILE_NAV_TABS.map((tab, idx) => {
+          {orderedTabs.map((tab, idx) => {
             const isActive = tab.match(pathname)
             const isCenter = tab.id === 'chat'
             const circleSize =

@@ -15,6 +15,8 @@ import {
   VolumeHighIcon,
 } from '@hugeicons/core-free-icons'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useTabOrder } from '@/hooks/use-tab-order'
+import { MOBILE_NAV_TABS } from '@/components/mobile-tab-bar'
 import { useCallback, useEffect, useState } from 'react'
 import type * as React from 'react'
 import type { LoaderStyle } from '@/hooks/use-chat-settings'
@@ -51,6 +53,51 @@ const VALID_SECTION_IDS: ReadonlyArray<SettingsNavId> = SETTINGS_NAV_ITEMS.map(
 )
 
 
+
+
+// Mobile tab order editor (arrow reordering, saved in localStorage)
+function TabOrderEditor() {
+  const { order, setOrder, resetOrder } = useTabOrder()
+  const ids = MOBILE_NAV_TABS.map((t) => t.id)
+  const current = order.filter((id) => ids.includes(id))
+  const missing = ids.filter((id) => !current.includes(id))
+  const full = [...current, ...missing]
+
+  const move = (idx: number, dir: -1 | 1) => {
+    const next = [...full]
+    const j = idx + dir
+    if (j < 0 || j >= next.length) return
+    ;[next[idx], next[j]] = [next[j], next[idx]]
+    setOrder(next)
+  }
+
+  return (
+    <div className="rounded-xl border p-4" style={{ borderColor: 'var(--theme-border)' }}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-[var(--theme-text)]">Порядок вкладок (мобильные)</h3>
+        <button type="button" onClick={resetOrder} className="text-xs underline opacity-60 hover:opacity-100">сбросить</button>
+      </div>
+      <p className="mt-1 text-xs opacity-60">Стрелками задайте порядок нижней панели и бокового меню.</p>
+      <ul className="mt-3 space-y-1.5">
+        {full.map((id, idx) => {
+          const tab = MOBILE_NAV_TABS.find((t) => t.id === id)
+          if (!tab) return null
+          return (
+            <li key={id} className="flex items-center justify-between rounded-lg border px-3 py-2" style={{ borderColor: 'var(--theme-border)' }}>
+              <span className="text-sm">{(__hermesT || (globalThis as any).__hermesT)(tab.labelKey)}</span>
+              <span className="flex gap-1">
+                <button type="button" aria-label="up" disabled={idx === 0} onClick={() => move(idx, -1)}
+                  className={"rounded border px-2 py-0.5 text-xs disabled:opacity-30"} style={{ borderColor: 'var(--theme-border)' }}>&uarr;</button>
+                <button type="button" aria-label="down" disabled={idx === full.length - 1} onClick={() => move(idx, 1)}
+                  className={"rounded border px-2 py-0.5 text-xs disabled:opacity-30"} style={{ borderColor: 'var(--theme-border)' }}>&darr;</button>
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
 
 export const Route = createFileRoute('/settings/')({
   ssr: false,
@@ -841,6 +888,7 @@ function ChatDisplaySection() {
 
   return (
     <>
+      <TabOrderEditor />
       <SettingsSection
         title="Отображение чата"
         description="Что показывать в сообщениях чата."

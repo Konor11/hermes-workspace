@@ -22,6 +22,7 @@ import {
 } from '@hugeicons/core-free-icons'
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useTabOrder, applyTabOrder } from '@/hooks/use-tab-order'
 import { hapticTap } from '@/lib/haptics'
 import { getTheme, getThemeVariant, isDarkTheme, setTheme } from '@/lib/theme'
 import { __hermesT, type TranslationKey, type LocaleId, getLocale } from '@/lib/i18n'
