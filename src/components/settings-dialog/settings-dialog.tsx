@@ -1468,8 +1468,8 @@ function AppearanceContent() {
   return (
     <div className="space-y-4">
       <SectionHeader
-        title="Appearance"
-        description="Theme and color accents."
+        title="Тема"
+        description="Тема и цветовые акценты."
       />
       <div className={SETTINGS_CARD_CLASS}>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary-500">
@@ -1829,42 +1829,42 @@ function ChatContent() {
   return (
     <div className="space-y-4">
       <SectionHeader
-        title="Chat"
-        description="Message visibility and response loader style."
+        title="Чат"
+        description="Видимость сообщений и стиль индикатора ответа."
       />
       <div className={SETTINGS_CARD_CLASS}>
         <Row
-          label="Show tool messages"
-          description="Display tool call details in assistant responses."
+          label="Показывать сообщения инструментов"
+          description="Показывать детали вызовов инструментов в ответах."
         >
           <Switch
             checked={cs.showToolMessages}
             onCheckedChange={(c) => updateCS({ showToolMessages: c })}
-            aria-label="Show tool messages"
+            aria-label="Показывать сообщения инструментов"
           />
         </Row>
         <Row
-          label="Show reasoning blocks"
-          description="Display model reasoning blocks when available."
+          label="Показывать блоки рассуждений"
+          description="Показывать блоки рассуждений модели, если доступны."
         >
           <Switch
             checked={cs.showReasoningBlocks}
             onCheckedChange={(c) => updateCS({ showReasoningBlocks: c })}
-            aria-label="Show reasoning blocks"
+            aria-label="Показывать блоки рассуждений"
           />
         </Row>
         <Row
-          label="Sound on response complete"
-          description="Play a short sound in the browser when the agent finishes replying."
+          label="Звук при завершении ответа"
+          description="Короткий звук в браузере, когда агент закончил отвечать."
         >
           <Switch
             checked={cs.soundOnChatComplete}
             onCheckedChange={(c) => updateCS({ soundOnChatComplete: c })}
-            aria-label="Sound on response complete"
+            aria-label="Звук при завершении ответа"
           />
         </Row>
         <Row
-          label="Enter key behavior"
+          label="Поведение клавиши Enter"
           description={
             cs.enterBehavior === 'newline'
               ? 'Enter inserts a newline. Use ⌘/Ctrl+Enter to send.'
@@ -1880,8 +1880,8 @@ function ChatContent() {
           />
         </Row>
         <Row
-          label="Chat content width"
-          description="Max-width of the message column on wide screens."
+          label="Ширина чата"
+          description="Максимальная ширина колонки сообщений на широких экранах."
         >
           <select
             value={cs.chatWidth}
@@ -1891,7 +1891,7 @@ function ChatContent() {
               })
             }
             className="h-8 rounded-md border border-primary-200 bg-primary-50 px-2 text-sm text-primary-900 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary-400"
-            aria-label="Chat content width"
+            aria-label="Ширина чата"
           >
             <option value="comfortable">Comfortable (900px)</option>
             <option value="wide">Wide (1200px)</option>
@@ -1899,7 +1899,7 @@ function ChatContent() {
           </select>
         </Row>
         <Row
-          label="Expand sidebar on hover"
+          label="Раскрывать сайдбар при наведении"
           description={
             cs.sidebarHoverExpand
               ? 'Collapsed sidebar expands temporarily on hover.'
@@ -1909,7 +1909,7 @@ function ChatContent() {
           <Switch
             checked={cs.sidebarHoverExpand}
             onCheckedChange={(c) => updateCS({ sidebarHoverExpand: c })}
-            aria-label="Expand sidebar on hover"
+            aria-label="Раскрывать сайдбар при наведении"
           />
         </Row>
       </div>
@@ -1923,18 +1923,18 @@ function NotificationsContent() {
   return (
     <div className="space-y-4">
       <SectionHeader
-        title="Notifications"
-        description="Simple alerts and threshold controls."
+        title="Оповещения"
+        description="Простые оповещения и пороги."
       />
       <div className={SETTINGS_CARD_CLASS}>
-        <Row label="Enable alerts">
+        <Row label="Включить оповещения">
           <Switch
             checked={settings.notificationsEnabled}
             onCheckedChange={(c) => updateSettings({ notificationsEnabled: c })}
-            aria-label="Enable alerts"
+            aria-label="Включить оповещения"
           />
         </Row>
-        <Row label="Usage threshold">
+        <Row label="Порог использования">
           <div className="flex w-full max-w-[14rem] items-center gap-2">
             <input
               type="range"
@@ -2138,8 +2138,8 @@ function AgentBehaviorContent() {
   return (
     <div className="space-y-4">
       <SectionHeader
-        title="Agent Behavior"
-        description="Execution limits and tool access."
+        title="Поведение агента"
+        description="Лимиты выполнения и доступ к инструментам."
       />
       {msg && (
         <div
@@ -2155,8 +2155,8 @@ function AgentBehaviorContent() {
       )}
       <div className={SETTINGS_CARD_CLASS}>
         <Row
-          label="Max turns"
-          description="Maximum agent turns per request (1-100)"
+          label="Макс. шагов"
+          description="Максимум шагов агента на запрос (1-100)"
         >
           <input
             type="number"
@@ -2167,7 +2167,7 @@ function AgentBehaviorContent() {
             className="h-8 w-20 rounded-lg border border-primary-200 bg-primary-50 px-2 text-sm text-center text-primary-900 outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
           />
         </Row>
-        <Row label="Gateway timeout" description="Seconds before timeout">
+        <Row label="Таймаут шлюза" description="Секунды до таймаута">
           <input
             type="number"
             min={10}
@@ -2177,7 +2177,7 @@ function AgentBehaviorContent() {
             className="h-8 w-20 rounded-lg border border-primary-200 bg-primary-50 px-2 text-sm text-center text-primary-900 outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100"
           />
         </Row>
-        <Row label="Tool enforcement" description="When agent must use tools">
+        <Row label="Принуждение инструментов" description="Когда агент обязан использовать инструменты">
           <select
             value={String(config.tool_use_enforcement || 'auto')}
             onChange={(e) => save('tool_use_enforcement', e.target.value)}
@@ -2250,8 +2250,8 @@ function VoiceContent() {
   return (
     <div className="space-y-4">
       <SectionHeader
-        title="Voice"
-        description="Text-to-speech and speech-to-text."
+        title="Голос"
+        description="Синтез и распознавание речи."
       />
       {msg && (
         <div
@@ -2269,7 +2269,7 @@ function VoiceContent() {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary-500">
           Text-to-Speech
         </p>
-        <Row label="TTS Provider">
+        <Row label="TTS-провайдер">
           <select
             value={ttsProvider}
             onChange={(e) => saveTts('provider', e.target.value)}
@@ -2310,13 +2310,13 @@ function VoiceContent() {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary-500">
           Speech-to-Text
         </p>
-        <Row label="Enable STT">
+        <Row label="Включить STT">
           <Switch
             checked={stt.enabled !== false}
             onCheckedChange={(c) => saveStt('enabled', c)}
           />
         </Row>
-        <Row label="STT Provider">
+        <Row label="STT-провайдер">
           <select
             value={sttProvider}
             onChange={(e) => saveStt('provider', e.target.value)}
@@ -2398,8 +2398,8 @@ function DisplayContent() {
   return (
     <div className="space-y-4">
       <SectionHeader
-        title="Display"
-        description="Agent response style and output preferences."
+        title="Отображение"
+        description="Стиль ответов агента и настройки вывода."
       />
       {msg && (
         <div
@@ -2414,7 +2414,7 @@ function DisplayContent() {
         </div>
       )}
       <div className={SETTINGS_CARD_CLASS}>
-        <Row label="Personality" description="Agent response style">
+        <Row label="Личность" description="Стиль ответов агента">
           <select
             value={String(config.personality || 'default')}
             onChange={(e) => save('personality', e.target.value)}
@@ -2426,28 +2426,28 @@ function DisplayContent() {
             <option value="creative">Творческий</option>
           </select>
         </Row>
-        <Row label="Streaming" description="Stream responses in real-time">
+        <Row label="Стриминг" description="Отображать ответы в реальном времени">
           <Switch
             checked={config.streaming !== false}
             onCheckedChange={(c) => save('streaming', c)}
           />
         </Row>
         <Row
-          label="Show reasoning"
-          description="Display model thinking process"
+          label="Показывать рассуждения"
+          description="Показывать ход мыслей модели"
         >
           <Switch
             checked={config.show_reasoning !== false}
             onCheckedChange={(c) => save('show_reasoning', c)}
           />
         </Row>
-        <Row label="Show cost" description="Display token cost per response">
+        <Row label="Показывать стоимость" description="Показывать стоимость токенов за ответ">
           <Switch
             checked={config.show_cost === true}
             onCheckedChange={(c) => save('show_cost', c)}
           />
         </Row>
-        <Row label="Compact mode" description="Reduce spacing in responses">
+        <Row label="Компактный режим" description="Уменьшить отступы в ответах">
           <Switch
             checked={config.compact === true}
             onCheckedChange={(c) => save('compact', c)}
@@ -2462,12 +2462,12 @@ function LanguageContent() {
   return (
     <div className="space-y-4">
       <SectionHeader
-        title="Language"
-        description="Choose the display language for the workspace UI."
+        title="Язык"
+        description="Язык интерфейса Workspace."
       />
       <Row
-        label="Interface Language"
-        description="Translates navigation, labels, and buttons."
+        label="Язык интерфейса"
+        description="Переводит навигацию, подписи и кнопки."
       >
         <select
           value={getLocale()}

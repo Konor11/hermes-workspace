@@ -174,14 +174,14 @@ export function MobilePromptTrigger() {
                     className="text-sm font-semibold"
                     style={{ color: 'var(--theme-text)' }}
                   >
-                    Set up mobile access
+                    Настройка мобильного доступа
                   </p>
                   <p
                     className="text-xs"
                     style={{ color: 'var(--theme-muted)' }}
                   >
-                    Connect your phone to this Hermes Workspace instance in a
-                    few steps.
+                    Подключите телефон к этому экземпляру Hermes Workspace за
+                    несколько шагов.
                   </p>
                 </div>
 
@@ -224,7 +224,7 @@ export function MobilePromptTrigger() {
                     background: 'var(--theme-card2)',
                   }}
                 />
-                <span>Don&apos;t show this again</span>
+                <span>Больше не показывать</span>
               </label>
             </div>
           </motion.div>
