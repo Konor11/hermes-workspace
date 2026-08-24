@@ -881,10 +881,13 @@ export function UsageMeter({ visible = true }: { visible?: boolean }) {
         <MenuRoot>
           <MenuTrigger
             className={cn(
-              "absolute bottom-24 right-2 md:bottom-2 md:right-2",
+              // Mobile: fixed top-right (below header) - bottom area is occupied
+              // by input bar + browser gesture bar, pill gets clipped there.
+              // Desktop: bottom-right as before.
+              "fixed top-14 right-2 z-40 md:absolute md:top-auto md:bottom-2 md:right-2",
               'ml-auto rounded-full border px-2 py-0.5 text-[11px] font-medium md:px-3 md:py-1 md:text-xs',
               'flex items-center gap-2 md:gap-3 transition hover:bg-primary-100 cursor-pointer',
-              'opacity-80 md:opacity-100',
+              'opacity-90 md:opacity-100 shadow-sm',
               alertTone,
             )}
             data-tour="usage-meter"
