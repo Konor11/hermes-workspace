@@ -343,6 +343,12 @@ if [[ "$MODE" == "systemd" ]]; then
   step "Gateway + Dashboard (systemd)"
 
   # hermes gateway install на чистом сервере НЕ создаёт юнит — пишем сами.
+  # Dva unita (system + user) derutsya za odin instans = respawn storm.
+  SKIP_SYSTEM_GATEWAY=0
+  if [[ -f /root/.config/systemd/user/hermes-gateway.service ]]; then
+    SKIP_SYSTEM_GATEWAY=1
+    ok "Gateway already managed by user-unit - skipping system-unit"
+  fi
   GW_UNIT="/etc/systemd/system/hermes-gateway.service"
   DASH_UNIT="/etc/systemd/system/hermes-dashboard.service"
 
@@ -482,7 +488,9 @@ EOF
 
   # daemon-reload / enable не должны убивать скрипт (set -e) — ловим ошибки
   systemctl daemon-reload 2>/dev/null || warn "daemon-reload вернул ошибку (не критично)"
-  if systemctl enable hermes-gateway.service 2>/dev/null; then
+  if [[ "$SKIP_SYSTEM_GATEWAY" == "1" ]]; then
+    ok "system-unit gateway skipped (user-unit active)"
+  elif systemctl enable hermes-gateway.service 2>/dev/null; then
     ok "Gateway enabled"
   else
     warn "Gateway enable не удался — проверь юнит /etc/systemd/system/hermes-gateway.service"
@@ -493,7 +501,9 @@ EOF
     warn "Dashboard enable не удался — проверь юнит /etc/systemd/system/hermes-dashboard.service"
   fi
   step "Запуск Gateway"
-  if systemctl restart hermes-gateway.service 2>/dev/null; then
+  if [[ "$SKIP_SYSTEM_GATEWAY" == "1" ]]; then
+    ok "gateway restart skipped (user-unit manages it)"
+  elif systemctl restart hermes-gateway.service 2>/dev/null; then
     ok "Gateway перезапущен"
   else
     warn "Gateway не стартует — диагностика:"
