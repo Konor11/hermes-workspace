@@ -196,14 +196,18 @@ Three paths — pick the one that matches you:
 ### One-line install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/outsourc-e/hermes-workspace/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Konor11/hermes-workspace/main/install.sh | bash
 ```
 
-This installs `hermes-agent` via Nous's official installer, clones this repo, sets up `.env`, and installs dependencies. Then:
+This provisions Hermes Agent + Gateway + Dashboard + Workspace + Caddy (HTTPS
+reverse proxy) in one command (systemd or docker mode, auto port picking, custom
+domains). On first run it opens an interactive `hermes setup` step — enter your
+passwords/tokens when prompted. Then:
 
 ```bash
-hermes gateway run                  # terminal 1
-cd ~/hermes-workspace && pnpm dev   # terminal 2
+# systemd mode (default) — services start automatically:
+systemctl --user status hermes-gateway
+# open the URL printed at the end of the installer
 ```
 
 Open http://localhost:3000. That's it.
