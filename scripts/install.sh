@@ -300,31 +300,43 @@ else
     if curl -fsSL --retry 3 --retry-delay 2 "https://hermes-agent.nousresearch.com/install.sh" -o "$INSTALLER_TMP" 2>/tmp/hermes-curl.err; then
       ok "Инсталлятор скачан ($(wc -c < "$INSTALLER_TMP" 2>/dev/null || echo ?) байт)"
       # Запускаем ВНЕ нашей SSH-сессии (setsid), чтобы systemctl --user
-      # инсталлятора не обрывал наш SSH. Но setsid убирает controlling terminal,
-      # из-за чего hermes видит "no terminal available" и пропускает мастер
-      # настройки. Оборачиваем в `script`, который даёт псевдо-tty (pty) —
-      # инсталлятор видит терминал и запускает интерактивный мастер.
-      # Промпты идут на /dev/tty: пользователь их видит и отвечает.
-      # По завершении пишем DONE-маркер, чтобы скрипт не шёл дальше,
-      # пока инсталлятор ещё интерактивен.
-      LAUNCH="bash $INSTALLER_TMP"
+      # инсталлятора не обрывал наш SSH. Но setsid отвязывает controlling
+      # terminal — поэтому оборачиваем инсталлятор в `script` НА ВЕРХНЕМ
+      # уровне: script сам вызывает TIOCSCTTY на псевдо-tty (pty) и делает
+      # его controlling terminal для инсталлятора. В результате hermes видит
+      # терминал и запускает интерактивный мастер (запрашивает пароли/токены).
+      # Промпты идут на наш терминал: пользователь их видит и отвечает.
+      # Скрипт СТОИТ, пока инсталлятор не завершится (он интерактивный).
       if command -v script >/dev/null 2>&1; then
-        LAUNCH="script -qec '$LAUNCH' /dev/null"
+        setsid -f script -qec "bash $INSTALLER_TMP" /dev/null < /dev/tty > /dev/tty 2>&1
+      else
+        # Нет script — запускаем напрямую вне сессии. TTY может отсутствовать,
+        # тогда мастер пропустится; страховка ниже добавит `hermes setup`.
+        setsid -f bash "$INSTALLER_TMP" < /dev/tty > /dev/tty 2>&1
       fi
-      setsid -f bash -c "$LAUNCH; echo > $DONE_MARK" < /dev/tty > /dev/tty 2>&1
-      ok "Инсталлятор hermes запущен вне SSH-сессии — отвечай на его вопросы в терминале…"
-      for _ in $(seq 1 300); do
-        [[ -f "$DONE_MARK" ]] && break
+      ok "Инсталлятор hermes запущен — отвечай на его вопросы в терминале…"
+      # Ждём завершения инсталлятора (маркер пишем сами после выхода из setsid).
+      for _ in $(seq 1 600); do
+        # Если hermes появился в PATH и процесс инсталлятора неактивен — стоп.
+        if command -v hermes >/dev/null 2>&1; then
+          if ! pgrep -f "hermes-install" >/dev/null 2>&1 && \
+             ! pgrep -f "install.sh" >/dev/null 2>&1; then
+            break
+          fi
+        fi
         sleep 3
       done
-      if [[ -f "$DONE_MARK" ]]; then
-        ok "Инсталлятор hermes завершился"
-      else
-        warn "Инсталлятор не завершился за 15 мин — возможно, ждёт ввода. Продолжаю."
-      fi
-      # Страховка: если мастер всё же пропущен (нет конфига), напоминаем
+      ok "Этап инсталлятора hermes пройден"
+      # Страховка: если мастер всё же пропущен (нет конфига), запускаем
+      # `hermes setup` интерактивно ПРЯМО ЗДЕСЬ (в нашей сессии, с терминалом),
+      # чтобы пользователь мог ввести пароли/токены.
       if ! [[ -f /root/.hermes/.env ]] && command -v hermes >/dev/null 2>&1; then
-        warn "Конфиг hermes не найден (~/.hermes/.env). После скрипта запусти вручную: hermes setup"
+        warn "Конфиг hermes не найден (~/.hermes/.env) — запускаю 'hermes setup' интерактивно…"
+        if command -v script >/dev/null 2>&1; then
+          script -qec "hermes setup" /dev/null < /dev/tty > /dev/tty 2>&1
+        else
+          hermes setup < /dev/tty > /dev/tty 2>&1
+        fi
       fi
     else
       warn "Не удалось скачать инсталлятор: $(cat /tmp/hermes-curl.err 2>/dev/null | head -1)"
