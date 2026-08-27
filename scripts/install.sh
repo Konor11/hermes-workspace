@@ -518,8 +518,20 @@ EOF
   fi
   if [[ "$DRY_RUN" -eq 0 ]]; then
     sleep 8
-    curl -fsS --max-time 5 "http://127.0.0.1:$GW_PORT/health" >/dev/null 2>&1 && ok "Gateway :$GW_PORT ✅" || warn "Gateway :$GW_PORT не отвечает — см. журнал выше"
-    curl -fsS --max-time 5 "http://127.0.0.1:$DASH_PORT/" >/dev/null 2>&1 && ok "Dashboard :$DASH_PORT ✅" || warn "Dashboard :$DASH_PORT не отвечает — см. журнал выше"
+    # Ждём запуска gateway/dashboard (retry до 20с), чтобы на медленном сервере
+    # не было ложной ошибки "не отвечает".
+    local up=0
+    for _ in $(seq 1 20); do
+      if curl -fsS --max-time 3 "http://127.0.0.1:$GW_PORT/health" >/dev/null 2>&1; then up=1; break; fi
+      sleep 1
+    done
+    [[ "$up" -eq 1 ]] && ok "Gateway :$GW_PORT ✅" || warn "Gateway :$GW_PORT не отвечает — см. журнал выше"
+    up=0
+    for _ in $(seq 1 20); do
+      if curl -fsS --max-time 3 "http://127.0.0.1:$DASH_PORT/" >/dev/null 2>&1; then up=1; break; fi
+      sleep 1
+    done
+    [[ "$up" -eq 1 ]] && ok "Dashboard :$DASH_PORT ✅" || warn "Dashboard :$DASH_PORT не отвечает — см. журнал выше"
   fi
 else
   step "Gateway + Dashboard (docker)"
