@@ -281,6 +281,54 @@ DASH_PORT=9119; port_free 9119 || DASH_PORT=$(next_free_port 9120)
 info "Выбраны порты: workspace=:$WS_PORT  gateway=:$GW_PORT  dashboard=:$DASH_PORT"
 
 # ---------------------------------------------------------------------------
+# 1.5 Превентивный systemd (ДО вызова hermes setup)
+# ---------------------------------------------------------------------------
+# `hermes setup` на финальном шаге предлагает поставить systemd-юнит и дёргает
+# `systemctl --user enable --now`. Внутри SSH-сессии это перезапускает user-
+# service-manager, привязанный к сессии → SSH РВЁТСЯ (старый баг, "connection
+# error" в конце мастера). Два слоя защиты:
+#   1) loginctl enable-linger root — user-manager становится независимым от SSH,
+#      разрыв сессии не убивает его (и не рвёт SSH при restart).
+#   2) Превентивно создаём user-unit hermes-gateway (как на рабочем сервере) —
+#      тогда `hermes setup` видит "systemd уже настроен" и НЕ предлагает свой
+#      conflict-шаг. Ниже (блок 3) скрипт всё равно перехватит этот юнит под
+#      system-unit, чтобы не дублировать инстансы.
+if [[ "$MODE" == "systemd" ]]; then
+  step "Pre-systemd (linger + seed user-unit)"
+  if command -v loginctl >/dev/null 2>&1; then
+    if loginctl enable-linger root 2>/dev/null; then
+      ok "Linger включён (user-systemd независим от SSH)"
+    else
+      warn "loginctl enable-linger не удался — если SSH оборвётся на шаге systemd, переподключись и продолжите"
+    fi
+  fi
+  # Создаём user-unit заранее (disable при старте, чтобы не дублировать инстанс).
+  USER_GW_DIR="/root/.config/systemd/user"
+  USER_GW_UNIT="$USER_GW_DIR/hermes-gateway.service"
+  if [[ ! -f "$USER_GW_UNIT" ]]; then
+    mkdir -p "$USER_GW_DIR"
+    HERMES_BIN="$(command -v hermes || echo /root/.hermes/bin/hermes)"
+    cat > "$USER_GW_UNIT" <<EOF
+[Unit]
+Description=Hermes Agent Gateway (pre-seeded)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=$HERMES_BIN gateway run
+Restart=on-failure
+RestartSec=5
+Environment=HOME=/root
+
+[Install]
+WantedBy=default.target
+EOF
+    systemctl --user daemon-reload 2>/dev/null || true
+    ok "Pre-seeded user-unit hermes-gateway (hermes setup не будет предлагать свой systemd-шаг)"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
 # 2. Hermes Agent
 # ---------------------------------------------------------------------------
 step "Hermes Agent"
