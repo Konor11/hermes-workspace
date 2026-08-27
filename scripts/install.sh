@@ -294,21 +294,38 @@ else
   # падает в pipe (curl: (23) Failure writing output to destination на мобильном
   # терминале). Качаем во временный файл, проверяем запись, затем запускаем.
   INSTALLER_TMP="$(mktemp -t hermes-install.XXXXXX.sh 2>/dev/null || echo /tmp/hermes-install.sh)"
+  DONE_MARK=/tmp/hermes-install.done
+  rm -f "$DONE_MARK"
   if [[ "$DRY_RUN" -eq 0 ]]; then
     if curl -fsSL --retry 3 --retry-delay 2 "https://hermes-agent.nousresearch.com/install.sh" -o "$INSTALLER_TMP" 2>/tmp/hermes-curl.err; then
       ok "Инсталлятор скачан ($(wc -c < "$INSTALLER_TMP" 2>/dev/null || echo ?) байт)"
-      # Запускаем инсталлятор ВНЕ нашей SSH-сессии через setsid: его
-      # systemctl --user (при ответе "Да" на systemd-вопрос) выполняется в
-      # отдельной сессии и НЕ обрывает SSH-подключение, из которого запущен
-      # этот скрипт. stdin/stdout/stderr -> tty, чтобы инсталлятор остался
-      # интерактивным (можно ответить "Да"). Скрипт не блокируется — бинарь
-      # hermes появляется в PATH ещё ДО systemd-вопроса, ждём его отдельным циклом.
-      setsid -f bash "$INSTALLER_TMP" < /dev/tty > /dev/tty 2>&1
-      ok "Инсталлятор hermes запущен вне SSH-сессии — ждём бинарь…"
-      for _ in $(seq 1 60); do
-        command -v hermes >/dev/null 2>&1 && break
+      # Запускаем ВНЕ нашей SSH-сессии (setsid), чтобы systemctl --user
+      # инсталлятора не обрывал наш SSH. Но setsid убирает controlling terminal,
+      # из-за чего hermes видит "no terminal available" и пропускает мастер
+      # настройки. Оборачиваем в `script`, который даёт псевдо-tty (pty) —
+      # инсталлятор видит терминал и запускает интерактивный мастер.
+      # Промпты идут на /dev/tty: пользователь их видит и отвечает.
+      # По завершении пишем DONE-маркер, чтобы скрипт не шёл дальше,
+      # пока инсталлятор ещё интерактивен.
+      LAUNCH="bash $INSTALLER_TMP"
+      if command -v script >/dev/null 2>&1; then
+        LAUNCH="script -qec '$LAUNCH' /dev/null"
+      fi
+      setsid -f bash -c "$LAUNCH; echo > $DONE_MARK" < /dev/tty > /dev/tty 2>&1
+      ok "Инсталлятор hermes запущен вне SSH-сессии — отвечай на его вопросы в терминале…"
+      for _ in $(seq 1 300); do
+        [[ -f "$DONE_MARK" ]] && break
         sleep 3
       done
+      if [[ -f "$DONE_MARK" ]]; then
+        ok "Инсталлятор hermes завершился"
+      else
+        warn "Инсталлятор не завершился за 15 мин — возможно, ждёт ввода. Продолжаю."
+      fi
+      # Страховка: если мастер всё же пропущен (нет конфига), напоминаем
+      if ! [[ -f /root/.hermes/.env ]] && command -v hermes >/dev/null 2>&1; then
+        warn "Конфиг hermes не найден (~/.hermes/.env). После скрипта запусти вручную: hermes setup"
+      fi
     else
       warn "Не удалось скачать инсталлятор: $(cat /tmp/hermes-curl.err 2>/dev/null | head -1)"
     fi
