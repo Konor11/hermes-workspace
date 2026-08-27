@@ -297,7 +297,18 @@ else
   if [[ "$DRY_RUN" -eq 0 ]]; then
     if curl -fsSL --retry 3 --retry-delay 2 "https://hermes-agent.nousresearch.com/install.sh" -o "$INSTALLER_TMP" 2>/tmp/hermes-curl.err; then
       ok "Инсталлятор скачан ($(wc -c < "$INSTALLER_TMP" 2>/dev/null || echo ?) байт)"
-      bash "$INSTALLER_TMP" || warn "Инсталлятор завершился с ошибкой — перейдём к поиску бинаря / pip fallback"
+      # Запускаем инсталлятор ВНЕ нашей SSH-сессии через setsid: его
+      # systemctl --user (при ответе "Да" на systemd-вопрос) выполняется в
+      # отдельной сессии и НЕ обрывает SSH-подключение, из которого запущен
+      # этот скрипт. stdin/stdout/stderr -> tty, чтобы инсталлятор остался
+      # интерактивным (можно ответить "Да"). Скрипт не блокируется — бинарь
+      # hermes появляется в PATH ещё ДО systemd-вопроса, ждём его отдельным циклом.
+      setsid -f bash "$INSTALLER_TMP" < /dev/tty > /dev/tty 2>&1
+      ok "Инсталлятор hermes запущен вне SSH-сессии — ждём бинарь…"
+      for _ in $(seq 1 60); do
+        command -v hermes >/dev/null 2>&1 && break
+        sleep 3
+      done
     else
       warn "Не удалось скачать инсталлятор: $(cat /tmp/hermes-curl.err 2>/dev/null | head -1)"
     fi
@@ -353,6 +364,12 @@ if [[ "$MODE" == "systemd" ]]; then
   USER_DASH_UNIT="/root/.config/systemd/user/hermes-dashboard.service"
   SKIP_SYSTEM_GATEWAY=0
   SKIP_SYSTEM_DASHBOARD=0
+  # Инсталлятор hermes запущен в фоне (setsid) — user-unit появляется не сразу.
+  # Ждём его до 40с, чтобы перехват сработал даже при медленном старте.
+  for _ in $(seq 1 40); do
+    [[ -f "$USER_GW_UNIT" || -f "$USER_DASH_UNIT" ]] && break
+    sleep 1
+  done
   if [[ -f "$USER_GW_UNIT" || -f "$USER_DASH_UNIT" ]]; then
     ok "Обнаружен user-unit hermes (отвечали 'Да' на systemd) — перехватываю под systemd, чтобы не рвало SSH"
     # Лингер: чтобы systemd --user сервисы жили вне сессии (страховка)
