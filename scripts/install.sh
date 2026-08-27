@@ -593,8 +593,15 @@ prompt_secret() {
   if [[ -n "$cur" ]]; then
     hint="$hint ${C_YEL}(текущее задано, Enter — оставить)${C_RST}"
   fi
+  # Читаем из /dev/tty, чтобы приглашение и ввод работали ДАЖЕ когда функция
+  # вызвана внутри конвейера { ... } | ... (иначе read берёт пустой stdin пайпа
+  # и пользователь не видит строку ввода — баг "нет строк ввода логина/паролей").
   echo "  $key — $hint:"
-  read -r val || true
+  if [[ -c /dev/tty ]]; then
+    read -r val < /dev/tty || true
+  else
+    read -r val || true
+  fi
   [[ -z "$val" && -n "$cur" ]] && val="$cur"
   printf '%s=%s\n' "$key" "$val"
 }
