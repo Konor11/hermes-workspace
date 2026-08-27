@@ -45,8 +45,8 @@ step()  { echo; echo "${C_BLD}${C_BLU}==>${C_RST} $*"; }
 ensure_build_deps() {
   if command -v apt-get >/dev/null 2>&1; then
     info "Ставлю системные зависимости (apt) …"
-    run "apt-get update -y"
-    run "DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    with_apt_lock "apt-get update -y"
+    with_apt_lock "DEBIAN_FRONTEND=noninteractive apt-get install -y \
       build-essential python3-dev python3-venv python3-pip \
       libssl-dev libffi-dev libsqlite3-dev \
       curl git ca-certificates gnupg lsb-release systemd \
@@ -55,20 +55,36 @@ ensure_build_deps() {
     if ! command -v node >/dev/null 2>&1 || [[ "$(node -v 2>/dev/null | sed -E 's/v([0-9]+).*/\1/')" -lt 22 ]]; then
       info "Ставлю Node.js 22 (NodeSource) …"
       run "curl -fsSL https://deb.nodesource.com/setup_22.x | bash -"
-      run "DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs"
+      with_apt_lock "DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs"
     fi
-    # Caddy (systemd-режим)
+    # Caddy (systemd-режим). Пробуем apt-репу Cloudflare; если сеть/DNS до
+    # dl.cloudflare.com недоступна — качаем бинарный релиз с GitHub (fallback),
+    # чтобы reverse-proxy не зависил от одного зеркала.
     if [[ "$MODE" == "systemd" ]] && ! command -v caddy >/dev/null 2>&1; then
-      info "Ставлю Caddy (apt) …"
-      run "install -m 0755 -d /etc/apt/keyrings"
-      run "curl -fsSL https://dl.cloudflare.com/apt/caddy.key | gpg --dearmor -o /etc/apt/keyrings/caddy.gpg 2>/dev/null || true"
-      if [[ -f /etc/apt/keyrings/caddy.gpg ]]; then
-        run "echo \"deb [signed-by=/etc/apt/keyrings/caddy.gpg] https://dl.cloudflare.com/apt/caddy stable main\" > /etc/apt/sources.list.d/caddy.list"
-        run "apt-get update -y"
-        run "DEBIAN_FRONTEND=noninteractive apt-get install -y caddy"
-      else
-        warn "Не удалось добавить репу Caddy — пропускаю (reverse-proxy настроишь вручную)."
+      info "Ставлю Caddy …"
+      CADDY_OK=0
+      if curl -fsS --max-time 8 https://dl.cloudflare.com/apt/caddy.key -o /tmp/caddy.key 2>/dev/null; then
+        run "install -m 0755 -d /etc/apt/keyrings"
+        gpg --dearmor -o /etc/apt/keyrings/caddy.gpg /tmp/caddy.key 2>/dev/null || true
+        if [[ -f /etc/apt/keyrings/caddy.gpg ]]; then
+          run "echo \"deb [signed-by=/etc/apt/keyrings/caddy.gpg] https://dl.cloudflare.com/apt/caddy stable main\" > /etc/apt/sources.list.d/caddy.list"
+          with_apt_lock "apt-get update -y"
+          with_apt_lock "DEBIAN_FRONTEND=noninteractive apt-get install -y caddy" && CADDY_OK=1
+        fi
       fi
+      if [[ "$CADDY_OK" -eq 0 ]]; then
+        warn "apt-репа Caddy недоступна (сеть/DNS) — пробую бинарный релиз с GitHub…"
+        if curl -fsSL https://caddyserver.com/api/v2/dl?os=linux&arch=amd64 -o /tmp/caddy.tar.gz 2>/dev/null; then
+          tar -xzf /tmp/caddy.tar.gz -C /tmp caddy 2>/dev/null || true
+          if [[ -x /tmp/caddy ]]; then
+            install -m 0755 /tmp/caddy /usr/local/bin/caddy
+            CADDY_OK=1
+            ok "Caddy установлен из бинарного релиза (/usr/local/bin/caddy)"
+          fi
+        fi
+      fi
+      [[ "$CADDY_OK" -eq 1 ]] || warn "Caddy не установлен — reverse-proxy настроишь вручную (https://caddyserver.com/docs/install)."
+      rm -f /tmp/caddy.key /tmp/caddy.tar.gz /tmp/caddy 2>/dev/null || true
     fi
   elif command -v dnf >/dev/null 2>&1; then
     info "Ставлю системные зависимости (dnf) …"
@@ -138,6 +154,21 @@ while [[ $# -gt 0 ]]; do
 done
 
 run() { if [[ "$DRY_RUN" -eq 1 ]]; then info "[dry-run] $*"; else eval "$@"; fi; }
+
+# with_apt_lock <cmd...> — дождаться освобождения dpkg/apt lock (до 120с),
+# затем выполнить. Убирает параллельные конфликты (второй запуск скрипта,
+# фоновый unattended-upgrades), из-за которых apt падает с "dpkg lock".
+with_apt_lock() {
+  if [[ "$DRY_RUN" -eq 1 ]]; then info "[dry-run] apt: $*"; return 0; fi
+  local waited=0
+  while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 || \
+        fuser /var/lib/dpkg/lock >/dev/null 2>&1 || \
+        fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
+    [[ "$waited" -ge 120 ]] && { warn "dpkg lock не освободился за 120с — продолжаю (возможен сбой apt)"; break; }
+    sleep 3; waited=$((waited+3))
+  done
+  eval "$@"
+}
 [[ "$(id -u)" -eq 0 ]] || die "Запускай от root: sudo bash $0"
 [[ "${BASH_VERSINFO:-0}" -ge 4 ]] || die "Нужен bash 4+ (у тебя ${BASH_VERSION})"
 
