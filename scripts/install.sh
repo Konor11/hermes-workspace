@@ -328,15 +328,23 @@ else
       done
       ok "Этап инсталлятора hermes пройден"
       # Страховка: если мастер всё же пропущен (нет конфига), запускаем
-      # `hermes setup` интерактивно ПРЯМО ЗДЕСЬ (в нашей сессии, с терминалом),
-      # чтобы пользователь мог ввести пароли/токены.
+      # `hermes setup` интерактивно. ВАЖНО: тоже ВНЕ нашей SSH-сессии (setsid),
+      # иначе на шаге установки systemd hermes дёрнет `systemctl --user`, который
+      # рвёт SSH-соединение (старый баг). script даёт псевдо-tty, так что
+      # промпты ввода паролей/токенов видны и можно отвечать.
       if ! [[ -f /root/.hermes/.env ]] && command -v hermes >/dev/null 2>&1; then
-        warn "Конфиг hermes не найден (~/.hermes/.env) — запускаю 'hermes setup' интерактивно…"
+        warn "Конфиг hermes не найден (~/.hermes/.env) — запускаю 'hermes setup'…"
         if command -v script >/dev/null 2>&1; then
-          script -qec "hermes setup" /dev/null < /dev/tty > /dev/tty 2>&1
+          setsid -f script -qec "hermes setup" /dev/null < /dev/tty > /dev/tty 2>&1
         else
-          hermes setup < /dev/tty > /dev/tty 2>&1
+          setsid -f bash -c "hermes setup" < /dev/tty > /dev/tty 2>&1
         fi
+        # Ждём появления конфига (пока пользователь отвечает на вопросы).
+        for _ in $(seq 1 600); do
+          [[ -f /root/.hermes/.env ]] && break
+          sleep 3
+        done
+        [[ -f /root/.hermes/.env ]] && ok "Конфиг hermes создан (~/.hermes/.env)" || warn "Конфиг не создан — проверь 'hermes setup' вручную"
       fi
     else
       warn "Не удалось скачать инсталлятор: $(cat /tmp/hermes-curl.err 2>/dev/null | head -1)"
