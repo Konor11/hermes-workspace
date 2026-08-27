@@ -343,22 +343,27 @@ if [[ "$MODE" == "systemd" ]]; then
   step "Gateway + Dashboard (systemd)"
 
   # hermes gateway/dashboard install на чистом сервере сам создаёт user-unit
-  # (~/.config/systemd/user/hermes-*.service) при подключении (напр. Telegram).
-  # Два unit-а (system + user) дерутся за один инстанс = respawn storm.
-  # Поэтому: если hermes уже управляет сервисом (user-unit есть) — наш скрипт
-  # НЕ создаёт и не трогает дублирующий system-unit. Если user-unit нет —
-  # создаём system-unit (как раньше). Так конфликта не будет при любом порядке.
+  # (~/.config/systemd/user/hermes-*.service) при ответе "Да" на вопрос
+  # "install systemd?" (напр. при подключении Telegram). ПРОБЛЕМА: этот
+  # user-unit стартует в scope текущей SSH-сессии и при реконфигурации
+  # systemd РВЁТ SSH-подключение. Поэтому МЫ ЕГО ЗАБИРАЕМ:
+  #   останавливаем user-unit hermes, ставим свой system-unit (живёт вне SSH,
+  #   не рвёт сессию) и запускаем его. Gateway стартует нормально, SSH — цел.
   USER_GW_UNIT="/root/.config/systemd/user/hermes-gateway.service"
   USER_DASH_UNIT="/root/.config/systemd/user/hermes-dashboard.service"
   SKIP_SYSTEM_GATEWAY=0
   SKIP_SYSTEM_DASHBOARD=0
-  if [[ -f "$USER_GW_UNIT" ]]; then
-    SKIP_SYSTEM_GATEWAY=1
-    ok "Gateway уже управляется user-unit hermes — system-unit не создаём"
-  fi
-  if [[ -f "$USER_DASH_UNIT" ]]; then
-    SKIP_SYSTEM_DASHBOARD=1
-    ok "Dashboard уже управляется user-unit hermes — system-unit не создаём"
+  if [[ -f "$USER_GW_UNIT" || -f "$USER_DASH_UNIT" ]]; then
+    ok "Обнаружен user-unit hermes (отвечали 'Да' на systemd) — перехватываю под systemd, чтобы не рвало SSH"
+    # Лингер: чтобы systemd --user сервисы жили вне сессии (страховка)
+    loginctl enable-linger root 2>/dev/null || true
+    # Останавливаем и отключаем user-unit hermes (он рвёт SSH при рестарте)
+    systemctl --user disable --now hermes-gateway.service 2>/dev/null || true
+    systemctl --user disable --now hermes-dashboard.service 2>/dev/null || true
+    # Удаляем user-unit-файлы, чтобы hermes не переподнял их
+    rm -f "$USER_GW_UNIT" "$USER_DASH_UNIT"
+    systemctl --user daemon-reload 2>/dev/null || true
+    # SKIP остаётся 0 → ниже создадим и запустим свой system-unit
   fi
   GW_UNIT="/etc/systemd/system/hermes-gateway.service"
   DASH_UNIT="/etc/systemd/system/hermes-dashboard.service"
@@ -499,8 +504,9 @@ EOF
     ok "Dashboard unit записан"
   fi
 
-  # daemon-reload / enable не должны убивать скрипт (set -e) — ловим ошибки
-  systemctl daemon-reload 2>/dev/null || warn "daemon-reload вернул ошибку (не критично)"
+  # daemon-reload / enable не должны убивать скрипт (set -e) — ловим ошибки.
+  # setsid: отвязываем от SSH-сессии, чтобы реконфигурация systemd не оборвала SSH.
+  setsid -f systemctl daemon-reload >/dev/null 2>&1 || warn "daemon-reload вернул ошибку (не критично)"
   if [[ "$SKIP_SYSTEM_GATEWAY" == "1" ]]; then
     ok "system-unit gateway skipped (user-unit active)"
   elif systemctl enable hermes-gateway.service 2>/dev/null; then
@@ -518,20 +524,30 @@ EOF
   step "Запуск Gateway"
   if [[ "$SKIP_SYSTEM_GATEWAY" == "1" ]]; then
     ok "gateway restart skipped (user-unit manages it)"
-  elif systemctl restart hermes-gateway.service 2>/dev/null; then
-    ok "Gateway перезапущен"
   else
-    warn "Gateway не стартует — диагностика:"
-    journalctl -u hermes-gateway.service -n 30 --no-pager 2>/dev/null | sed 's/^/    /' || true
+    # setsid: отвязываем restart от текущей SSH-сессии, чтобы systemd
+    # реконфигурация/старт юнита не оборвал SSH-подключение скрипта.
+    if setsid -f systemctl restart hermes-gateway.service >/dev/null 2>&1; then
+      ok "Gateway запущен (systemd, вне SSH-сессии)"
+    elif systemctl restart hermes-gateway.service 2>/dev/null; then
+      ok "Gateway перезапущен"
+    else
+      warn "Gateway не стартует — диагностика:"
+      journalctl -u hermes-gateway.service -n 30 --no-pager 2>/dev/null | sed 's/^/    /' || true
+    fi
   fi
   step "Запуск Dashboard"
   if [[ "$SKIP_SYSTEM_DASHBOARD" == "1" ]]; then
     ok "dashboard restart skipped (user-unit manages it)"
-  elif systemctl restart hermes-dashboard.service 2>/dev/null; then
-    ok "Dashboard перезапущен"
   else
-    warn "Dashboard не стартует — диагностика:"
-    journalctl -u hermes-dashboard.service -n 30 --no-pager 2>/dev/null | sed 's/^/    /' || true
+    if setsid -f systemctl restart hermes-dashboard.service >/dev/null 2>&1; then
+      ok "Dashboard запущен (systemd, вне SSH-сессии)"
+    elif systemctl restart hermes-dashboard.service 2>/dev/null; then
+      ok "Dashboard перезапущен"
+    else
+      warn "Dashboard не стартует — диагностика:"
+      journalctl -u hermes-dashboard.service -n 30 --no-pager 2>/dev/null | sed 's/^/    /' || true
+    fi
   fi
   if [[ "$DRY_RUN" -eq 0 ]]; then
     sleep 8
