@@ -342,12 +342,23 @@ set +e
 if [[ "$MODE" == "systemd" ]]; then
   step "Gateway + Dashboard (systemd)"
 
-  # hermes gateway install на чистом сервере НЕ создаёт юнит — пишем сами.
-  # Dva unita (system + user) derutsya za odin instans = respawn storm.
+  # hermes gateway/dashboard install на чистом сервере сам создаёт user-unit
+  # (~/.config/systemd/user/hermes-*.service) при подключении (напр. Telegram).
+  # Два unit-а (system + user) дерутся за один инстанс = respawn storm.
+  # Поэтому: если hermes уже управляет сервисом (user-unit есть) — наш скрипт
+  # НЕ создаёт и не трогает дублирующий system-unit. Если user-unit нет —
+  # создаём system-unit (как раньше). Так конфликта не будет при любом порядке.
+  USER_GW_UNIT="/root/.config/systemd/user/hermes-gateway.service"
+  USER_DASH_UNIT="/root/.config/systemd/user/hermes-dashboard.service"
   SKIP_SYSTEM_GATEWAY=0
-  if [[ -f /root/.config/systemd/user/hermes-gateway.service ]]; then
+  SKIP_SYSTEM_DASHBOARD=0
+  if [[ -f "$USER_GW_UNIT" ]]; then
     SKIP_SYSTEM_GATEWAY=1
-    ok "Gateway already managed by user-unit - skipping system-unit"
+    ok "Gateway уже управляется user-unit hermes — system-unit не создаём"
+  fi
+  if [[ -f "$USER_DASH_UNIT" ]]; then
+    SKIP_SYSTEM_DASHBOARD=1
+    ok "Dashboard уже управляется user-unit hermes — system-unit не создаём"
   fi
   GW_UNIT="/etc/systemd/system/hermes-gateway.service"
   DASH_UNIT="/etc/systemd/system/hermes-dashboard.service"
@@ -457,7 +468,9 @@ EOF
     ok "Gateway unit записан"
   fi
 
-  if [[ -f "$DASH_UNIT" && "$DRY_RUN" -eq 0 && "$UPDATE" -eq 0 ]]; then
+  if [[ "$SKIP_SYSTEM_DASHBOARD" == "1" ]]; then
+    ok "dashboard system-unit пропущен (user-unit hermes активен)"
+  elif [[ -f "$DASH_UNIT" && "$DRY_RUN" -eq 0 && "$UPDATE" -eq 0 ]]; then
     warn "$DASH_UNIT уже существует — не перезаписываю."
   elif [[ "$DRY_RUN" -eq 1 ]]; then
     info "[dry-run] пропускаю запись $DASH_UNIT"
@@ -495,7 +508,9 @@ EOF
   else
     warn "Gateway enable не удался — проверь юнит /etc/systemd/system/hermes-gateway.service"
   fi
-  if systemctl enable hermes-dashboard.service 2>/dev/null; then
+  if [[ "$SKIP_SYSTEM_DASHBOARD" == "1" ]]; then
+    ok "dashboard system-unit enable/restart пропущен (user-unit hermes управляет)"
+  elif systemctl enable hermes-dashboard.service 2>/dev/null; then
     ok "Dashboard enabled"
   else
     warn "Dashboard enable не удался — проверь юнит /etc/systemd/system/hermes-dashboard.service"
@@ -510,7 +525,9 @@ EOF
     journalctl -u hermes-gateway.service -n 30 --no-pager 2>/dev/null | sed 's/^/    /' || true
   fi
   step "Запуск Dashboard"
-  if systemctl restart hermes-dashboard.service 2>/dev/null; then
+  if [[ "$SKIP_SYSTEM_DASHBOARD" == "1" ]]; then
+    ok "dashboard restart skipped (user-unit manages it)"
+  elif systemctl restart hermes-dashboard.service 2>/dev/null; then
     ok "Dashboard перезапущен"
   else
     warn "Dashboard не стартует — диагностика:"
