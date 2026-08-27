@@ -902,8 +902,25 @@ if [[ "$MODE" == "systemd" ]]; then
     warn "Caddy не стартует — проверь Caddyfile и 'journalctl -u caddy -n 30'"
   fi
   if [[ "$DRY_RUN" -eq 0 && -n "$DOMAIN" ]]; then
-    sleep 3
-    curl -fsS --max-time 5 "https://$DOMAIN/" >/dev/null 2>&1 && ok "Caddy $DOMAIN (HTTPS) ✅" || warn "Caddy $DOMAIN не отвечает (DNS + 80/443 открыты?)"
+    # Caddy только что перезапущен и должен ВЫПУСТИТЬ TLS-сертификат
+    # Let's Encrypt (ACME HTTP-01 challenge на :80 — сетевой round-trip,
+    # обычно 5–30с, иногда дольше). Сразу дёргать https бессмысленно — будет
+    # ложная ошибка "не отвечает". Сначала проверяем DNS, потом retry HTTPS.
+    SRV_IP="$(curl -fsS --max-time 5 https://api.ipify.org 2>/dev/null || true)"
+    DOMAIN_IP="$(getent hosts "$DOMAIN" 2>/dev/null | awk '{print $1}' | head -1)"
+    if [[ -n "$DOMAIN_IP" && -n "$SRV_IP" && "$DOMAIN_IP" != "$SRV_IP" ]]; then
+      warn "DNS $DOMAIN → $DOMAIN_IP, но этот сервер $SRV_IP. Workspace заработает, когда DNS укажет на сервер."
+    fi
+    up=0
+    for _ in $(seq 1 30); do
+      if curl -fsS --max-time 5 "https://$DOMAIN/" >/dev/null 2>&1; then up=1; break; fi
+      sleep 3
+    done
+    if [[ "$up" -eq 1 ]]; then
+      ok "Caddy $DOMAIN (HTTPS) ✅"
+    else
+      warn "Caddy $DOMAIN не отвечает по HTTPS за 90с — проверь: DNS указывает на сервер? 80/443 открыты? 'journalctl -u caddy -n 30'. Workspace поднимется, когда Caddy выпустит сертификат."
+    fi
   fi
 else
   info "Caddy будет контейнером через docker compose."
