@@ -688,15 +688,19 @@ EOF
     done
     [[ "$up" -eq 1 ]] && ok "Gateway :$GW_PORT ✅" || warn "Gateway :$GW_PORT не отвечает — см. журнал выше"
     up=0
-    # Dashboard стартует медленно (venv/dashboard init) — ждём до 60с.
-    # Сначала локально, потом (если задан домен) через Caddy — чтобы не было
-    # ложного "не отвечает", когда сервис уже работает, просто ещё прогревается.
-    for _ in $(seq 1 60); do
-      if curl -fsS --max-time 3 "http://127.0.0.1:$DASH_PORT/" >/dev/null 2>&1; then up=1; break; fi
-      if [[ -n "$DASH_DOMAIN" ]] && curl -fsS --max-time 3 "https://$DASH_DOMAIN/" >/dev/null 2>&1; then up=1; break; fi
+    # Dashboard стартует медленно (venv/dashboard init) — ждём до 120с.
+    # Считаем живым ЛЮБОЙ ответ < 500 (302-редирект на логин / 401 basic-auth
+    # — это нормально, сервис уже работает; не путать с "не отвечает").
+    for _ in $(seq 1 120); do
+      code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "http://127.0.0.1:$DASH_PORT/" 2>/dev/null)
+      if [[ "${code:-000}" =~ ^[0-9]+$ && "$code" -lt 500 ]]; then up=1; break; fi
+      if [[ -n "$DASH_DOMAIN" ]]; then
+        code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 "https://$DASH_DOMAIN/" 2>/dev/null)
+        if [[ "${code:-000}" =~ ^[0-9]+$ && "$code" -lt 500 ]]; then up=1; break; fi
+      fi
       sleep 1
     done
-    [[ "$up" -eq 1 ]] && ok "Dashboard :$DASH_PORT ✅" || warn "Dashboard :$DASH_PORT не отвечает за 60с — 'journalctl -u hermes-dashboard -n 50'"
+    [[ "$up" -eq 1 ]] && ok "Dashboard :$DASH_PORT ✅" || warn "Dashboard :$DASH_PORT не отвечает за 120с — 'journalctl -u hermes-dashboard -n 50'"
   fi
 else
   step "Gateway + Dashboard (docker)"
