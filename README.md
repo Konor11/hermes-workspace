@@ -26,7 +26,7 @@
 > **Это форк ([Konor11/hermes-workspace](https://github.com/Konor11/hermes-workspace)).**
 > Добавлено поверх upstream `outsourc-e/hermes-workspace`:
 > - 🇷🇺 **Полная русская локализация UI** — интерфейс переключается на русский автоматически (по `navigator.language` / `localStorage['hermes-locale']`).
-> - 🛠️ **Скрипт автоустановки** [`scripts/install.sh`](https://github.com/Konor11/hermes-workspace/blob/main/scripts/install.sh) — ставит Hermes Agent, Gateway, Dashboard, Workspace и Caddy (reverse-proxy + HTTPS) одной командой. Поддерживает режимы `systemd` и `docker`, авто-подбор свободных портов и произвольные домены.
+> - 🛠️ **Скрипт автоустановки** [`install.sh`](https://github.com/Konor11/hermes-workspace/blob/main/install.sh) (полный код в [`scripts/install.sh`](https://github.com/Konor11/hermes-workspace/blob/main/scripts/install.sh)) — ставит Hermes Agent, Gateway, Dashboard, Workspace и Caddy (reverse-proxy + HTTPS) одной командой. Поддерживает режимы `systemd` и `docker`, авто-подбор свободных портов и произвольные домены.
 >
 > Остальное — ванильный upstream (zero-fork behavior сохранён).
 
@@ -64,23 +64,29 @@ cd /root/hermes-workspace
 
 ### Шаг 3. Запусти скрипт установки
 
-Скрипт: [`scripts/install.sh`](https://github.com/Konor11/hermes-workspace/blob/main/scripts/install.sh)
-
-Просто запусти его — он сам задаст понятные вопросы в интерактивном меню
-(режим рантайма, домен workspace, отдельный домен для dashboard, секреты).
-Enter принимает значение по умолчанию.
+Основной скрипт — [`install.sh`](https://github.com/Konor11/hermes-workspace/blob/main/install.sh)
+в корне репозитория. Он сам скачает полный установщик и проведёт тебя по
+интерактивному меню (режим рантайма, домен workspace, отдельный домен для
+dashboard, секреты).
 
 ```bash
-# Интерактивный мастер (рекомендуется)
-sudo bash scripts/install.sh
+# One-line (рекомендуется)
+curl -fsSL https://raw.githubusercontent.com/Konor11/hermes-workspace/main/install.sh | bash
 
-# Или сразу с параметрами (неинтерактивно)
-sudo bash scripts/install.sh --domain ws.mydomen.com --dashboard-domain dash.mydomen.com
-sudo bash scripts/install.sh --mode docker --domain ws.mydomen.com
+# Или скачай и запусти вручную
+curl -fsSL https://raw.githubusercontent.com/Konor11/hermes-workspace/main/install.sh -o /tmp/install.sh
+bash /tmp/install.sh
+
+# Сразу с параметрами (неинтерактивно)
+bash /tmp/install.sh --domain ws.mydomen.com --dashboard-domain dash.mydomen.com
+bash /tmp/install.sh --mode docker --domain ws.mydomen.com
 
 # Проверить, что всё пройдёт без ошибок, ничего не меняя
-sudo bash scripts/install.sh --dry-run
+bash /tmp/install.sh --dry-run
 ```
+
+> Полный установщик лежит в [`scripts/install.sh`](https://github.com/Konor11/hermes-workspace/blob/main/scripts/install.sh)
+> — это тот же код, который вызывает корневой `install.sh`. Можно запускать и его напрямую.
 
 Интерактивное меню спросит:
 - **Режим рантайма** — `systemd` (по умолчанию) или `docker`.
@@ -119,7 +125,7 @@ sudo bash scripts/install.sh --dry-run
 journalctl -u hermes-workspace -f
 
 # Перезапуск после правок
-sudo bash scripts/install.sh --update --domain ws.mydomen.com
+bash /tmp/install.sh --update --domain ws.mydomen.com
 
 # Docker-режим: логи и перезапуск
 docker compose -f /root/hermes-workspace/docker-compose.yml logs -f
