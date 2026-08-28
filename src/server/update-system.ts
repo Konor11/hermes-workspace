@@ -349,6 +349,7 @@ export function readWorkspaceUpdateStatus(
   const remoteUrl = git(['remote', 'get-url', 'origin'], gitRepo)
   const repoMatches = remoteUrlMatches(remoteUrl, [
     'hermes-workspace',
+    'Konor11/hermes-workspace',
     'outsourc-e/hermes-workspace',
   ])
   if (repoMatches) git(['fetch', 'origin', '--quiet'], gitRepo, 30_000)
@@ -607,11 +608,38 @@ export function applyWorkspaceUpdate(): ApplyUpdateResult {
     },
   ]
   persistPendingReleaseNotes(releaseNotes)
+
+  // После обновления исходников workspace нужно перезапустить процесс,
+  // иначе пользователь увидит старую сборку. Если workspace запущен как
+  // systemd-юнит — делаем restart самостоятельно (без участия пользователя).
+  // Для docker/desktop/локального dev эта логика не применяется (restart
+  // управляется внешне).
+  let restarted = false
+  if (before.currentHead !== after.currentHead) {
+    try {
+      const unit = exec('systemctl', ['list-units', '--full', '--no-legend', '--no-pager'], {
+        cwd: before.repoPath,
+        timeout: 8_000,
+      })
+      const unitName = unit
+        ?.split('\n')
+        .map((l) => l.split(/\s+/)[0])
+        .find((u) => u === 'hermes-workspace.service')
+      if (unitName) {
+        execOrThrow('systemctl', ['restart', unitName], { timeout: 30_000 })
+        restarted = true
+        output.push(`restarted ${unitName}`)
+      }
+    } catch {
+      // restart не удался — оставляем restartRequired=true, пусть перезапустит вручную
+    }
+  }
+
   return {
     ok: true,
     product: 'workspace',
     output: output.filter(Boolean).join('\n'),
-    restartRequired: before.currentHead !== after.currentHead,
+    restartRequired: !restarted && before.currentHead !== after.currentHead,
     status: after,
     releaseNotes,
   }
