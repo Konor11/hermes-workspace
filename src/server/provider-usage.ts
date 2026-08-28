@@ -8,10 +8,61 @@
  * - Anthropic API: API key from env → header-based usage tracking
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, statSync } from 'node:fs'
 import { execSync } from 'node:child_process'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
+
+// ── Hermes env loader ────────────────────────────────────────────────────────
+// Ключи провайдеров живут в ~/.hermes/.env (его пишет gateway / install.sh).
+// Workspace-процесс (systemd) не наследует эти переменные в process.env,
+// поэтому Usage Overview ложно показывал "Not configured". Читаем файл
+// напрямую и отдаём приоритет ему, с фолбэком на process.env (для локального
+// запуска `pnpm dev`, где env может быть задан в shell).
+let _hermesEnvCache: Record<string, string> | null = null
+let _hermesEnvMtime = 0
+
+function hermesEnvPath(): string {
+  const home = process.env.HERMES_HOME ?? process.env.CLAUDE_HOME ?? join(homedir(), '.hermes')
+  return join(home, '.env')
+}
+
+function loadHermesEnv(force = false): Record<string, string> {
+  const p = hermesEnvPath()
+  try {
+    const mtime = existsSync(p) ? statSync(p).mtimeMs : 0
+    if (_hermesEnvCache && !force && mtime === _hermesEnvMtime) return _hermesEnvCache
+    const out: Record<string, string> = {}
+    if (existsSync(p)) {
+      const text = readFileSync(p, 'utf-8')
+      for (const raw of text.split('\n')) {
+        const line = raw.trim()
+        if (!line || line.startsWith('#')) continue
+        const eq = line.indexOf('=')
+        if (eq === -1) continue
+        const k = line.slice(0, eq).trim()
+        let v = line.slice(eq + 1).trim()
+        if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+          v = v.slice(1, -1)
+        }
+        out[k] = v
+      }
+    }
+    _hermesEnvCache = out
+    _hermesEnvMtime = mtime
+  } catch {
+    _hermesEnvCache = _hermesEnvCache ?? {}
+  }
+  return _hermesEnvCache
+}
+
+// Приоритет: process.env (если задан явно) -> ~/.hermes/.env
+function getKey(name: string): string | undefined {
+  const fromEnv = process.env[name]
+  if (fromEnv && fromEnv.trim()) return fromEnv.trim()
+  const fromFile = loadHermesEnv()[name]
+  return fromFile && fromFile.trim() ? fromFile.trim() : undefined
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -769,7 +820,7 @@ export async function fetchCodexUsage(): Promise<ProviderUsageResult> {
 
 export async function fetchOpenAIUsage(): Promise<ProviderUsageResult> {
   const now = Date.now()
-  const apiKey = process.env.OPENAI_API_KEY?.trim()
+  const apiKey = getKey('OPENAI_API_KEY')
 
   if (!apiKey) {
     return {
@@ -889,7 +940,7 @@ export async function fetchOpenAIUsage(): Promise<ProviderUsageResult> {
 
 export async function fetchOpenRouterUsage(): Promise<ProviderUsageResult> {
   const now = Date.now()
-  const apiKey = process.env.OPENROUTER_API_KEY?.trim()
+  const apiKey = getKey('OPENROUTER_API_KEY')
 
   if (!apiKey) {
     return {
@@ -982,7 +1033,7 @@ export async function fetchOpenRouterUsage(): Promise<ProviderUsageResult> {
 
 export async function fetchGeminiUsage(): Promise<ProviderUsageResult> {
   const now = Date.now()
-  const apiKey = process.env.GOOGLE_API_KEY?.trim()
+  const apiKey = getKey('GOOGLE_API_KEY') ?? getKey('GEMINI_API_KEY')
 
   if (!apiKey) {
     return {
