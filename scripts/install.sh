@@ -760,100 +760,68 @@ fi
 step "Конфигурация /root/.hermes/workspace_env.conf"
 mkdir -p /root/.hermes
 
-prompt_secret() {
-  local key="$1" hint="$2" cur="${3:-}" val=""
-  if [[ "$DRY_RUN" -eq 1 ]]; then
-    val="${cur:-<dry-run>}"
-    printf '%s=%s\n' "$key" "$val"
-    return
-  fi
-  if [[ -n "$cur" ]]; then
-    hint="$hint ${C_YEL}(текущее задано, Enter — оставить)${C_RST}"
-  fi
-  # Читаем из /dev/tty, чтобы приглашение и ввод работали ДАЖЕ когда функция
-  # вызвана внутри конвейера { ... } | ... (иначе read берёт пустой stdin пайпа
-  # и пользователь не видит строку ввода — баг "нет строк ввода логина/паролей").
-  echo "  $key — $hint:"
-  if [[ -c /dev/tty ]]; then
-    read -r val < /dev/tty || true
-  else
-    read -r val || true
-  fi
-  [[ -z "$val" && -n "$cur" ]] && val="$cur"
-  printf '%s=%s\n' "$key" "$val"
-}
+# БЛОК СЕКРЕТОВ — ПОЛНОСТЬЮ БЕЗ ИНТЕРАКТИВНОГО ВВОДА.
+# Причины:
+#  - read < /dev/tty внутри конвейера { … } | cat ломался, когда скрипт
+#    запускался не из живого терминала (авто-ответы, setsid) → пустые
+#    значения записывались в файл ("ввожу в пустоту → некорректно записалось").
+#  - Теперь значения берутся ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ (если задал юзер) либо
+#    ГЕНЕРИРУЮТСЯ надёжно. Никаких read/prompt — детерминированно и безопасно.
+#
+# Передать свои значения можно так:
+#   WS_PASSWORD=mysecret DASH_USER=admin DASH_PASS=mypass \
+#     bash install.sh
+#
+# Если переменные пусты — генерим криптостойкие (secrets.token_urlsafe).
 
-cur_token=$(grep -E '^HERMES_API_TOKEN='  "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
-# Если токен ещё не задан — берём сгенерированный API_SERVER_KEY из .env gateway,
-# чтобы workspace мог подключиться к тому же gateway без ручного ввода.
-if [[ -z "$cur_token" && -n "${GEN_KEY:-}" ]]; then
-  cur_token="$GEN_KEY"
-  info "HERMES_API_TOKEN возьмёт сгенерированный API_SERVER_KEY (можно Enter)."
+# HERMES_API_TOKEN = API_SERVER_KEY гейтвея (уже сгенерирован в блоке 3 → GEN_KEY)
+if [[ -z "${GEN_KEY:-}" ]]; then
+  GW_KEY=$(grep -E '^API_SERVER_KEY=' /root/.hermes/.env 2>/dev/null | cut -d= -f2- || true)
+  GEN_KEY="$GW_KEY"
 fi
-cur_pw=$(grep -E '^HERMES_PASSWORD='      "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
+cur_token=$(grep -E '^HERMES_API_TOKEN=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
+HERMES_API_TOKEN="${cur_token:-${GEN_KEY:-}}"
+
+# HERMES_PASSWORD — из env, либо текущее, либо генерим
+cur_pw=$(grep -E '^HERMES_PASSWORD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
+if [[ -n "${WS_PASSWORD:-}" ]]; then
+  HERMES_PASSWORD="$WS_PASSWORD"
+elif [[ -n "$cur_pw" ]]; then
+  HERMES_PASSWORD="$cur_pw"
+else
+  HERMES_PASSWORD="$(python3 -c 'import secrets;print(secrets.token_urlsafe(16))')"
+  info "HERMES_PASSWORD сгенерирован автоматически (передай WS_PASSWORD=… чтобы задать свой)"
+fi
+
+# Basic Auth дашборда — из env, либо дефолт admin + сгенерированный пароль
 cur_bu=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_USERNAME=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
 cur_bp=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
-# Basic Auth дашборда: дефолт admin/admin (Enter — оставить), либо введи свои
-: "${cur_bu:=admin}"; : "${cur_bp:=admin}"
+HERMES_DASHBOARD_BASIC_AUTH_USERNAME="${DASH_USER:-${cur_bu:-admin}}"
+if [[ -n "${DASH_PASS:-}" ]]; then
+  HERMES_DASHBOARD_BASIC_AUTH_PASSWORD="$DASH_PASS"
+elif [[ -n "$cur_bp" ]]; then
+  HERMES_DASHBOARD_BASIC_AUTH_PASSWORD="$cur_bp"
+else
+  HERMES_DASHBOARD_BASIC_AUTH_PASSWORD="$(python3 -c 'import secrets;print(secrets.token_urlsafe(16))')"
+  info "Пароль basic-auth дашборда сгенерирован (передай DASH_PASS=… чтобы задать свой)"
+fi
 
-echo "Введи параметры подключения к Hermes Gateway/Dashboard."
-echo "(HERMES_API_TOKEN = API_SERVER_KEY гейтвея — подставляется автоматически; basic-auth — из dashboard_auth_env.conf)"
 {
-  # HERMES_API_TOKEN: не спрашиваем, если GEN_KEY сгенерирован (берём его),
-  # чтобы пользователю не нужно было вводить ключ вручную.
-  if [[ -n "${GEN_KEY:-}" ]]; then
-    printf '%s=%s\n' "HERMES_API_TOKEN" "$GEN_KEY"
-
-  else
-    prompt_secret "HERMES_API_TOKEN" "Bearer-токен гейтвея (API_SERVER_KEY)" "$cur_token"
-  fi
-  prompt_secret "HERMES_PASSWORD" "пароль входа в Workspace" "$cur_pw"
-  prompt_secret "HERMES_DASHBOARD_BASIC_AUTH_USERNAME" "basic-auth user дашборда" "$cur_bu"
-  prompt_secret "HERMES_DASHBOARD_BASIC_AUTH_PASSWORD" "basic-auth пароль дашборда" "$cur_bp"
+  echo "HERMES_API_TOKEN=$HERMES_API_TOKEN"
+  echo "HERMES_PASSWORD=$HERMES_PASSWORD"
+  echo "HERMES_DASHBOARD_BASIC_AUTH_USERNAME=$HERMES_DASHBOARD_BASIC_AUTH_USERNAME"
+  echo "HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=$HERMES_DASHBOARD_BASIC_AUTH_PASSWORD"
   echo "HERMES_WORKSPACE_DIR=$WS_DIR"
-} | if [[ "$DRY_RUN" -eq 1 ]]; then
-      cat >/dev/null
-      info "[dry-run] запись $ENV_FILE пропущена"
-    else
-      cat > "$ENV_FILE"
-    fi
-[[ "$DRY_RUN" -eq 0 ]] && chmod 600 "$ENV_FILE"
-
-# HERMES_API_TOKEN obligatorisch: bez nego workspace slot pustoy Bearer.
-if ! grep -qE '^HERMES_API_TOKEN=.+' "$ENV_FILE"; then
-  GW_KEY=$(grep -E '^API_SERVER_KEY=' /root/.hermes/.env 2>/dev/null | cut -d= -f2- || true)
-  if [[ -n "$GW_KEY" ]]; then
-    if grep -qE '^HERMES_API_TOKEN=' "$ENV_FILE"; then
-      sed -i "s|^HERMES_API_TOKEN=.*|HERMES_API_TOKEN=$GW_KEY|" "$ENV_FILE"
-    else
-      echo "HERMES_API_TOKEN=$GW_KEY" >> "$ENV_FILE"
-    fi
-    ok "HERMES_API_TOKEN = API_SERVER_KEY (auto)"
-  else
-    warn "API_SERVER_KEY not found in /root/.hermes/.env"
-  fi
-fi
-
-# Workspace отказывается стартовать с HOST=0.0.0.0 без пароля (#122).
-# Если пользователь оставил HERMES_PASSWORD пустым — генерируем надёжный.
-if grep -qE '^HERMES_PASSWORD=$' "$ENV_FILE"; then
-  GEN_PW=$(python3 -c "import secrets; print(secrets.token_urlsafe(12))")
-  sed -i "s|^HERMES_PASSWORD=$|HERMES_PASSWORD=$GEN_PW|" "$ENV_FILE"
-  ok "HERMES_PASSWORD сгенерирован: $GEN_PW"
-fi
+} > "$ENV_FILE"
+chmod 600 "$ENV_FILE"
 ok "Записано: $ENV_FILE (chmod 600)"
 
-# Файл basic-auth для дашборда (читается unit'ом hermes-dashboard.service через
-# EnvironmentFile). Если не создать — systemd считает отсутствующий файл фатальным.
+# Файл basic-auth для дашборда (читается unit'ом hermes-dashboard.service)
 DASH_AUTH="/root/.hermes/dashboard_auth_env.conf"
 if [[ "$DRY_RUN" -eq 0 ]]; then
-  # вытащим значения из только что записанного ENV_FILE
-  bu=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_USERNAME=' "$ENV_FILE" | cut -d= -f2-)
-  bp=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=' "$ENV_FILE" | cut -d= -f2-)
-  : "${bu:=admin}"; : "${bp:=admin}"
   cat > "$DASH_AUTH" <<EOF
-HERMES_DASHBOARD_BASIC_AUTH_USERNAME=$bu
-HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=$bp
+HERMES_DASHBOARD_BASIC_AUTH_USERNAME=$HERMES_DASHBOARD_BASIC_AUTH_USERNAME
+HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=$HERMES_DASHBOARD_BASIC_AUTH_PASSWORD
 EOF
   chmod 600 "$DASH_AUTH"
   ok "Записано: $DASH_AUTH (basic-auth дашборда)"
