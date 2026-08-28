@@ -183,7 +183,12 @@ async function probeAuthCheck(timeoutMs = 5_000): Promise<ProbeResult> {
 
   const contentType = res.headers.get('content-type') || ''
   if (contentType.includes('text/html')) {
-    return { kind: 'proxy-redirect' }
+    // Caddy может отдать HTML-страницу ошибки (502/503) при кратковременном
+    // рестарте workspace — НЕ считаем это proxy-redirect и НЕ перезагружаем
+    // страницу (иначе форма логина "мигает" и ввод идёт в пустоту). Вместо
+    // этого трактуем как недоступность и оставляем текущий экран; форма
+    // логина появится при следующем успешном /api/auth-check.
+    return { kind: 'unreachable', error: 'html-response' }
   }
 
   try {

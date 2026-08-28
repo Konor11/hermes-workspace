@@ -378,22 +378,13 @@ else
   if [[ "$DRY_RUN" -eq 0 ]]; then
     if curl -fsSL --retry 3 --retry-delay 2 "https://hermes-agent.nousresearch.com/install.sh" -o "$INSTALLER_TMP" 2>/tmp/hermes-curl.err; then
       ok "Инсталлятор скачан ($(wc -c < "$INSTALLER_TMP" 2>/dev/null || echo ?) байт)"
-      # Запускаем инсталлятор hermes. В НЕинтерактивном режиме (--yes) сами
-      # подаём поток 'y'+Enter в stdin, чтобы он не ждал ответов (авто-установка).
-      # В интерактивном — оборачиваем в `script` (pty), чтобы мастер видел
-      # терминал и пользователь отвечал на вопросы сам.
-      if [[ "$NONINTERACTIVE" -eq 1 ]]; then
-        if command -v script >/dev/null 2>&1; then
-          setsid -f script -qec "printf 'y\n%.0s' \$(seq 1 60) | bash $INSTALLER_TMP" /dev/null
-        else
-          setsid -f bash -c "printf 'y\n%.0s' \$(seq 1 60) | bash $INSTALLER_TMP"
-        fi
-      elif command -v script >/dev/null 2>&1; then
-        setsid -f script -qec "bash $INSTALLER_TMP" /dev/null < /dev/tty > /dev/tty 2>&1
+      # ВСЕГДА отвечаем 'y'+Enter на промпты инсталлятора (авто-установка,
+      # без ручного участия — и без флагов). systemd-шаг безопасен благодаря
+      # превентивному enable-linger (блок 1.5): SSH не оборвётся.
+      if command -v script >/dev/null 2>&1; then
+        setsid -f script -qec "printf 'y\n%.0s' \$(seq 1 60) | bash $INSTALLER_TMP" /dev/null
       else
-        # Нет script — запускаем напрямую вне сессии. TTY может отсутствовать,
-        # тогда мастер пропустится; страховка ниже добавит `hermes setup`.
-        setsid -f bash "$INSTALLER_TMP" < /dev/tty > /dev/tty 2>&1
+        setsid -f bash -c "printf 'y\n%.0s' \$(seq 1 60) | bash $INSTALLER_TMP"
       fi
       ok "Инсталлятор hermes запущен — отвечай на его вопросы в терминале…"
       # Ждём завершения инсталлятора (маркер пишем сами после выхода из setsid).
@@ -415,19 +406,12 @@ else
       # промпты ввода паролей/токенов видны и можно отвечать.
       if ! [[ -f /root/.hermes/.env ]] && command -v hermes >/dev/null 2>&1; then
         warn "Конфиг hermes не найден (~/.hermes/.env) — запускаю 'hermes setup'…"
-        # В неинтерактивном режиме (--yes) сами подаём 'y'+Enter (как вручную
-        # нажимали), чтобы не ждать ответов. Иначе — интерактивно вне SSH (setsid),
-        # иначе на шаге systemd hermes дёрнет `systemctl --user`, который рвёт SSH.
-        if [[ "$NONINTERACTIVE" -eq 1 ]]; then
-          if command -v script >/dev/null 2>&1; then
-            setsid -f script -qec "printf 'y\n%.0s' \$(seq 1 60) | hermes setup" /dev/null
-          else
-            setsid -f bash -c "printf 'y\n%.0s' \$(seq 1 60) | hermes setup"
-          fi
-        elif command -v script >/dev/null 2>&1; then
-          setsid -f script -qec "hermes setup" /dev/null < /dev/tty > /dev/tty 2>&1
+        # ВСЕГДА отвечаем 'y'+Enter (авто, без ручного участия). systemd-шаг
+        # безопасен благодаря превентивному enable-linger (блок 1.5).
+        if command -v script >/dev/null 2>&1; then
+          setsid -f script -qec "printf 'y\n%.0s' \$(seq 1 60) | hermes setup" /dev/null
         else
-          setsid -f bash -c "hermes setup" < /dev/tty > /dev/tty 2>&1
+          setsid -f bash -c "printf 'y\n%.0s' \$(seq 1 60) | hermes setup"
         fi
         # Ждём появления конфига (пока пользователь отвечает на вопросы).
         for _ in $(seq 1 600); do
@@ -704,11 +688,15 @@ EOF
     done
     [[ "$up" -eq 1 ]] && ok "Gateway :$GW_PORT ✅" || warn "Gateway :$GW_PORT не отвечает — см. журнал выше"
     up=0
-    for _ in $(seq 1 20); do
+    # Dashboard стартует медленно (venv/dashboard init) — ждём до 60с.
+    # Сначала локально, потом (если задан домен) через Caddy — чтобы не было
+    # ложного "не отвечает", когда сервис уже работает, просто ещё прогревается.
+    for _ in $(seq 1 60); do
       if curl -fsS --max-time 3 "http://127.0.0.1:$DASH_PORT/" >/dev/null 2>&1; then up=1; break; fi
+      if [[ -n "$DASH_DOMAIN" ]] && curl -fsS --max-time 3 "https://$DASH_DOMAIN/" >/dev/null 2>&1; then up=1; break; fi
       sleep 1
     done
-    [[ "$up" -eq 1 ]] && ok "Dashboard :$DASH_PORT ✅" || warn "Dashboard :$DASH_PORT не отвечает — см. журнал выше"
+    [[ "$up" -eq 1 ]] && ok "Dashboard :$DASH_PORT ✅" || warn "Dashboard :$DASH_PORT не отвечает за 60с — 'journalctl -u hermes-dashboard -n 50'"
   fi
 else
   step "Gateway + Dashboard (docker)"
