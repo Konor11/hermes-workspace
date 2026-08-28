@@ -896,11 +896,17 @@ EOF
   fi
   if [[ "$DRY_RUN" -eq 0 ]]; then
     up=0
-    for i in $(seq 1 30); do
-      curl -fsS --max-time 3 "http://127.0.0.1:$WS_PORT/" >/dev/null 2>&1 && up=1 && break
+    for i in $(seq 1 120); do
+      if curl -fsS --max-time 3 "http://127.0.0.1:$WS_PORT/" >/dev/null 2>&1; then up=1; break; fi
       sleep 1
     done
-    [[ "$up" -eq 1 ]] && ok "Workspace :$WS_PORT ✅" || err "Workspace не поднялся за 30с (journalctl -u hermes-workspace -n 50)"
+    if [[ "$up" -eq 1 ]]; then
+      ok "Workspace :$WS_PORT ✅"
+    else
+      err "Workspace не ответил за 120с — диагностика:"
+      echo "  journalctl -u hermes-workspace.service -n 40 --no-pager"
+      systemctl status hermes-workspace.service --no-pager -l 2>&1 | tail -15 || true
+    fi
   else
     info "[dry-run] пропускаю проверку :$WS_PORT"
   fi
