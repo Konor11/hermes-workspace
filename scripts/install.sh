@@ -378,15 +378,17 @@ else
   if [[ "$DRY_RUN" -eq 0 ]]; then
     if curl -fsSL --retry 3 --retry-delay 2 "https://hermes-agent.nousresearch.com/install.sh" -o "$INSTALLER_TMP" 2>/tmp/hermes-curl.err; then
       ok "Инсталлятор скачан ($(wc -c < "$INSTALLER_TMP" 2>/dev/null || echo ?) байт)"
-      # Запускаем ВНЕ нашей SSH-сессии (setsid), чтобы systemctl --user
-      # инсталлятора не обрывал наш SSH. Но setsid отвязывает controlling
-      # terminal — поэтому оборачиваем инсталлятор в `script` НА ВЕРХНЕМ
-      # уровне: script сам вызывает TIOCSCTTY на псевдо-tty (pty) и делает
-      # его controlling terminal для инсталлятора. В результате hermes видит
-      # терминал и запускает интерактивный мастер (запрашивает пароли/токены).
-      # Промпты идут на наш терминал: пользователь их видит и отвечает.
-      # Скрипт СТОИТ, пока инсталлятор не завершится (он интерактивный).
-      if command -v script >/dev/null 2>&1; then
+      # Запускаем инсталлятор hermes. В НЕинтерактивном режиме (--yes) сами
+      # подаём поток 'y'+Enter в stdin, чтобы он не ждал ответов (авто-установка).
+      # В интерактивном — оборачиваем в `script` (pty), чтобы мастер видел
+      # терминал и пользователь отвечал на вопросы сам.
+      if [[ "$NONINTERACTIVE" -eq 1 ]]; then
+        if command -v script >/dev/null 2>&1; then
+          setsid -f script -qec "printf 'y\n%.0s' \$(seq 1 60) | bash $INSTALLER_TMP" /dev/null
+        else
+          setsid -f bash -c "printf 'y\n%.0s' \$(seq 1 60) | bash $INSTALLER_TMP"
+        fi
+      elif command -v script >/dev/null 2>&1; then
         setsid -f script -qec "bash $INSTALLER_TMP" /dev/null < /dev/tty > /dev/tty 2>&1
       else
         # Нет script — запускаем напрямую вне сессии. TTY может отсутствовать,
@@ -413,7 +415,16 @@ else
       # промпты ввода паролей/токенов видны и можно отвечать.
       if ! [[ -f /root/.hermes/.env ]] && command -v hermes >/dev/null 2>&1; then
         warn "Конфиг hermes не найден (~/.hermes/.env) — запускаю 'hermes setup'…"
-        if command -v script >/dev/null 2>&1; then
+        # В неинтерактивном режиме (--yes) сами подаём 'y'+Enter (как вручную
+        # нажимали), чтобы не ждать ответов. Иначе — интерактивно вне SSH (setsid),
+        # иначе на шаге systemd hermes дёрнет `systemctl --user`, который рвёт SSH.
+        if [[ "$NONINTERACTIVE" -eq 1 ]]; then
+          if command -v script >/dev/null 2>&1; then
+            setsid -f script -qec "printf 'y\n%.0s' \$(seq 1 60) | hermes setup" /dev/null
+          else
+            setsid -f bash -c "printf 'y\n%.0s' \$(seq 1 60) | hermes setup"
+          fi
+        elif command -v script >/dev/null 2>&1; then
           setsid -f script -qec "hermes setup" /dev/null < /dev/tty > /dev/tty 2>&1
         else
           setsid -f bash -c "hermes setup" < /dev/tty > /dev/tty 2>&1
