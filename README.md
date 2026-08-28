@@ -55,14 +55,7 @@ node --version   # должно быть v22.x
 > Если будешь ставить в режиме `--mode docker`, дополнительно поставь Docker
 > (с `docker compose` v2): https://docs.docker.com/engine/install/
 
-### Шаг 2. Клонируй форк
-
-```bash
-git clone https://github.com/Konor11/hermes-workspace.git /root/hermes-workspace
-cd /root/hermes-workspace
-```
-
-### Шаг 3. Запусти скрипт установки
+### Шаг 2. Запусти скрипт установки
 
 Основной скрипт — [`install.sh`](https://github.com/Konor11/hermes-workspace/blob/main/install.sh)
 в корне репозитория. Он сам скачает полный установщик и проведёт тебя по
@@ -104,7 +97,7 @@ bash /tmp/install.sh --dry-run
 5. запустит Workspace (порт `3000`, либо `3001`/`3002`/… если занят);
 6. установит **Caddy** и настроит reverse-proxy с авто-TLS (Let's Encrypt) на твой домен.
 
-### Шаг 4. Настрой DNS и открой порты
+### Шаг 3. Настрой DNS и открой порты
 
 - Направь DNS-запись **A** твоего домена (например `ws.mydomen.com`) на IP сервера.
 - Открой в фаерволе порты **80** и **443** (Caddy использует их для выпуска TLS-сертификата).
@@ -112,7 +105,7 @@ bash /tmp/install.sh --dry-run
 
 Через ~30 секунд после запуска Caddy выпустит сертификат, и Workspace откроется по `https://ws.mydomen.com`.
 
-### Шаг 5. Вход
+### Шаг 4. Вход
 
 - Открой `https://ws.mydomen.com` в браузере.
 - Войди под паролем, который ввёл на шаге 3 (секрет `HERMES_PASSWORD`).
