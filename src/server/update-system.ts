@@ -520,9 +520,24 @@ export function readUpdateStatus(): UpdateStatus {
   }
 }
 
-export function applyWorkspaceUpdate(): ApplyUpdateResult {
+export type UpdateStage =
+  | 'fetch'
+  | 'sync'
+  | 'install'
+  | 'build'
+  | 'restart'
+  | 'done'
+  | 'error'
+
+export type StageCallback = (stage: UpdateStage, message: string) => void
+
+export function applyWorkspaceUpdate(
+  onStage?: StageCallback,
+): ApplyUpdateResult {
+  const emit = (stage: UpdateStage, message: string) => onStage?.(stage, message)
   const before = readWorkspaceUpdateStatus()
   if (!before.canUpdate || !before.repoPath || !before.branch) {
+    emit('error', before.reason || 'Workspace update is not available.')
     return {
       ok: false,
       product: 'workspace',
@@ -534,6 +549,7 @@ export function applyWorkspaceUpdate(): ApplyUpdateResult {
     }
   }
   const output: Array<string> = []
+  emit('fetch', 'Fetching updates from origin…')
   output.push(
     execOrThrow('git', ['fetch', 'origin'], {
       cwd: before.repoPath,
@@ -543,6 +559,7 @@ export function applyWorkspaceUpdate(): ApplyUpdateResult {
   const remoteRef = `origin/${before.branch}`
   if (!canResetToRemote(before.repoPath, remoteRef)) {
     const status = readWorkspaceUpdateStatus()
+    emit('error', `${remoteRef} could not be verified.`)
     return {
       ok: false,
       product: 'workspace',
@@ -553,6 +570,7 @@ export function applyWorkspaceUpdate(): ApplyUpdateResult {
       error: `${remoteRef} could not be verified.`,
     }
   }
+  emit('sync', `Syncing to ${remoteRef}…`)
   output.push(syncRepoToRemote(before.repoPath, remoteRef))
   const after = readWorkspaceUpdateStatus()
   const changedFiles =
@@ -570,6 +588,7 @@ export function applyWorkspaceUpdate(): ApplyUpdateResult {
       (file) => file === 'package.json' || file === 'pnpm-lock.yaml',
     )
   ) {
+    emit('install', 'Installing dependencies (pnpm install)…')
     output.push(
       execOrThrow('pnpm', ['install', '--no-frozen-lockfile'], {
         cwd: before.repoPath,
@@ -587,6 +606,7 @@ export function applyWorkspaceUpdate(): ApplyUpdateResult {
         file.startsWith('tsconfig'),
     )
   ) {
+    emit('build', 'Building workspace (pnpm build)…')
     output.push(
       execOrThrow('pnpm', ['build'], {
         cwd: before.repoPath,
@@ -617,6 +637,7 @@ export function applyWorkspaceUpdate(): ApplyUpdateResult {
   let restarted = false
   if (before.currentHead !== after.currentHead) {
     try {
+      emit('restart', 'Restarting workspace service…')
       const unit = exec('systemctl', ['list-units', '--full', '--no-legend', '--no-pager'], {
         cwd: before.repoPath,
         timeout: 8_000,
@@ -635,6 +656,7 @@ export function applyWorkspaceUpdate(): ApplyUpdateResult {
     }
   }
 
+  emit('done', restarted ? 'Updated and restarted.' : 'Update complete.')
   return {
     ok: true,
     product: 'workspace',

@@ -59,6 +59,9 @@ type ApplyUpdateResult = {
 }
 
 type Phase = 'idle' | 'updating' | 'done' | 'error'
+
+type StageInfo = { stage: string; message: string; status: 'pending' | 'active' | 'done' | 'error' }
+const STAGE_ORDER = ['fetch', 'sync', 'install', 'build', 'restart', 'done']
 type Notes = {
   id: string
   sections: Array<ReleaseNoteSection>
@@ -123,6 +126,10 @@ export function UpdateCenterNotifier() {
     workspace: '',
     agent: '',
   })
+  const [stages, setStages] = useState<Record<ProductId, StageInfo[]>>({
+    workspace: [],
+    agent: [],
+  })
   const [notes, setNotes] = useState<Notes | null>(null)
 
   useEffect(() => {
@@ -180,6 +187,21 @@ export function UpdateCenterNotifier() {
     if (!product.canUpdate) return
     setPhases((prev) => ({ ...prev, [product.id]: 'updating' }))
     setErrors((prev) => ({ ...prev, [product.id]: '' }))
+    setStages((prev) => ({ ...prev, [product.id]: [] }))
+    const markStage = (stage: string, message: string, status: StageInfo['status']) => {
+      setStages((prev) => {
+        const list = [...(prev[product.id] || [])]
+        const idx = list.findIndex((s) => s.stage === stage)
+        const info: StageInfo = { stage, message, status }
+        if (idx >= 0) list[idx] = info
+        else list.push(info)
+        // помечаем предыдущие как done
+        for (let i = 0; i < list.length - 1; i++) {
+          if (list[i].status === 'active') list[i].status = 'done'
+        }
+        return { ...prev, [product.id]: list }
+      })
+    }
     try {
       const res = await fetch(
         `/api/update/${product.id === 'workspace' ? 'workspace' : 'agent'}`,
@@ -189,32 +211,86 @@ export function UpdateCenterNotifier() {
           body: JSON.stringify({}),
         },
       )
-      const result = (await res.json()) as ApplyUpdateResult
-      if (!res.ok || !result.ok) {
+      if (!res.ok || !res.body) {
+        const text = await res.text().catch(() => '')
+        let msg = `${product.label} update failed`
+        try {
+          const j = JSON.parse(text)
+          if (j?.error) msg = j.error
+        } catch {
+          /* ignore */
+        }
+        markStage('error', msg, 'error')
         setPhases((prev) => ({ ...prev, [product.id]: 'error' }))
-        setErrors((prev) => ({
-          ...prev,
-          [product.id]: result.error || `${product.label} update failed`,
-        }))
+        setErrors((prev) => ({ ...prev, [product.id]: msg }))
+        return
+      }
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let finalResult: ApplyUpdateResult | null = null
+      const handleEvent = (ev: string, data: string) => {
+        if (ev === 'stage') {
+          try {
+            const { stage, message } = JSON.parse(data) as {
+              stage: string
+              message: string
+            }
+            const isErr = stage === 'error'
+            const isDone = stage === 'done'
+            markStage(
+              stage,
+              message,
+              isErr ? 'error' : isDone ? 'done' : 'active',
+            )
+          } catch {
+            /* ignore */
+          }
+        } else if (ev === 'result') {
+          try {
+            finalResult = JSON.parse(data) as ApplyUpdateResult
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const parts = buffer.split('\n\n')
+        buffer = parts.pop() ?? ''
+        for (const part of parts) {
+          let ev = 'message'
+          let data = ''
+          for (const line of part.split('\n')) {
+            if (line.startsWith('event:')) ev = line.slice(6).trim()
+            else if (line.startsWith('data:')) data += line.slice(5).trim()
+          }
+          if (data) handleEvent(ev, data)
+        }
+      }
+      const fr = finalResult as ApplyUpdateResult | null
+      if (!fr || !fr.ok) {
+        const msg = fr?.error || `${product.label} update failed`
+        markStage('error', msg, 'error')
+        setPhases((prev) => ({ ...prev, [product.id]: 'error' }))
+        setErrors((prev) => ({ ...prev, [product.id]: msg }))
         return
       }
       setPhases((prev) => ({ ...prev, [product.id]: 'done' }))
       dismiss(product)
-      const stored = result.releaseNotes?.length
-        ? storeNotes(result.releaseNotes)
+      const stored = fr.releaseNotes?.length
+        ? storeNotes(fr.releaseNotes)
         : null
       if (stored) setNotes(stored)
       await queryClient.invalidateQueries({ queryKey: ['update-status-v2'] })
-      toast(`${product.label} updated. Restart may be required.`, {
-        type: 'success',
-        duration: 7000,
-      })
+      toast(`${product.label} updated.`, { type: 'success', duration: 7000 })
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      markStage('error', msg, 'error')
       setPhases((prev) => ({ ...prev, [product.id]: 'error' }))
-      setErrors((prev) => ({
-        ...prev,
-        [product.id]: err instanceof Error ? err.message : String(err),
-      }))
+      setErrors((prev) => ({ ...prev, [product.id]: msg }))
     }
   }
 
@@ -234,6 +310,7 @@ export function UpdateCenterNotifier() {
               product={product}
               phase={phases[product.id]}
               error={errors[product.id]}
+              stages={stages[product.id] || []}
               onDismiss={() => dismiss(product)}
               onUpdate={() => update(product)}
             />
@@ -248,12 +325,14 @@ function UpdateCard({
   product,
   phase,
   error,
+  stages,
   onDismiss,
   onUpdate,
 }: {
   product: ProductUpdateStatus
   phase: Phase
   error: string
+  stages: StageInfo[]
   onDismiss: () => void
   onUpdate: () => void
 }) {
@@ -372,6 +451,57 @@ function UpdateCard({
                   …and {product.blockingFiles.length - 8} more
                 </li>
               ) : null}
+            </ul>
+          ) : null}
+          {updating && stages.length > 0 ? (
+            <ul className="mt-2 space-y-1 border-t pt-2" style={{ borderColor: 'var(--theme-border)' }}>
+              {STAGE_ORDER.map((s) => {
+                const info = stages.find((x) => x.stage === s)
+                const label: Record<string, string> = {
+                  fetch: 'Fetch',
+                  sync: 'Sync',
+                  install: 'Install deps',
+                  build: 'Build',
+                  restart: 'Restart',
+                  done: 'Done',
+                }
+                const icon =
+                  info?.status === 'done'
+                    ? '✓'
+                    : info?.status === 'error'
+                      ? '✕'
+                      : info?.status === 'active'
+                        ? '…'
+                        : '·'
+                const color =
+                  info?.status === 'done'
+                    ? '#10b981'
+                    : info?.status === 'error'
+                      ? '#ef4444'
+                      : info?.status === 'active'
+                        ? 'var(--theme-accent)'
+                        : 'var(--theme-muted)'
+                return (
+                  <li
+                    key={s}
+                    className="flex items-center gap-2 text-[11px]"
+                    style={{ color: info ? 'var(--theme-text)' : 'var(--theme-muted)' }}
+                  >
+                    <span style={{ color }} className="w-3 text-center">
+                      {icon}
+                    </span>
+                    <span className="font-medium">{label[s] ?? s}</span>
+                    {info?.message ? (
+                      <span
+                        className="truncate opacity-70"
+                        style={{ color: 'var(--theme-muted)' }}
+                      >
+                        {info.message}
+                      </span>
+                    ) : null}
+                  </li>
+                )
+              })}
             </ul>
           ) : null}
         </div>
