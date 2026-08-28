@@ -130,7 +130,8 @@ UFW_ENABLE=0
 DOMAIN=""
 DASH_DOMAIN=""
 GW_DOMAIN=""
-NONINTERACTIVE=0
+NONINTERACTIVE=1   # по умолчанию — ПОЛНАЯ АВТОМАТИЗАЦИЯ (без ручного ввода).
+                 # TUI-мастер только по явному --interactive.
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -147,6 +148,7 @@ while [[ $# -gt 0 ]]; do
     --update)            UPDATE=1; shift ;;
     --dry-run)           DRY_RUN=1; shift ;;
     --yes|-y)            NONINTERACTIVE=1; shift ;;
+    --interactive|-i)    NONINTERACTIVE=0; shift ;;
     -h|--help)
       grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) die "Неизвестный аргумент: $1" ;;
@@ -249,9 +251,15 @@ tui_configure() {
   ok "Конфигурация принята: target=$TARGET, режим=$MODE, domain=${DOMAIN:-<нет>}, dashboard=${DASH_DOMAIN:-<нет>}, ufw=$([[ $UFW_ENABLE -eq 1 ]] && echo да || echo нет)"
 }
 
-# Запуск TUI, если не все ключевые параметры заданы флагами и не --yes
-if [[ "$NONINTERACTIVE" -eq 0 && ( -z "$MODE" || -z "$DOMAIN" && -z "$DASH_DOMAIN" ) ]]; then
+# Дефолты при полной автоматизации (NONINTERACTIVE=1): vps + systemd + ufw.
+# TUI-мастер (выбор/ввод домена) — ТОЛЬКО по явному --interactive.
+if [[ "$NONINTERACTIVE" -eq 0 ]]; then
   tui_configure
+else
+  [[ -z "$TARGET" ]] && TARGET="vps"
+  [[ -z "$MODE" ]]   && MODE="systemd"
+  [[ -z "$DOMAIN" && -z "$DASH_DOMAIN" ]] && { DOMAIN=""; DASH_DOMAIN=""; }
+  [[ "$UFW_ENABLE" -eq 0 && "$TARGET" == "vps" ]] && UFW_ENABLE=1
 fi
 [[ -n "$MODE" ]] || MODE="systemd"   # fallback если вообще ничего не задано
 
