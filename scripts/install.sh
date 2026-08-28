@@ -130,8 +130,7 @@ UFW_ENABLE=0
 DOMAIN=""
 DASH_DOMAIN=""
 GW_DOMAIN=""
-NONINTERACTIVE=1   # по умолчанию — ПОЛНАЯ АВТОМАТИЗАЦИЯ (без ручного ввода).
-                 # TUI-мастер только по явному --interactive.
+NONINTERACTIVE=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -148,7 +147,6 @@ while [[ $# -gt 0 ]]; do
     --update)            UPDATE=1; shift ;;
     --dry-run)           DRY_RUN=1; shift ;;
     --yes|-y)            NONINTERACTIVE=1; shift ;;
-    --interactive|-i)    NONINTERACTIVE=0; shift ;;
     -h|--help)
       grep '^#' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) die "Неизвестный аргумент: $1" ;;
@@ -251,15 +249,9 @@ tui_configure() {
   ok "Конфигурация принята: target=$TARGET, режим=$MODE, domain=${DOMAIN:-<нет>}, dashboard=${DASH_DOMAIN:-<нет>}, ufw=$([[ $UFW_ENABLE -eq 1 ]] && echo да || echo нет)"
 }
 
-# Дефолты при полной автоматизации (NONINTERACTIVE=1): vps + systemd + ufw.
-# TUI-мастер (выбор/ввод домена) — ТОЛЬКО по явному --interactive.
-if [[ "$NONINTERACTIVE" -eq 0 ]]; then
+# Запуск TUI, если не все ключевые параметры заданы флагами и не --yes
+if [[ "$NONINTERACTIVE" -eq 0 && ( -z "$MODE" || -z "$DOMAIN" && -z "$DASH_DOMAIN" ) ]]; then
   tui_configure
-else
-  [[ -z "$TARGET" ]] && TARGET="vps"
-  [[ -z "$MODE" ]]   && MODE="systemd"
-  [[ -z "$DOMAIN" && -z "$DASH_DOMAIN" ]] && { DOMAIN=""; DASH_DOMAIN=""; }
-  [[ "$UFW_ENABLE" -eq 0 && "$TARGET" == "vps" ]] && UFW_ENABLE=1
 fi
 [[ -n "$MODE" ]] || MODE="systemd"   # fallback если вообще ничего не задано
 
@@ -768,52 +760,64 @@ fi
 step "Конфигурация /root/.hermes/workspace_env.conf"
 mkdir -p /root/.hermes
 
-# БЛОК СЕКРЕТОВ — ПОЛНОСТЬЮ БЕЗ ИНТЕРАКТИВНОГО ВВОДА.
-# Причины:
-#  - read < /dev/tty внутри конвейера { … } | cat ломался, когда скрипт
-#    запускался не из живого терминала (авто-ответы, setsid) → пустые
-#    значения записывались в файл ("ввожу в пустоту → некорректно записалось").
-#  - Теперь значения берутся ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ (если задал юзер) либо
-#    ГЕНЕРИРУЮТСЯ надёжно. Никаких read/prompt — детерминированно и безопасно.
-#
-# Передать свои значения можно так:
-#   WS_PASSWORD=mysecret DASH_USER=admin DASH_PASS=mypass \
-#     bash install.sh
-#
-# Если переменные пусты — генерим криптостойкие (secrets.token_urlsafe).
+# prompt_secret <key> <hint> <cur> -> пишет значение в глобальную $REPLY.
+# Читает ИЗ ТЕРМИНАЛА (stdin), а не из /dev/tty — чтобы работать и в живом
+# терминале, и при перенаправлении. НЕ принимает пустоту: если ввод пустой и
+# нет текущего значения — спрашивает повторно (до 3 раз), потом берёт из env
+# или генерит. Раньше был баг: read < /dev/tty внутри конвейера { … } | cat
+# читал пустоту → в файл писалось некорректно ("ввожу в пустоту").
+prompt_secret() {
+  local key="$1" hint="$2" cur="${3:-}" val="" tries=0
+  if [[ "$DRY_RUN" -eq 1 ]]; then REPLY="${cur:-<dry-run>}"; return; fi
+  if [[ -n "$cur" ]]; then
+    hint="$hint ${C_YEL}(текущее задано, Enter — оставить)${C_RST}"
+  fi
+  while :; do
+    echo "  $key — $hint:"
+    # читаем из stdin (терминал). Без терминала — из переменной окружения.
+    if [[ -t 0 ]]; then
+      read -r val || true
+    else
+      val="${!key:-}"
+    fi
+    if [[ -n "$val" ]]; then break
+    elif [[ -n "$cur" ]]; then val="$cur"; break
+    elif [[ $((++tries)) -ge 3 ]]; then
+      # 3 попытки пустые — генерим надёжный, чтобы не застрять
+      val="$(python3 -c 'import secrets;print(secrets.token_urlsafe(16))')"
+      info "$key сгенерирован автоматически (пустой ввод)"
+      break
+    fi
+    warn "Пустое значение — введите $key (попытка $tries/3):"
+  done
+  REPLY="$val"
+}
 
-# HERMES_API_TOKEN = API_SERVER_KEY гейтвея (уже сгенерирован в блоке 3 → GEN_KEY)
-if [[ -z "${GEN_KEY:-}" ]]; then
-  GW_KEY=$(grep -E '^API_SERVER_KEY=' /root/.hermes/.env 2>/dev/null | cut -d= -f2- || true)
-  GEN_KEY="$GW_KEY"
+cur_token=$(grep -E '^HERMES_API_TOKEN='  "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
+if [[ -z "$cur_token" && -n "${GEN_KEY:-}" ]]; then
+  cur_token="$GEN_KEY"
+  info "HERMES_API_TOKEN возьмёт сгенерированный API_SERVER_KEY (можно Enter)."
 fi
-cur_token=$(grep -E '^HERMES_API_TOKEN=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
-HERMES_API_TOKEN="${cur_token:-${GEN_KEY:-}}"
-
-# HERMES_PASSWORD — из env, либо текущее, либо генерим
-cur_pw=$(grep -E '^HERMES_PASSWORD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
-if [[ -n "${WS_PASSWORD:-}" ]]; then
-  HERMES_PASSWORD="$WS_PASSWORD"
-elif [[ -n "$cur_pw" ]]; then
-  HERMES_PASSWORD="$cur_pw"
-else
-  HERMES_PASSWORD="$(python3 -c 'import secrets;print(secrets.token_urlsafe(16))')"
-  info "HERMES_PASSWORD сгенерирован автоматически (передай WS_PASSWORD=… чтобы задать свой)"
-fi
-
-# Basic Auth дашборда — из env, либо дефолт admin + сгенерированный пароль
+cur_pw=$(grep -E '^HERMES_PASSWORD='      "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
 cur_bu=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_USERNAME=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
 cur_bp=$(grep -E '^HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=' "$ENV_FILE" 2>/dev/null | cut -d= -f2- || true)
-HERMES_DASHBOARD_BASIC_AUTH_USERNAME="${DASH_USER:-${cur_bu:-admin}}"
-if [[ -n "${DASH_PASS:-}" ]]; then
-  HERMES_DASHBOARD_BASIC_AUTH_PASSWORD="$DASH_PASS"
-elif [[ -n "$cur_bp" ]]; then
-  HERMES_DASHBOARD_BASIC_AUTH_PASSWORD="$cur_bp"
-else
-  HERMES_DASHBOARD_BASIC_AUTH_PASSWORD="$(python3 -c 'import secrets;print(secrets.token_urlsafe(16))')"
-  info "Пароль basic-auth дашборда сгенерирован (передай DASH_PASS=… чтобы задать свой)"
-fi
+: "${cur_bu:=admin}"; : "${cur_bp:=admin}"
 
+echo "Введи параметры подключения к Hermes Gateway/Dashboard."
+echo "(HERMES_API_TOKEN = API_SERVER_KEY гейтвея — подставляется автоматически; basic-auth — из dashboard_auth_env.conf)"
+
+# Вызываем prompt_secret ВНЕ конвейера — результаты в переменные.
+if [[ -n "${GEN_KEY:-}" ]]; then
+  HERMES_API_TOKEN="$GEN_KEY"
+else
+  prompt_secret "HERMES_API_TOKEN" "Bearer-токен гейтвея (API_SERVER_KEY)" "$cur_token"
+  HERMES_API_TOKEN="$REPLY"
+fi
+prompt_secret "HERMES_PASSWORD" "пароль входа в Workspace" "$cur_pw";   HERMES_PASSWORD="$REPLY"
+prompt_secret "HERMES_DASHBOARD_BASIC_AUTH_USERNAME" "basic-auth user дашборда" "$cur_bu"; HERMES_DASHBOARD_BASIC_AUTH_USERNAME="$REPLY"
+prompt_secret "HERMES_DASHBOARD_BASIC_AUTH_PASSWORD" "basic-auth пароль дашборда" "$cur_bp"; HERMES_DASHBOARD_BASIC_AUTH_PASSWORD="$REPLY"
+
+# Запись в файл (без конвейера — переменные уже заполнены корректно)
 {
   echo "HERMES_API_TOKEN=$HERMES_API_TOKEN"
   echo "HERMES_PASSWORD=$HERMES_PASSWORD"
