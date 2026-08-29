@@ -2830,7 +2830,7 @@ function ChatComposerComponent({
                         <circle cx="15" cy="12" r="2" fill="currentColor" stroke="none" />
                         <circle cx="11" cy="18" r="2" fill="currentColor" stroke="none" />
                       </svg>
-                      <span className="max-w-[5rem] truncate sm:max-w-[8rem] md:max-w-[10rem]">{formatModelName(modelButtonLabel)}</span>
+                      <span className="hidden sm:inline max-w-[5rem] truncate sm:max-w-[8rem] md:max-w-[10rem]">{formatModelName(modelButtonLabel)}</span>
                       <HugeiconsIcon icon={ArrowDown01Icon} size={11} />
                     </button>
                     {isControlsMenuOpen ? (
