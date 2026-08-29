@@ -526,6 +526,11 @@ export function ChatScreen({
     if (typeof window === 'undefined') return
     window.localStorage.setItem('hermes-chat-profile', selectedChatProfile)
   }, [selectedChatProfile])
+  // Every new chat starts on the default profile (Workspace / 8642).
+  // Existing sessions keep whatever profile was last chosen.
+  useEffect(() => {
+    if (isNewChat) setSelectedChatProfile('Workspace')
+  }, [isNewChat])
   // Tracks whether the user has explicitly picked a thinking level for this session.
   // A missing/absent sessionStorage key means we should fall back to the Hermes config default.
   const thinkingInitializedByUserRef = useRef(false)
