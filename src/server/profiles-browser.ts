@@ -254,6 +254,7 @@ async function fetchDashboardProfiles(): Promise<{
           : path.join(getProfilesRoot(), canonicalName),
         active: canonicalName === activeProfile,
         exists: true,
+      }
       model: p.model,
       provider: p.provider,
       description: p.description,
