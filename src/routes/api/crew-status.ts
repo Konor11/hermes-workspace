@@ -7,6 +7,8 @@ import { join } from 'node:path'
 import * as yaml from 'yaml'
 import { BEARER_TOKEN, CLAUDE_API, ensureGatewayProbed } from '../../server/gateway-capabilities'
 import { getClaudeRoot, getProfileClaudeHome, getWorkspaceClaudeHome } from '../../server/claude-paths'
+import { listSessions } from '../../server/claude-api'
+import { resolveProfileGateway } from '../../server/profile-gateways'
 import { formatSwarmWorkerLabel, rosterByWorkerId, type SwarmRosterWorker } from '../../server/swarm-roster'
 
 type CrewDefinition = {
@@ -39,7 +41,7 @@ function titleCase(value: string): string {
     .join(' ')
 }
 
-function buildCrewDefinitionFromRoster(profile: string, worker: SwarmRosterWorker | null | undefined): CrewDefinition {
+async function buildCrewDefinitionFromRoster(profile: string, worker: SwarmRosterWorker | null | undefined): Promise<CrewDefinition> {
   const displayName = worker?.name || titleCase(profile)
   const role = worker?.role || 'Profile'
   return {
@@ -55,7 +57,7 @@ function buildCrewDefinitionFromRoster(profile: string, worker: SwarmRosterWorke
   }
 }
 
-function buildCrewDefinitions(): CrewDefinition[] {
+async function buildCrewDefinitions(): Promise<CrewDefinition[]> {
   const profilesDir = join(getClaudeRoot(), 'profiles')
   const dynamicProfiles = existsSync(profilesDir)
     ? readdirSync(profilesDir, { withFileTypes: true })
@@ -76,7 +78,11 @@ function buildCrewDefinitions(): CrewDefinition[] {
   const roster = rosterByWorkerId(dynamicProfiles)
   return [
     { id: 'workspace', displayName: 'default', humanLabel: 'default — Primary profile', role: 'Primary profile', profilePath: null },
-    ...dynamicProfiles.map((profile) => buildCrewDefinitionFromRoster(profile, /^swarm\d+$/i.test(profile) ? roster.get(profile) : null)),
+    ...(await Promise.all(
+      dynamicProfiles.map((profile) =>
+        buildCrewDefinitionFromRoster(profile, /^swarm\d+$/i.test(profile) ? roster.get(profile) : null),
+      ),
+    )),
   ]
 }
 
@@ -254,9 +260,9 @@ export const Route = createFileRoute('/api/crew-status')({
 
         await ensureGatewayProbed()
         const taskCounts = await fetchAssignedTaskCounts()
-        const crewDefinitions = buildCrewDefinitions()
+        const crewDefinitions = await buildCrewDefinitions()
 
-        const crew = crewDefinitions.map((member) => {
+        const crew = crewDefinitions.map(async (member) => {
           const claudeHome = getClaudeHome(member.profilePath)
           const profileFound = existsSync(claudeHome)
 
@@ -292,6 +298,25 @@ export const Route = createFileRoute('/api/crew-status')({
           const dbStats = readDbStats(claudeHome)
           const config = readConfig(claudeHome)
 
+          // Count sessions from the same source the sidebar uses (gateway
+          // API) so the profile page and the chat sidebar never disagree.
+          // `workspace`/default routes to the shared gateway; other profiles
+          // use their own per-profile gateway.
+          let gatewaySessionCount = dbStats.sessionCount
+          try {
+            const gwOverride =
+              member.profilePath === null ||
+              member.profilePath === 'workspace' ||
+              member.profilePath === 'default'
+                ? undefined
+                : resolveProfileGateway(member.profilePath)
+            const sessions = await listSessions(200, 0, gwOverride)
+            gatewaySessionCount = sessions.length
+          } catch {
+            // Fall back to the DB-derived count on any gateway error.
+            gatewaySessionCount = dbStats.sessionCount
+          }
+
           return {
             id: member.id,
             displayName: member.displayName,
@@ -309,7 +334,7 @@ export const Route = createFileRoute('/api/crew-status')({
             provider: config.provider,
             lastSessionTitle: dbStats.lastSessionTitle,
             lastSessionAt: dbStats.lastSessionAt,
-            sessionCount: dbStats.sessionCount,
+            sessionCount: gatewaySessionCount,
             messageCount: dbStats.messageCount,
             toolCallCount: dbStats.toolCallCount,
             totalTokens: dbStats.totalTokens,
@@ -319,7 +344,8 @@ export const Route = createFileRoute('/api/crew-status')({
           }
         })
 
-        return json({ crew, fetchedAt: Date.now() })
+        const resolvedCrew = await Promise.all(crew)
+        return json({ crew: resolvedCrew, fetchedAt: Date.now() })
       },
     },
   },
