@@ -71,8 +71,32 @@ export type ClaudeConfig = {
 
 // ── Helpers ───────────────────────────────────────────────────────
 
-async function claudeGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${CLAUDE_API}${path}`, { headers: _authHeaders() })
+/**
+ * Optional override that routes a gateway call to a specific profile's
+ * gateway (per-profile gateway feature). When omitted, the default
+ * CLAUDE_API (8642) + BEARER_TOKEN are used.
+ */
+export type GatewayOverride = {
+  baseUrl: string
+  apiKey: string
+}
+
+function overrideHeaders(override?: GatewayOverride): Record<string, string> {
+  if (override?.apiKey) return { Authorization: `Bearer ${override.apiKey}` }
+  return _authHeaders()
+}
+
+function overrideBase(override?: GatewayOverride): string {
+  return override?.baseUrl || CLAUDE_API
+}
+
+async function claudeGet<T>(
+  path: string,
+  override?: GatewayOverride,
+): Promise<T> {
+  const res = await fetch(`${overrideBase(override)}${path}`, {
+    headers: overrideHeaders(override),
+  })
   if (!res.ok) {
     const body = await res.text().catch(() => '')
     throw new Error(`Hermes Agent API ${path}: ${res.status} ${body}`)
@@ -80,10 +104,14 @@ async function claudeGet<T>(path: string): Promise<T> {
   return res.json() as Promise<T>
 }
 
-async function claudePost<T>(path: string, body?: unknown): Promise<T> {
-  const res = await fetch(`${CLAUDE_API}${path}`, {
+async function claudePost<T>(
+  path: string,
+  body?: unknown,
+  override?: GatewayOverride,
+): Promise<T> {
+  const res = await fetch(`${overrideBase(override)}${path}`, {
     method: 'POST',
-    headers: { ..._authHeaders(), 'Content-Type': 'application/json' },
+    headers: { ...overrideHeaders(override), 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
   })
   if (!res.ok) {
@@ -93,10 +121,14 @@ async function claudePost<T>(path: string, body?: unknown): Promise<T> {
   return res.json() as Promise<T>
 }
 
-async function claudePatch<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${CLAUDE_API}${path}`, {
+async function claudePatch<T>(
+  path: string,
+  body: unknown,
+  override?: GatewayOverride,
+): Promise<T> {
+  const res = await fetch(`${overrideBase(override)}${path}`, {
     method: 'PATCH',
-    headers: { ..._authHeaders(), 'Content-Type': 'application/json' },
+    headers: { ...overrideHeaders(override), 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
   if (!res.ok) {
@@ -106,10 +138,13 @@ async function claudePatch<T>(path: string, body: unknown): Promise<T> {
   return res.json() as Promise<T>
 }
 
-async function claudeDeleteReq(path: string): Promise<void> {
-  const res = await fetch(`${CLAUDE_API}${path}`, {
+async function claudeDeleteReq(
+  path: string,
+  override?: GatewayOverride,
+): Promise<void> {
+  const res = await fetch(`${overrideBase(override)}${path}`, {
     method: 'DELETE',
-    headers: _authHeaders(),
+    headers: overrideHeaders(override),
   })
   if (!res.ok) {
     const text = await res.text().catch(() => '')
@@ -128,8 +163,9 @@ export async function checkHealth(): Promise<{ status: string }> {
 export async function listSessions(
   limit = 50,
   offset = 0,
+  override?: GatewayOverride,
 ): Promise<Array<ClaudeSession>> {
-  if (getCapabilities().dashboard.available) {
+  if (getCapabilities().dashboard.available && !override) {
     const resp = await listDashboardSessions(limit, offset)
     return resp.sessions as Array<ClaudeSession>
   }
@@ -137,19 +173,23 @@ export async function listSessions(
     items?: Array<ClaudeSession>
     data?: Array<ClaudeSession>
     total?: number
-  }>(`/api/sessions?limit=${limit}&offset=${offset}`)
+  }>(`/api/sessions?limit=${limit}&offset=${offset}`, override)
   // The gateway (OpenAI-compat) returns { object: 'list', data: [...] }, while the
   // dashboard / older gateway shape uses { items: [...] }. Accept either, and never
   // return undefined (callers .map over this).
   return resp.items ?? resp.data ?? []
 }
 
-export async function getSession(sessionId: string): Promise<ClaudeSession> {
-  if (getCapabilities().dashboard.available) {
+export async function getSession(
+  sessionId: string,
+  override?: GatewayOverride,
+): Promise<ClaudeSession> {
+  if (getCapabilities().dashboard.available && !override) {
     return getDashboardSession(sessionId) as Promise<ClaudeSession>
   }
   const resp = await claudeGet<{ session: ClaudeSession }>(
     `/api/sessions/${sessionId}`,
+    override,
   )
   return resp.session
 }
@@ -158,14 +198,16 @@ export async function createSession(opts?: {
   id?: string
   title?: string
   model?: string
-}): Promise<ClaudeSession> {
-  if (getCapabilities().dashboard.available) {
+},
+override?: GatewayOverride): Promise<ClaudeSession> {
+  if (getCapabilities().dashboard.available && !override) {
     const resp = await createDashboardSession(opts || {})
     return resp.session as ClaudeSession
   }
   const resp = await claudePost<{ session: ClaudeSession }>(
     '/api/sessions',
     opts || {},
+    override,
   )
   return resp.session
 }
@@ -173,30 +215,36 @@ export async function createSession(opts?: {
 export async function updateSession(
   sessionId: string,
   updates: { title?: string },
+  override?: GatewayOverride,
 ): Promise<ClaudeSession> {
-  if (getCapabilities().dashboard.available) {
+  if (getCapabilities().dashboard.available && !override) {
     const resp = await updateDashboardSession(sessionId, updates)
     return resp.session as ClaudeSession
   }
   const resp = await claudePatch<{ session: ClaudeSession }>(
     `/api/sessions/${sessionId}`,
     updates,
+    override,
   )
   return resp.session
 }
 
-export async function deleteSession(sessionId: string): Promise<void> {
-  if (getCapabilities().dashboard.available) {
+export async function deleteSession(
+  sessionId: string,
+  override?: GatewayOverride,
+): Promise<void> {
+  if (getCapabilities().dashboard.available && !override) {
     await deleteDashboardSession(sessionId)
     return
   }
-  return claudeDeleteReq(`/api/sessions/${sessionId}`)
+  return claudeDeleteReq(`/api/sessions/${sessionId}`, override)
 }
 
 export async function getMessages(
   sessionId: string,
+  override?: GatewayOverride,
 ): Promise<Array<ClaudeMessage>> {
-  if (getCapabilities().dashboard.available) {
+  if (getCapabilities().dashboard.available && !override) {
     const resp = await getDashboardSessionMessages(sessionId)
     return resp.messages as Array<ClaudeMessage>
   }
@@ -205,7 +253,7 @@ export async function getMessages(
     data?: Array<ClaudeMessage>
     messages?: Array<ClaudeMessage>
     total?: number
-  }>(`/api/sessions/${sessionId}/messages`)
+  }>(`/api/sessions/${sessionId}/messages`, override)
   // Gateway (OpenAI-compat) returns { object: 'list', data: [...] }; dashboard / older
   // shape uses { items: [...] }; some message endpoints use { messages: [...] }.
   // Accept any, and never return undefined (callers read .length / .map / .slice).
@@ -215,25 +263,28 @@ export async function getMessages(
 export async function searchSessions(
   query: string,
   limit = 20,
+  override?: GatewayOverride,
 ): Promise<{ query?: string; count?: number; results: Array<unknown> }> {
-  if (getCapabilities().dashboard.available) {
+  if (getCapabilities().dashboard.available && !override) {
     return searchDashboardSessions(query)
   }
   return claudeGet(
     `/api/sessions/search?q=${encodeURIComponent(query)}&limit=${limit}`,
+    override,
   )
 }
 
 export async function forkSession(
   sessionId: string,
+  override?: GatewayOverride,
 ): Promise<{ session: ClaudeSession; forked_from: string }> {
-  if (getCapabilities().dashboard.available) {
+  if (getCapabilities().dashboard.available && !override) {
     return forkDashboardSession(sessionId) as Promise<{
       session: ClaudeSession
       forked_from: string
     }>
   }
-  return claudePost(`/api/sessions/${sessionId}/fork`)
+  return claudePost(`/api/sessions/${sessionId}/fork`, undefined, override)
 }
 
 // ── Conversion helpers (Claude → Chat format) ─────────────────
@@ -380,12 +431,13 @@ export async function streamChat(
     attachments?: Array<Record<string, unknown>>
   },
   opts: StreamChatOptions,
+  override?: GatewayOverride,
 ): Promise<void> {
   const res = await fetch(
-    `${CLAUDE_API}/api/sessions/${sessionId}/chat/stream`,
+    `${overrideBase(override)}/api/sessions/${sessionId}/chat/stream`,
     {
       method: 'POST',
-      headers: { ..._authHeaders(), 'Content-Type': 'application/json' },
+      headers: { ...overrideHeaders(override), 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
       signal: opts.signal,
     },
@@ -538,11 +590,13 @@ export async function patchConfig(
 
 // ── Models ───────────────────────────────────────────────────────
 
-export async function listModels(): Promise<{
+export async function listModels(
+  override?: GatewayOverride,
+): Promise<{
   object: string
   data: Array<{ id: string; object: string }>
 }> {
-  return claudeGet('/v1/models')
+  return claudeGet('/v1/models', override)
 }
 
 // ── Connection check ─────────────────────────────────────────────

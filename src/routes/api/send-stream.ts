@@ -33,6 +33,7 @@ import {
   streamChat,
 } from '../../server/claude-api'
 import { loadWorkspaceCatalog } from './workspace'
+import { resolveProfileGateway } from '../../server/profile-gateways'
 import {
   collectSyntheticLiveToolEvents,
   createSyntheticLiveToolTracker,
@@ -376,6 +377,22 @@ export const Route = createFileRoute('/api/send-stream')({
           getChatMessage(message, attachments),
           workspaceScope,
         )
+
+        // Per-profile gateway: route this chat to the selected profile's
+        // gateway (e.g. dev → 127.0.0.1:8643) instead of the default 8642.
+        // `profile` comes from the Chat Controls selection in the UI; when
+        // omitted or 'default'/'Workspace', no override is applied.
+        const requestedProfile =
+          typeof body.profile === 'string' ? body.profile.trim() : ''
+        const gatewayOverride =
+          requestedProfile &&
+          requestedProfile !== 'default' &&
+          requestedProfile !== 'Workspace'
+            ? (() => {
+                const gw = resolveProfileGateway(requestedProfile)
+                return { baseUrl: gw.baseUrl, apiKey: gw.apiKey }
+              })()
+            : undefined
 
         // Create streaming response using the SHARED server connection
         const encoder = new TextEncoder()
@@ -1491,6 +1508,7 @@ export const Route = createFileRoute('/api/send-stream')({
                     }
                   },
                 },
+                gatewayOverride,
                 )
               } finally {
                 // Stop the mid-run tool poller and let it drain.

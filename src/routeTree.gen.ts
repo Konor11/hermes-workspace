@@ -171,6 +171,7 @@ import { Route as ApiMcpHubSourcesIdRouteImport } from './routes/api/mcp/hub-sou
 import { Route as ApiMcpNameLogsRouteImport } from './routes/api/mcp/$name.logs'
 import { Route as ApiHermesworldReservationsConfirmRouteImport } from './routes/api/hermesworld/reservations/confirm'
 import { Route as ApiRunsSessionKeyRunIdAbandonRouteImport } from './routes/api/runs/$sessionKey.$runId.abandon'
+import { Route as ApiGatewayChar91profileChar93Char91DotPathChar93RouteImport } from './routes/api/gateway/[$profile]/[...path]'
 
 const WorldRoute = WorldRouteImport.update({
   id: '/world',
@@ -990,6 +991,12 @@ const ApiRunsSessionKeyRunIdAbandonRoute =
     path: '/api/runs/$sessionKey/$runId/abandon',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiGatewayChar91profileChar93Char91DotPathChar93Route =
+  ApiGatewayChar91profileChar93Char91DotPathChar93RouteImport.update({
+    id: '/api/gateway/$profile/[./path]',
+    path: '/api/gateway/$profile/[./path]',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -1153,6 +1160,7 @@ export interface FileRoutesByFullPath {
   '/api/mcp/hub-sources/$id': typeof ApiMcpHubSourcesIdRoute
   '/api/sessions/$sessionKey/active-run': typeof ApiSessionsSessionKeyActiveRunRoute
   '/api/sessions/$sessionKey/status': typeof ApiSessionsSessionKeyStatusRoute
+  '/api/gateway/$profile/[./path]': typeof ApiGatewayChar91profileChar93Char91DotPathChar93Route
   '/api/runs/$sessionKey/$runId/abandon': typeof ApiRunsSessionKeyRunIdAbandonRoute
 }
 export interface FileRoutesByTo {
@@ -1316,6 +1324,7 @@ export interface FileRoutesByTo {
   '/api/mcp/hub-sources/$id': typeof ApiMcpHubSourcesIdRoute
   '/api/sessions/$sessionKey/active-run': typeof ApiSessionsSessionKeyActiveRunRoute
   '/api/sessions/$sessionKey/status': typeof ApiSessionsSessionKeyStatusRoute
+  '/api/gateway/$profile/[./path]': typeof ApiGatewayChar91profileChar93Char91DotPathChar93Route
   '/api/runs/$sessionKey/$runId/abandon': typeof ApiRunsSessionKeyRunIdAbandonRoute
 }
 export interface FileRoutesById {
@@ -1481,6 +1490,7 @@ export interface FileRoutesById {
   '/api/mcp/hub-sources/$id': typeof ApiMcpHubSourcesIdRoute
   '/api/sessions/$sessionKey/active-run': typeof ApiSessionsSessionKeyActiveRunRoute
   '/api/sessions/$sessionKey/status': typeof ApiSessionsSessionKeyStatusRoute
+  '/api/gateway/$profile/[./path]': typeof ApiGatewayChar91profileChar93Char91DotPathChar93Route
   '/api/runs/$sessionKey/$runId/abandon': typeof ApiRunsSessionKeyRunIdAbandonRoute
 }
 export interface FileRouteTypes {
@@ -1647,6 +1657,7 @@ export interface FileRouteTypes {
     | '/api/mcp/hub-sources/$id'
     | '/api/sessions/$sessionKey/active-run'
     | '/api/sessions/$sessionKey/status'
+    | '/api/gateway/$profile/[./path]'
     | '/api/runs/$sessionKey/$runId/abandon'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -1810,6 +1821,7 @@ export interface FileRouteTypes {
     | '/api/mcp/hub-sources/$id'
     | '/api/sessions/$sessionKey/active-run'
     | '/api/sessions/$sessionKey/status'
+    | '/api/gateway/$profile/[./path]'
     | '/api/runs/$sessionKey/$runId/abandon'
   id:
     | '__root__'
@@ -1974,6 +1986,7 @@ export interface FileRouteTypes {
     | '/api/mcp/hub-sources/$id'
     | '/api/sessions/$sessionKey/active-run'
     | '/api/sessions/$sessionKey/status'
+    | '/api/gateway/$profile/[./path]'
     | '/api/runs/$sessionKey/$runId/abandon'
   fileRoutesById: FileRoutesById
 }
@@ -2114,6 +2127,7 @@ export interface RootRouteChildren {
   ApiUpdateWorkspaceRoute: typeof ApiUpdateWorkspaceRoute
   ApiMcpIndexRoute: typeof ApiMcpIndexRoute
   ApiMcpNameLogsRoute: typeof ApiMcpNameLogsRoute
+  ApiGatewayChar91profileChar93Char91DotPathChar93Route: typeof ApiGatewayChar91profileChar93Char91DotPathChar93Route
   ApiRunsSessionKeyRunIdAbandonRoute: typeof ApiRunsSessionKeyRunIdAbandonRoute
 }
 
@@ -3253,6 +3267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRunsSessionKeyRunIdAbandonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/gateway/$profile/[./path]': {
+      id: '/api/gateway/$profile/[./path]'
+      path: '/api/gateway/$profile/[./path]'
+      fullPath: '/api/gateway/$profile/[./path]'
+      preLoaderRoute: typeof ApiGatewayChar91profileChar93Char91DotPathChar93RouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -3583,6 +3604,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUpdateWorkspaceRoute: ApiUpdateWorkspaceRoute,
   ApiMcpIndexRoute: ApiMcpIndexRoute,
   ApiMcpNameLogsRoute: ApiMcpNameLogsRoute,
+  ApiGatewayChar91profileChar93Char91DotPathChar93Route:
+    ApiGatewayChar91profileChar93Char91DotPathChar93Route,
   ApiRunsSessionKeyRunIdAbandonRoute: ApiRunsSessionKeyRunIdAbandonRoute,
 }
 export const routeTree = rootRouteImport

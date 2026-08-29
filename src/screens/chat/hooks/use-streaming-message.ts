@@ -802,6 +802,8 @@ export function useStreamingMessage(options: UseStreamingMessageOptions = {}) {
       attachments?: Array<ChatAttachment>
       idempotencyKey?: string
       model?: string
+      /** Per-profile gateway routing — selected profile's gateway (e.g. dev → 8643). Omit for default. */
+      profile?: string
     }) => {
       if (eventSourceRef.current) {
         // Preserve in-progress response as a partial message before aborting
@@ -875,6 +877,7 @@ export function useStreamingMessage(options: UseStreamingMessageOptions = {}) {
               typeof window !== 'undefined'
                 ? localStorage.getItem('hermes-workspace-locale') || 'en'
                 : 'en',
+            profile: params.profile || undefined,
           }),
           signal: abortController.signal,
         })

@@ -513,6 +513,19 @@ export function ChatScreen({
       return stored
     return 'low'
   })
+  // Per-profile gateway selection — which Hermes profile's gateway the chat
+  // should route to (e.g. dev → 127.0.0.1:8643). Persisted in localStorage so
+  // the choice survives reloads. 'Workspace' (default) = 8642.
+  const [selectedChatProfile, setSelectedChatProfile] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'Workspace'
+    return window.localStorage.getItem('hermes-chat-profile') || 'Workspace'
+  })
+  const selectedChatProfileRef = useRef(selectedChatProfile)
+  selectedChatProfileRef.current = selectedChatProfile
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem('hermes-chat-profile', selectedChatProfile)
+  }, [selectedChatProfile])
   // Tracks whether the user has explicitly picked a thinking level for this session.
   // A missing/absent sessionStorage key means we should fall back to the Hermes config default.
   const thinkingInitializedByUserRef = useRef(false)
@@ -2046,6 +2059,7 @@ export function ChatScreen({
           currentThinkingLevel === 'off' ? undefined : currentThinkingLevel,
         fastMode,
         model: currentModel || undefined,
+        profile: selectedChatProfileRef.current || undefined,
         idempotencyKey: optimisticClientId || crypto.randomUUID(),
       }).catch((err: unknown) => {
         const messageText = err instanceof Error ? err.message : String(err)
@@ -2914,6 +2928,8 @@ export function ChatScreen({
               wrapperRef={composerRef}
               composerRef={composerHandleRef}
               embedded={embedded}
+              chatProfile={selectedChatProfile}
+              onChatProfileChange={setSelectedChatProfile}
               // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime safety
               focusKey={`${isNewChat ? 'new' : activeFriendlyId}:${activeCanonicalKey ?? ''}`}
               thinkingLevel={thinkingLevel}
