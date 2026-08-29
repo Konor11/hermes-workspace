@@ -2272,8 +2272,8 @@ function ChatComposerComponent({
           </div>
         ) : null}
 
-        {isMobileViewport ? (
-          /* ── Mobile: Telegram-style single-row bar ── */
+        {false ? (
+          /* ── Mobile: Telegram-style single-row bar (disabled — use desktop composer everywhere) ── */
           <>
             <div className="flex items-center gap-2 px-3 py-2">
               {/* + button — opens bottom sheet actions menu */}
