@@ -297,7 +297,7 @@ export async function openaiChat(
   }
 
   const endpoint = options.baseUrl
-    ? `${options.baseUrl.replace(/\/+$/, '')}/chat/completions`
+    ? `${options.baseUrl.replace(/\/+$/, '')}/v1/chat/completions`
     : `${CLAUDE_API}/v1/chat/completions`
   const response = await fetch(endpoint, {
     method: 'POST',
