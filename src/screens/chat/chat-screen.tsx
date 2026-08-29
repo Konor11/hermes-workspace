@@ -2918,12 +2918,6 @@ export function ChatScreen({
           )}
           {showComposer ? (
             <>
-              <div className="px-3 pt-2 pb-1">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-500/15 px-3 py-1 text-xs font-medium text-accent-600 ring-1 ring-accent-500/30 dark:bg-accent-500/20 dark:text-accent-400">
-                  <span className="size-1.5 rounded-full bg-accent-500" />
-                  Routed to: {selectedChatProfile}
-                </span>
-              </div>
               <ChatComposer
                 onSubmit={send}
               onAbort={handleAbortStreaming}
