@@ -75,7 +75,7 @@ function buildCrewDefinitions(): CrewDefinition[] {
 
   const roster = rosterByWorkerId(dynamicProfiles)
   return [
-    { id: 'workspace', displayName: 'Workspace', humanLabel: 'Workspace — Primary profile', role: 'Primary profile', profilePath: null },
+    { id: 'workspace', displayName: 'default', humanLabel: 'default — Primary profile', role: 'Primary profile', profilePath: null },
     ...dynamicProfiles.map((profile) => buildCrewDefinitionFromRoster(profile, /^swarm\d+$/i.test(profile) ? roster.get(profile) : null)),
   ]
 }
