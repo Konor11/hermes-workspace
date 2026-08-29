@@ -2873,13 +2873,14 @@ function ChatComposerComponent({
                                       key={profile.name}
                                       type="button"
                                       onClick={() => {
+                                        // Always route the chat to this profile,
+                                        // even if it's already the active one.
+                                        onChatProfileChange?.(profile.name)
                                         if (selected) {
                                           setIsProfileMenuOpen(false)
                                           return
                                         }
                                         profileActivateMutation.mutate(profile.name)
-                                        // Route the chat to this profile's gateway too
-                                        onChatProfileChange?.(profile.name)
                                       }}
                                       className={cn(
                                         'flex w-full flex-col rounded-lg px-3 py-2 text-left text-sm transition-colors',
