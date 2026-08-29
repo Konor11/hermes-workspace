@@ -91,6 +91,8 @@ export type OpenAIChatOptions = {
   sessionId?: string
   /** Override the base URL (e.g. for local providers). Bypasses gateway. */
   baseUrl?: string
+  /** Override the bearer token (e.g. for a per-profile gateway key). */
+  apiKey?: string
 }
 
 type OpenAIChatRequest = {
@@ -279,7 +281,7 @@ export async function openaiChat(
   options: OpenAIChatOptions = {},
 ): Promise<string | AsyncGenerator<StreamChunkType, void, void>> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  const bearer = getBearerToken()
+  const bearer = options.apiKey ?? getBearerToken()
   if (bearer) {
     headers['Authorization'] = `Bearer ${bearer}`
   }

@@ -103,13 +103,16 @@ function extractOutputText(output: unknown): string {
  */
 export async function* streamResponses(
   req: ResponsesChatRequest,
+  override?: { baseUrl?: string; apiKey?: string },
 ): AsyncGenerator<ResponsesStreamEvent, void, void> {
   const headers: Record<string, string> = {
-    ..._authHeaders(),
+    ...(override?.apiKey
+      ? { Authorization: `Bearer ${override.apiKey}` }
+      : _authHeaders()),
     'Content-Type': 'application/json',
     Accept: 'text/event-stream',
   }
-  if (req.sessionId && BEARER_TOKEN) {
+  if (req.sessionId && (override?.apiKey ?? BEARER_TOKEN)) {
     headers['X-Hermes-Session-Id'] = req.sessionId
   }
 
@@ -123,12 +126,15 @@ export async function* streamResponses(
   if (req.model) body.model = req.model
   if (req.sessionId) body.session_id = req.sessionId
 
-  const res = await fetch(`${CLAUDE_API}/v1/responses`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-    signal: req.signal,
-  })
+  const res = await fetch(
+    `${override?.baseUrl || CLAUDE_API}/v1/responses`,
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      signal: req.signal,
+    },
+  )
   if (!res.ok) {
     const text = await res.text().catch(() => '')
     throw new Error(`responses stream: ${res.status} ${text}`)
