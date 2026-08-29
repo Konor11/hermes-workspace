@@ -2912,8 +2912,10 @@ export function ChatScreen({
             />
           )}
           {showComposer ? (
-            <ChatComposer
-              onSubmit={send}
+            <>
+              <div className="px-3 py-1 text-xs text-accent-500">Routed to: {selectedChatProfile}</div>
+              <ChatComposer
+                onSubmit={send}
               onAbort={handleAbortStreaming}
               isLoading={sending || waitingForResponse}
               disabled={sending || hideUi}
@@ -2935,6 +2937,7 @@ export function ChatScreen({
               thinkingLevel={thinkingLevel}
               onThinkingLevelChange={handleThinkingLevelChange}
             />
+            </>
           ) : null}
         </main>
         {!compact && !isFocusMode && <AgentViewPanel />}
