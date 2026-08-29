@@ -241,20 +241,16 @@ async function fetchDashboardProfiles(): Promise<{
 
     if (!data.profiles || !Array.isArray(data.profiles)) return null
 
-    const rawActive =
+    const activeProfile =
       data.profiles.find((p) => p.is_default)?.name || 'default'
-    const activeProfile = rawActive === 'Workspace' ? 'default' : rawActive
 
-    const profiles: Array<ProfileSummary> = data.profiles.map((p) => {
-      const canonicalName = p.name === 'Workspace' ? 'default' : p.name
-      return {
-        name: canonicalName,
-        path: p.is_default
-          ? getClaudeRoot()
-          : path.join(getProfilesRoot(), canonicalName),
-        active: canonicalName === activeProfile,
-        exists: true,
-      }
+    const profiles: Array<ProfileSummary> = data.profiles.map((p) => ({
+      name: p.name,
+      path: p.is_default
+        ? getClaudeRoot()
+        : path.join(getProfilesRoot(), p.name),
+      active: p.name === activeProfile,
+      exists: true,
       model: p.model,
       provider: p.provider,
       description: p.description,
