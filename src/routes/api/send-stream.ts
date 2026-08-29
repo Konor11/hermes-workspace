@@ -300,6 +300,8 @@ export const Route = createFileRoute('/api/send-stream')({
         try {
           const rawBody = await request.text()
           body = JSON.parse(rawBody) as Record<string, unknown>
+          // TEMP DIAGNOSTIC: log what the browser actually sends
+          console.log('[BROWSER-PROFILE] profile=', body.profile, 'message=', typeof body.message === 'string' ? body.message.slice(0, 30) : null)
         } catch {
           // Fall through — body stays empty, will hit 'message required' below
         }
