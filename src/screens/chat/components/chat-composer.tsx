@@ -2749,12 +2749,8 @@ function ChatComposerComponent({
               }}
               className="min-h-[44px]"
             />
-            <PromptInputActions className="flex justify-between px-1.5 md:px-3 gap-0.5 md:gap-2">
-              <span className="order-2 inline-flex shrink-0 items-center gap-1 rounded-full bg-accent-600 px-2 py-0.5 text-[10px] font-semibold text-white">
-                <span className="size-1 rounded-full bg-white" />
-                {chatProfile}
-              </span>
-              <div className="order-1 flex min-w-0 flex-1 items-center gap-0 md:gap-1">
+            <PromptInputActions className="justify-between px-1.5 md:px-3 gap-0.5 md:gap-2">
+              <div className="flex min-w-0 flex-1 items-center gap-0 md:gap-1">
                 <PromptInputAction tooltip="Add attachment">
                   <Button
                     size="icon-sm"
