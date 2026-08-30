@@ -87,6 +87,47 @@ function splitFiles(files: Array<MemoryFileMeta>) {
   return { rootMemory, memoryFiles }
 }
 
+// Human-readable labels + descriptions for the memory surfaces the dashboard edits.
+function fileKind(pathValue: string): {
+  label: string
+  description: string
+  accent: string
+} {
+  const base = pathValue.split('/').pop() ?? pathValue
+  switch (base) {
+    case 'MEMORY.md':
+      return {
+        label: 'Memory',
+        description: 'Long-term facts & decisions',
+        accent: 'bg-sky-500',
+      }
+    case 'USER.md':
+      return {
+        label: 'User Profile',
+        description: 'Facts about you (the owner)',
+        accent: 'bg-emerald-500',
+      }
+    case 'SOUL.md':
+      return {
+        label: 'System Prompt',
+        description: 'Agent persona & behaviour',
+        accent: 'bg-violet-500',
+      }
+    case 'AGENTS.md':
+      return {
+        label: 'Agent Rules',
+        description: 'Project / worker conventions',
+        accent: 'bg-amber-500',
+      }
+    default:
+      return {
+        label: base,
+        description: pathValue,
+        accent: 'bg-neutral-400',
+      }
+  }
+}
+
 function highlightMatch(
   text: string,
   query: string,
@@ -376,35 +417,64 @@ export function MemoryBrowserScreen() {
                 !mobileFilesOpen && 'hidden md:block',
               )}
             >
-              <div className="max-h-72 space-y-1 overflow-y-auto pr-1 md:h-full md:max-h-none">
-                {rootMemory ? (
-                  <FileRow
-                    file={rootMemory}
-                    selected={selectedPath === rootMemory.path}
-                    onSelect={(pathValue) => {
-                      trySelectFile(pathValue)
-                    }}
-                  />
-                ) : null}
-
-                <div className="px-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-primary-400 dark:text-neutral-500">
-                  memory/ or memories/
-                </div>
-                {memoryFiles.length === 0 ? (
-                  <div className="rounded-lg border border-primary-200 bg-primary-50/80 px-3 py-2 text-xs text-primary-400 dark:border-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-500">
-                    No files in memory/ or memories/
-                  </div>
-                ) : (
-                  memoryFiles.map((file) => (
+              <div className="max-h-72 space-y-3 overflow-y-auto pr-1 md:h-full md:max-h-none">
+                {/* Core surfaces (root-level) */}
+                <div className="space-y-1">
+                  {rootMemory ? (
                     <FileRow
-                      key={file.path}
-                      file={file}
-                      selected={selectedPath === file.path}
+                      file={rootMemory}
+                      selected={selectedPath === rootMemory.path}
                       onSelect={(pathValue) => {
                         trySelectFile(pathValue)
                       }}
                     />
-                  ))
+                  ) : null}
+                  {memoryFiles
+                    .filter(
+                      (file) =>
+                        !file.path.startsWith('memory/') &&
+                        !file.path.startsWith('memories/'),
+                    )
+                    .map((file) => (
+                      <FileRow
+                        key={file.path}
+                        file={file}
+                        selected={selectedPath === file.path}
+                        onSelect={(pathValue) => {
+                          trySelectFile(pathValue)
+                        }}
+                      />
+                    ))}
+                </div>
+
+                <div className="px-1 pt-1 text-[11px] font-semibold uppercase tracking-wide text-primary-400 dark:text-neutral-500">
+                  Memory folder
+                </div>
+                {memoryFiles.filter(
+                  (file) =>
+                    file.path.startsWith('memory/') ||
+                    file.path.startsWith('memories/'),
+                ).length === 0 ? (
+                  <div className="rounded-lg border border-primary-200 bg-primary-50/80 px-3 py-2 text-xs text-primary-400 dark:border-neutral-800 dark:bg-neutral-900/60 dark:text-neutral-500">
+                    No files in memory/ or memories/
+                  </div>
+                ) : (
+                  memoryFiles
+                    .filter(
+                      (file) =>
+                        file.path.startsWith('memory/') ||
+                        file.path.startsWith('memories/'),
+                    )
+                    .map((file) => (
+                      <FileRow
+                        key={file.path}
+                        file={file}
+                        selected={selectedPath === file.path}
+                        onSelect={(pathValue) => {
+                          trySelectFile(pathValue)
+                        }}
+                      />
+                    ))
                 )}
               </div>
             </div>
@@ -414,13 +484,13 @@ export function MemoryBrowserScreen() {
         <section className="min-h-0 rounded-2xl border border-primary-200 bg-primary-50 dark:border-neutral-800 dark:bg-neutral-950 md:col-span-2">
           <div className="flex items-center justify-between border-b border-primary-200 px-3 py-2 dark:border-neutral-800">
             <div className="min-w-0">
-              <div className="truncate font-mono text-sm text-primary-900 dark:text-neutral-100">
-                {selectedPath || 'Select a file'}
+              <div className="truncate text-sm font-semibold text-primary-900 dark:text-neutral-100">
+                {selectedPath ? fileKind(selectedPath).label : 'Select a file'}
               </div>
               {selectedPath ? (
-                <div className="text-xs text-primary-400 dark:text-neutral-500">
+                <div className="truncate text-xs text-primary-400 dark:text-neutral-500">
                   {selectedFileMeta?.size != null
-                    ? `${formatBytes(selectedFileMeta.size)} · ${formatModified(selectedFileMeta.modified)}`
+                    ? `${selectedPath} · ${formatBytes(selectedFileMeta.size)} · ${formatModified(selectedFileMeta.modified)}`
                     : 'Loading metadata...'}
                 </div>
               ) : null}
@@ -569,22 +639,34 @@ function FileRow({
   selected: boolean
   onSelect: (pathValue: string) => void
 }) {
+  const kind = fileKind(file.path)
   return (
     <button
       type="button"
       onClick={() => onSelect(file.path)}
       className={cn(
-        'w-full rounded-lg border px-2.5 py-2 text-left transition-colors',
+        'flex w-full items-start gap-2.5 rounded-lg border px-2.5 py-2 text-left transition-colors',
         selected
           ? 'border-accent-500/70 bg-accent-500/10'
           : 'border-primary-200 bg-primary-50/80 hover:border-primary-300 hover:bg-primary-100 dark:border-neutral-800 dark:bg-neutral-900/60 dark:hover:border-neutral-700 dark:hover:bg-neutral-900',
       )}
     >
-      <div className="truncate font-mono text-xs text-primary-900 dark:text-neutral-100">
-        {file.path}
-      </div>
-      <div className="mt-0.5 text-[11px] text-primary-400 dark:text-neutral-500">
-        {formatBytes(file.size)} · {formatModified(file.modified)}
+      <span
+        className={cn(
+          'mt-1 size-2.5 shrink-0 rounded-full',
+          kind.accent,
+        )}
+      />
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-semibold text-primary-900 dark:text-neutral-100">
+          {kind.label}
+        </div>
+        <div className="truncate text-[11px] text-primary-400 dark:text-neutral-500">
+          {kind.description}
+        </div>
+        <div className="mt-0.5 font-mono text-[10px] text-primary-300 dark:text-neutral-600">
+          {file.path} · {formatBytes(file.size)}
+        </div>
       </div>
     </button>
   )
