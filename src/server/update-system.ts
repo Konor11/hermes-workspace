@@ -680,8 +680,29 @@ export function applyWorkspaceUpdate(
         }),
       )
       emit('hermes', 'Reinstalling hermes-agent (pip install -e --no-deps)…')
+      // hermes-agent is installed editable inside its own venv
+      // (/usr/local/lib/hermes-agent/venv/bin/pip), NOT system pip. If a venv
+      // pip exists, use it; otherwise fall back to system pip with
+      // --break-system-packages (PEP 668 externally-managed environments).
+      const venvPip = join(hermesDir, 'venv', 'bin', 'pip')
+      let pipCmd: string
+      let pipArgs: Array<string>
+      if (exec('test', ['-x', venvPip], { cwd: hermesDir }).trim() === '') {
+        pipCmd = venvPip
+        pipArgs = ['install', '-e', '.', '--no-deps', '--no-build-isolation']
+      } else {
+        pipCmd = 'pip'
+        pipArgs = [
+          'install',
+          '-e',
+          '.',
+          '--no-deps',
+          '--no-build-isolation',
+          '--break-system-packages',
+        ]
+      }
       output.push(
-        execOrThrow('pip', ['install', '-e', '.', '--no-deps', '--no-build-isolation'], {
+        execOrThrow(pipCmd, pipArgs, {
           cwd: hermesDir,
           timeout: 180_000,
         }),
