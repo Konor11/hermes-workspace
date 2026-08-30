@@ -122,6 +122,7 @@ export function OpsStrip({
   })
 
   const [updating, setUpdating] = useState(false)
+  const [updateStage, setUpdateStage] = useState('')
   const [updateError, setUpdateError] = useState('')
 
   if (!status) return null
@@ -129,6 +130,7 @@ export function OpsStrip({
   async function runUpdate(product: ProductUpdateStatus) {
     if (updating) return
     setUpdating(true)
+    setUpdateStage('starting')
     setUpdateError('')
     try {
       const res = await fetch(
@@ -155,8 +157,25 @@ export function OpsStrip({
       const decoder = new TextDecoder()
       let buffer = ''
       let finalResult: ApplyUpdateResult | null = null
+      const stageLabels: Record<string, string> = {
+        fetch: 'fetching',
+        sync: 'syncing',
+        install: 'installing deps',
+        build: 'building',
+        hermes: 'updating hermes',
+        restart: 'restarting',
+        done: 'done',
+        error: 'error',
+      }
       const handleEvent = (ev: string, data: string) => {
-        if (ev === 'result') {
+        if (ev === 'stage') {
+          try {
+            const d = JSON.parse(data) as { stage: string; message?: string }
+            if (d.stage) setUpdateStage(stageLabels[d.stage] ?? d.stage)
+          } catch {
+            /* ignore */
+          }
+        } else if (ev === 'result') {
           try {
             finalResult = JSON.parse(data) as ApplyUpdateResult
           } catch {
@@ -188,6 +207,7 @@ export function OpsStrip({
       setUpdateError(err instanceof Error ? err.message : String(err))
     } finally {
       setUpdating(false)
+      setUpdateStage('')
     }
   }
 
@@ -432,7 +452,7 @@ export function OpsStrip({
             strokeWidth={2}
             className={updating ? 'animate-spin' : undefined}
           />
-          {updating ? 'updating' : 'update'}
+          {updating ? (updateStage ? `updating: ${updateStage}` : 'updating') : 'update'}
         </button>
         {updateError ? (
           <span

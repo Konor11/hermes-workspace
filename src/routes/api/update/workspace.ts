@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { spawn } from 'node:child_process'
 import { isAuthenticated } from '../../../server/auth-middleware'
 import {
   getClientIp,
@@ -40,8 +41,10 @@ export const Route = createFileRoute('/api/update/workspace')({
                 encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
               )
             }
+            let result: Awaited<ReturnType<typeof applyWorkspaceUpdate>> | null =
+              null
             try {
-              const result = applyWorkspaceUpdate(
+              result = applyWorkspaceUpdate(
                 (stage: UpdateStage, message: string) => {
                   send('stage', { stage, message })
                 },
@@ -65,6 +68,14 @@ export const Route = createFileRoute('/api/update/workspace')({
               })
             } finally {
               controller.close()
+            }
+            // Restart AFTER the stream is closed, so the client receives
+            // 'done' before this process is killed by systemctl restart.
+            if (result?.restartRequired) {
+              spawn('systemctl', ['restart', 'hermes-workspace.service'], {
+                detached: true,
+                stdio: 'ignore',
+              }).unref()
             }
           },
         })

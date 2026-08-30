@@ -536,6 +536,7 @@ export type UpdateStage =
   | 'sync'
   | 'install'
   | 'build'
+  | 'hermes'
   | 'restart'
   | 'done'
   | 'error'
@@ -655,15 +656,53 @@ export function applyWorkspaceUpdate(
   ]
   persistPendingReleaseNotes(releaseNotes)
 
+  // Обновляем сам hermes-agent (gateway/dashboard), если он установлен как
+  // git-clone. Делаем git pull + переустановку пакета БЕЗ перезапуска gateway
+  // (restart gateway убил бы текущий workspace-процесс и оборвал бы стрим).
+  // Безопасно: не трогаем зависимости (--no-deps), только пересобираем пакет.
+  const hermesDir = '/usr/local/lib/hermes-agent'
+  try {
+    const isRepo = exec('git', ['rev-parse', '--is-inside-work-tree'], {
+      cwd: hermesDir,
+      timeout: 8_000,
+    })
+    if (isRepo?.trim() === 'true') {
+      emit('hermes', 'Updating hermes-agent (git pull)…')
+      // сохраняем локальные правки, если есть
+      exec('git', ['stash', '--include-untracked'], {
+        cwd: hermesDir,
+        timeout: 20_000,
+      })
+      output.push(
+        execOrThrow('git', ['pull', '--ff-only'], {
+          cwd: hermesDir,
+          timeout: 60_000,
+        }),
+      )
+      emit('hermes', 'Reinstalling hermes-agent (pip install -e --no-deps)…')
+      output.push(
+        execOrThrow('pip', ['install', '-e', '.', '--no-deps', '--no-build-isolation'], {
+          cwd: hermesDir,
+          timeout: 180_000,
+        }),
+      )
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    emit('hermes', `hermes-agent update skipped: ${msg.slice(0, 120)}`)
+    output.push(`hermes-agent update error: ${msg}`)
+  }
+
   // После обновления исходников workspace нужно перезапустить процесс,
   // иначе пользователь увидит старую сборку. Если workspace запущен как
-  // systemd-юнит — делаем restart самостоятельно (без участия пользователя).
+  // systemd-юнит — сигнализируем наружу (restartRequired), а сам restart
+  // делает вызывающая сторона УЖЕ ПОСЛЕ закрытия SSE-стрима (иначе restart
+  // убивает текущий процесс раньше, чем клиент получит событие 'done').
   // Для docker/desktop/локального dev эта логика не применяется (restart
   // управляется внешне).
   let restarted = false
   if (force || before.currentHead !== after.currentHead) {
     try {
-      emit('restart', 'Restarting workspace service…')
       const unit = exec('systemctl', ['list-units', '--full', '--no-legend', '--no-pager'], {
         cwd: before.repoPath,
         timeout: 8_000,
@@ -673,21 +712,21 @@ export function applyWorkspaceUpdate(
         .map((l) => l.split(/\s+/)[0])
         .find((u) => u === 'hermes-workspace.service')
       if (unitName) {
-        execOrThrow('systemctl', ['restart', unitName], { timeout: 30_000 })
-        restarted = true
-        output.push(`restarted ${unitName}`)
+        // НЕ делаем restart здесь — только отмечаем, что он требуется.
+        restarted = false
+        output.push(`restart required: ${unitName}`)
       }
     } catch {
-      // restart не удался — оставляем restartRequired=true, пусть перезапустит вручную
+      // ignore
     }
   }
 
-  emit('done', restarted ? 'Updated and restarted.' : 'Update complete.')
+  emit('done', 'Update complete. Restarting…')
   return {
     ok: true,
     product: 'workspace',
     output: output.filter(Boolean).join('\n'),
-    restartRequired: !restarted && before.currentHead !== after.currentHead,
+    restartRequired: !restarted && (force || before.currentHead !== after.currentHead),
     status: after,
     releaseNotes,
   }
