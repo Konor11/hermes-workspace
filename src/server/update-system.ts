@@ -139,6 +139,17 @@ function git(args: Array<string>, cwd: string, timeout = 8_000): string | null {
   return exec('git', args, { cwd, timeout })
 }
 
+// Pick the package manager available on this host. Workspace can be installed
+// with pnpm (default upstream) or npm (clean-server install). Prefer pnpm when
+// present, fall back to npm.
+function detectPkgManager(): string {
+  for (const candidate of ['pnpm', 'yarn', 'npm']) {
+    if (exec('which', [candidate]) !== null) return candidate
+  }
+  return 'npm'
+}
+const pkgManager = detectPkgManager()
+
 function realGitRepoPath(path: string | null | undefined): string | null {
   if (!path) return null
   try {
@@ -602,9 +613,9 @@ export function applyWorkspaceUpdate(
       (file) => file === 'package.json' || file === 'pnpm-lock.yaml',
     )
   ) {
-    emit('install', 'Installing dependencies (pnpm install)…')
+    emit('install', 'Installing dependencies…')
     output.push(
-      execOrThrow('pnpm', ['install', '--no-frozen-lockfile'], {
+      execOrThrow(pkgManager, ['install'], {
         cwd: before.repoPath,
         timeout: 180_000,
       }),
@@ -621,9 +632,9 @@ export function applyWorkspaceUpdate(
         file.startsWith('tsconfig'),
     )
   ) {
-    emit('build', 'Building workspace (pnpm build)…')
+    emit('build', 'Building workspace…')
     output.push(
-      execOrThrow('pnpm', ['build'], {
+      execOrThrow(pkgManager, ['run', 'build'], {
         cwd: before.repoPath,
         timeout: 240_000,
       }),
