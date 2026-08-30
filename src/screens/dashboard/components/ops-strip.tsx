@@ -127,7 +127,7 @@ export function OpsStrip({
   if (!status) return null
 
   async function runUpdate(product: ProductUpdateStatus) {
-    if (!product.canUpdate || updating) return
+    if (updating) return
     setUpdating(true)
     setUpdateError('')
     try {
@@ -136,7 +136,7 @@ export function OpsStrip({
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
+          body: JSON.stringify({ force: true }),
         },
       )
       if (!res.ok || !res.body) {
@@ -400,59 +400,40 @@ export function OpsStrip({
         })() : null}
 
         {/* Update control: check for updates / update in place. */}
-        {anyAvailable ? (
-          <button
-            type="button"
-            disabled={updating}
-            onClick={() => {
-              if (ws?.updateAvailable && ws?.canUpdate) runUpdate(ws)
-              else if (ag?.updateAvailable && ag?.canUpdate) runUpdate(ag)
-            }}
-            className="inline-flex items-center gap-1.5 rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
-            style={{
-              borderColor: 'color-mix(in srgb, var(--theme-accent) 40%, transparent)',
-              background: 'color-mix(in srgb, var(--theme-accent) 14%, transparent)',
-              color: 'var(--theme-accent)',
-            }}
-            title={updating ? 'Updating…' : 'Update available'}
-          >
-            <span
-              className="inline-block size-1.5 rounded-full animate-pulse"
-              style={{ background: 'var(--theme-accent)' }}
-              aria-hidden
-            />
-            <HugeiconsIcon
-              icon={updating ? Loading03Icon : ArrowUp02Icon}
-              size={12}
-              strokeWidth={2}
-              className={updating ? 'animate-spin' : undefined}
-            />
-            {updating ? 'updating' : 'update'}
-          </button>
-        ) : (
-          <button
-            type="button"
-            disabled={checkingUpdate || updating}
-            onClick={() =>
-              queryClient.invalidateQueries({ queryKey: ['update-status-opsstrip'] })
-            }
-            className="inline-flex items-center gap-1.5 rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors hover:bg-[var(--theme-card)]/80 disabled:cursor-not-allowed disabled:opacity-60"
-            style={{
-              borderColor: 'var(--theme-border)',
-              color: 'var(--theme-muted)',
-              background: 'transparent',
-            }}
-            title={checkingUpdate ? 'Checking…' : 'Check for updates'}
-          >
-            <HugeiconsIcon
-              icon={checkingUpdate ? Loading03Icon : RefreshIcon}
-              size={12}
-              strokeWidth={2}
-              className={checkingUpdate ? 'animate-spin' : undefined}
-            />
-            {checkingUpdate ? 'checking' : 'updates'}
-          </button>
-        )}
+        {/* Update control: force-pull + rebuild + restart on click. */}
+        <button
+          type="button"
+          disabled={updating}
+          onClick={() => {
+            const target =
+              ws?.repoPath ? ws : ag?.repoPath ? ag : ws
+            if (target) runUpdate(target)
+          }}
+          className="inline-flex items-center gap-1.5 rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+          style={{
+            borderColor: 'color-mix(in srgb, var(--theme-accent) 40%, transparent)',
+            background: 'color-mix(in srgb, var(--theme-accent) 14%, transparent)',
+            color: 'var(--theme-accent)',
+          }}
+          title={
+            updating
+              ? 'Updating…'
+              : 'Update workspace from GitHub (pull, build, restart)'
+          }
+        >
+          <span
+            className="inline-block size-1.5 rounded-full animate-pulse"
+            style={{ background: 'var(--theme-accent)' }}
+            aria-hidden
+          />
+          <HugeiconsIcon
+            icon={updating ? Loading03Icon : ArrowUp02Icon}
+            size={12}
+            strokeWidth={2}
+            className={updating ? 'animate-spin' : undefined}
+          />
+          {updating ? 'updating' : 'update'}
+        </button>
         {updateError ? (
           <span
             className="font-mono text-[9px] uppercase tracking-[0.1em]"
@@ -462,6 +443,7 @@ export function OpsStrip({
             update failed
           </span>
         ) : null}
+
       </div>
     </div>
   )

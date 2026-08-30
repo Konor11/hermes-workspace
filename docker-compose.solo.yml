@@ -1,0 +1,29 @@
+# Standalone Workspace (local source build) — no hermes-agent container.
+# Connects to the host's already-running gateway on 127.0.0.1:8642 via
+# host.docker.internal. Mounts the host ~/.hermes (ro) so /memory shows real files.
+# Runs on host port 3001 (3000 is taken by remnawave).
+#
+# Usage:
+#   docker compose -f docker-compose.solo.yml up -d --build
+
+services:
+  hermes-workspace:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    environment:
+      HERMES_HOME: /home/workspace/.hermes
+      HERMES_WORKSPACE_DIR: /workspace
+      HERMES_API_URL: http://host.docker.internal:8642
+      HERMES_DASHBOARD_URL: http://host.docker.internal:9119
+      HERMES_API_TOKEN: ''
+      HERMES_PASSWORD: ${HERMES_PASSWORD:-}
+      COOKIE_SECURE: ''
+      TRUST_PROXY: ''
+    ports:
+      - '127.0.0.1:3002:3000'
+    volumes:
+      - /root/.hermes:/home/workspace/.hermes:ro

@@ -24,6 +24,14 @@ export const Route = createFileRoute('/api/update/workspace')({
           return rateLimitResponse()
         }
 
+        let force = false
+        try {
+          const body = (await request.json()) as { force?: boolean }
+          force = Boolean(body?.force)
+        } catch {
+          // no body / invalid JSON → treat as non-force
+        }
+
         const encoder = new TextEncoder()
         const stream = new ReadableStream({
           start(controller) {
@@ -37,6 +45,7 @@ export const Route = createFileRoute('/api/update/workspace')({
                 (stage: UpdateStage, message: string) => {
                   send('stage', { stage, message })
                 },
+                force,
               )
               send('stage', {
                 stage: result.ok ? 'done' : 'error',

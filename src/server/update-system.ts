@@ -533,10 +533,23 @@ export type StageCallback = (stage: UpdateStage, message: string) => void
 
 export function applyWorkspaceUpdate(
   onStage?: StageCallback,
+  force = false,
 ): ApplyUpdateResult {
   const emit = (stage: UpdateStage, message: string) => onStage?.(stage, message)
   const before = readWorkspaceUpdateStatus()
-  if (!before.canUpdate || !before.repoPath || !before.branch) {
+  if (!before.repoPath || !before.branch) {
+    emit('error', before.reason || 'Workspace update is not available.')
+    return {
+      ok: false,
+      product: 'workspace',
+      output: '',
+      restartRequired: false,
+      status: before,
+      releaseNotes: [],
+      error: before.reason || 'Workspace update is not available.',
+    }
+  }
+  if (!force && !before.canUpdate) {
     emit('error', before.reason || 'Workspace update is not available.')
     return {
       ok: false,
@@ -584,6 +597,7 @@ export function applyWorkspaceUpdate(
           .filter(Boolean) ?? [])
       : []
   if (
+    force ||
     changedFiles.some(
       (file) => file === 'package.json' || file === 'pnpm-lock.yaml',
     )
@@ -597,6 +611,7 @@ export function applyWorkspaceUpdate(
     )
   }
   if (
+    force ||
     changedFiles.some(
       (file) =>
         file.startsWith('src/') ||
@@ -635,7 +650,7 @@ export function applyWorkspaceUpdate(
   // Для docker/desktop/локального dev эта логика не применяется (restart
   // управляется внешне).
   let restarted = false
-  if (before.currentHead !== after.currentHead) {
+  if (force || before.currentHead !== after.currentHead) {
     try {
       emit('restart', 'Restarting workspace service…')
       const unit = exec('systemctl', ['list-units', '--full', '--no-legend', '--no-pager'], {
