@@ -18,6 +18,9 @@ export type MemorySearchMatch = {
 function isBrowserMemoryPath(relativePath: string): boolean {
   return (
     relativePath === 'MEMORY.md' ||
+    relativePath === 'USER.md' ||
+    relativePath === 'SOUL.md' ||
+    relativePath === 'AGENTS.md' ||
     relativePath.startsWith('memory/') ||
     relativePath.startsWith('memories/')
   )
@@ -137,7 +140,10 @@ export function listMemoryFiles(): Array<MemoryFileMeta> {
   const workspaceRoot = getMemoryWorkspaceRoot()
   const results: Array<MemoryFileMeta> = []
 
-  pushIfMarkdownFile(results, workspaceRoot, path.join(workspaceRoot, 'MEMORY.md'))
+  // Root-level Markdown surfaces the dashboard edits (memory + system prompts).
+  for (const name of ['MEMORY.md', 'USER.md', 'SOUL.md', 'AGENTS.md']) {
+    pushIfMarkdownFile(results, workspaceRoot, path.join(workspaceRoot, name))
+  }
   for (const subdir of ['memory', 'memories']) {
     walkWorkspaceDir(results, workspaceRoot, path.join(workspaceRoot, subdir))
   }
