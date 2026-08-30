@@ -674,7 +674,7 @@ export function applyWorkspaceUpdate(
         timeout: 20_000,
       })
       output.push(
-        execOrThrow('git', ['pull', '--ff-only'], {
+        execOrThrow('git', ['pull', '--rebase', '--autostash'], {
           cwd: hermesDir,
           timeout: 60_000,
         }),
