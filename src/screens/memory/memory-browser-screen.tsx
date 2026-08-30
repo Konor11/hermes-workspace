@@ -67,11 +67,12 @@ function splitFiles(files: Array<MemoryFileMeta>) {
   const memoryFiles = files
     .filter(
       (file) =>
-        file.path.startsWith('memory/') ||
-        file.path.startsWith('memories/') ||
-        file.name === 'SOUL.md' ||
-        file.name === 'AGENTS.md' ||
-        file.name === 'USER.md',
+        file !== rootMemory &&
+        (file.path.startsWith('memory/') ||
+          file.path.startsWith('memories/') ||
+          file.name === 'SOUL.md' ||
+          file.name === 'AGENTS.md' ||
+          file.name === 'USER.md'),
     )
     .sort((a, b) => {
       if (isDailyMemoryPath(a.path) && isDailyMemoryPath(b.path)) {
