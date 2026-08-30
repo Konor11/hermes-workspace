@@ -1,4 +1,18 @@
 import { useNavigate } from '@tanstack/react-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import {
+  ArrowUp02Icon,
+  Loading03Icon,
+  RefreshIcon,
+  Tick01Icon,
+} from '@hugeicons/core-free-icons'
+import type {
+  ProductUpdateStatus,
+  UpdateStatus,
+  ApplyUpdateResult,
+} from '@/components/update-center-notifier'
 import type { DashboardOverview } from '@/server/dashboard-aggregator'
 import { cn } from '@/lib/utils'
 
@@ -93,7 +107,95 @@ export function OpsStrip({
   platforms: DashboardOverview['platforms']
 }) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
+  const { data: updateStatus, isFetching: checkingUpdate } = useQuery<UpdateStatus | null>({
+    queryKey: ['update-status-opsstrip'],
+    queryFn: async () => {
+      const res = await fetch('/api/update/status')
+      if (!res.ok) return null
+      return (await res.json()) as UpdateStatus
+    },
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
+    retry: false,
+  })
+
+  const [updating, setUpdating] = useState(false)
+  const [updateError, setUpdateError] = useState('')
+
   if (!status) return null
+
+  async function runUpdate(product: ProductUpdateStatus) {
+    if (!product.canUpdate || updating) return
+    setUpdating(true)
+    setUpdateError('')
+    try {
+      const res = await fetch(
+        `/api/update/${product.id === 'workspace' ? 'workspace' : 'agent'}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        },
+      )
+      if (!res.ok || !res.body) {
+        const text = await res.text().catch(() => '')
+        let msg = `${product.label} update failed`
+        try {
+          const j = JSON.parse(text)
+          if (j?.error) msg = j.error
+        } catch {
+          /* ignore */
+        }
+        setUpdateError(msg)
+        return
+      }
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let finalResult: ApplyUpdateResult | null = null
+      const handleEvent = (ev: string, data: string) => {
+        if (ev === 'result') {
+          try {
+            finalResult = JSON.parse(data) as ApplyUpdateResult
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const parts = buffer.split('\n\n')
+        buffer = parts.pop() ?? ''
+        for (const part of parts) {
+          let ev = 'message'
+          let data = ''
+          for (const line of part.split('\n')) {
+            if (line.startsWith('event:')) ev = line.slice(6).trim()
+            else if (line.startsWith('data:')) data += line.slice(5).trim()
+          }
+          if (data) handleEvent(ev, data)
+        }
+      }
+      const fr = finalResult as ApplyUpdateResult | null
+      if (!fr || !fr.ok) {
+        setUpdateError(fr?.error || `${product.label} update failed`)
+      }
+    } catch (err) {
+      setUpdateError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  const ws = updateStatus?.products?.workspace
+  const ag = updateStatus?.products?.agent
+  const anyAvailable =
+    (ws?.updateAvailable && ws?.canUpdate) ||
+    (ag?.updateAvailable && ag?.canUpdate)
 
   const ok =
     status.gatewayState === 'running' ||
@@ -296,6 +398,70 @@ export function OpsStrip({
             </button>
           )
         })() : null}
+
+        {/* Update control: check for updates / update in place. */}
+        {anyAvailable ? (
+          <button
+            type="button"
+            disabled={updating}
+            onClick={() => {
+              if (ws?.updateAvailable && ws?.canUpdate) runUpdate(ws)
+              else if (ag?.updateAvailable && ag?.canUpdate) runUpdate(ag)
+            }}
+            className="inline-flex items-center gap-1.5 rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+            style={{
+              borderColor: 'color-mix(in srgb, var(--theme-accent) 40%, transparent)',
+              background: 'color-mix(in srgb, var(--theme-accent) 14%, transparent)',
+              color: 'var(--theme-accent)',
+            }}
+            title={updating ? 'Updating…' : 'Update available'}
+          >
+            <span
+              className="inline-block size-1.5 rounded-full animate-pulse"
+              style={{ background: 'var(--theme-accent)' }}
+              aria-hidden
+            />
+            <HugeiconsIcon
+              icon={updating ? Loading03Icon : ArrowUp02Icon}
+              size={12}
+              strokeWidth={2}
+              className={updating ? 'animate-spin' : undefined}
+            />
+            {updating ? 'updating' : 'update'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={checkingUpdate || updating}
+            onClick={() =>
+              queryClient.invalidateQueries({ queryKey: ['update-status-opsstrip'] })
+            }
+            className="inline-flex items-center gap-1.5 rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors hover:bg-[var(--theme-card)]/80 disabled:cursor-not-allowed disabled:opacity-60"
+            style={{
+              borderColor: 'var(--theme-border)',
+              color: 'var(--theme-muted)',
+              background: 'transparent',
+            }}
+            title={checkingUpdate ? 'Checking…' : 'Check for updates'}
+          >
+            <HugeiconsIcon
+              icon={checkingUpdate ? Loading03Icon : RefreshIcon}
+              size={12}
+              strokeWidth={2}
+              className={checkingUpdate ? 'animate-spin' : undefined}
+            />
+            {checkingUpdate ? 'checking' : 'updates'}
+          </button>
+        )}
+        {updateError ? (
+          <span
+            className="font-mono text-[9px] uppercase tracking-[0.1em]"
+            style={{ color: 'var(--theme-danger, #ef4444)' }}
+            title={updateError}
+          >
+            update failed
+          </span>
+        ) : null}
       </div>
     </div>
   )

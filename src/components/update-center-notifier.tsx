@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 import { toast } from '@/components/ui/toast'
 
 type ProductId = 'workspace' | 'agent'
-type ProductUpdateStatus = {
+export type ProductUpdateStatus = {
   id: ProductId
   label: string
   installKind: 'git' | 'desktop' | 'docker' | 'unknown'
@@ -32,7 +32,7 @@ type ProductUpdateStatus = {
   updateMode: string
 }
 
-type UpdateStatus = {
+export type UpdateStatus = {
   ok: true
   checkedAt: number
   products: Record<ProductId, ProductUpdateStatus>
@@ -48,7 +48,7 @@ type ReleaseNoteSection = {
   commits: Array<string>
 }
 
-type ApplyUpdateResult = {
+export type ApplyUpdateResult = {
   ok: boolean
   product: ProductId
   output?: string
