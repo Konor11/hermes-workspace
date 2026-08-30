@@ -298,18 +298,17 @@ export const Route = createFileRoute('/api/crew-status')({
           const dbStats = readDbStats(claudeHome)
           const config = readConfig(claudeHome)
 
-          // Count sessions from the same source the sidebar uses (gateway
-          // API) so the profile page and the chat sidebar never disagree.
-          // `workspace`/default routes to the shared gateway; other profiles
+          // Count sessions from the same gateway the sidebar uses so the
+          // profile page and chat sidebar never disagree. For the default
+          // profile this routes to the shared gateway (:8642); other profiles
           // use their own per-profile gateway.
           let gatewaySessionCount = dbStats.sessionCount
           try {
-            const gwOverride =
-              member.profilePath === null ||
-              member.profilePath === 'workspace' ||
-              member.profilePath === 'default'
-                ? undefined
-                : resolveProfileGateway(member.profilePath)
+            const profileKey =
+              member.profilePath === null || member.profilePath === 'workspace'
+                ? 'default'
+                : member.profilePath
+            const gwOverride = resolveProfileGateway(profileKey)
             const sessions = await listSessions(200, 0, gwOverride)
             gatewaySessionCount = sessions.length
           } catch {
