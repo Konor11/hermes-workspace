@@ -687,7 +687,7 @@ export function applyWorkspaceUpdate(
       const venvPip = join(hermesDir, 'venv', 'bin', 'pip')
       let pipCmd: string
       let pipArgs: Array<string>
-      if (exec('test', ['-x', venvPip], { cwd: hermesDir }).trim() === '') {
+      if (existsSync(venvPip)) {
         pipCmd = venvPip
         pipArgs = ['install', '-e', '.', '--no-deps', '--no-build-isolation']
       } else {
