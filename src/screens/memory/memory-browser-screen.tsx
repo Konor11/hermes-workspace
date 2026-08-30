@@ -59,7 +59,11 @@ function isDailyMemoryPath(pathValue: string): boolean {
 }
 
 function splitFiles(files: Array<MemoryFileMeta>) {
-  const rootMemory = files.find((file) => file.path === 'MEMORY.md') || null
+  // Root memory may live at ./MEMORY.md (CLI default) or ./memories/MEMORY.md
+  // (Mnemosyne provider used by the dashboard). Match by file name so both
+  // surfaces edit the same file and stay in sync.
+  const rootMemory =
+    files.find((file) => file.name === 'MEMORY.md') || null
   const memoryFiles = files
     .filter(
       (file) =>
