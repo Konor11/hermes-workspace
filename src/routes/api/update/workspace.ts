@@ -95,6 +95,7 @@ export const Route = createFileRoute('/api/update/workspace')({
           headers: {
             'Content-Type': 'text/event-stream; charset=utf-8',
             'Cache-Control': 'no-cache, no-transform',
+            'X-Accel-Buffering': 'no',
             Connection: 'keep-alive',
           },
         })
