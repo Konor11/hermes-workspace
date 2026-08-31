@@ -132,6 +132,13 @@ export function OpsStrip({
     setUpdating(true)
     setUpdateStage('starting')
     setUpdateError('')
+    // Safety net: if the SSE stream never closes (e.g. proxy hiccup), force
+    // a reset + reload so the button never stays stuck on "updating".
+    const safety = window.setTimeout(() => {
+      setUpdating(false)
+      setUpdateStage('')
+      window.location.reload()
+    }, 150_000)
     try {
       const res = await fetch(
         `/api/update/${product.id === 'workspace' ? 'workspace' : 'agent'}`,
@@ -177,6 +184,9 @@ export function OpsStrip({
             // freshly-built bundle (and never get stuck on "updating").
             if (d.stage === 'done') {
               setUpdateStage('restarting — reloading')
+              // Drop any cached "update available" flag so the button resets
+              // to the correct state for the freshly-pulled code.
+              queryClient.invalidateQueries({ queryKey: ['update-status'] })
               window.setTimeout(() => {
                 window.location.reload()
               }, 2500)
@@ -215,6 +225,7 @@ export function OpsStrip({
     } catch (err) {
       setUpdateError(err instanceof Error ? err.message : String(err))
     } finally {
+      window.clearTimeout(safety)
       setUpdating(false)
       setUpdateStage('')
     }
