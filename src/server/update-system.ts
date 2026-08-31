@@ -7,7 +7,6 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
 
 type ProductId = 'workspace' | 'agent'
 type InstallKind = 'git' | 'desktop' | 'docker' | 'unknown'
@@ -655,64 +654,6 @@ export function applyWorkspaceUpdate(
     },
   ]
   persistPendingReleaseNotes(releaseNotes)
-
-  // Обновляем сам hermes-agent (gateway/dashboard), если он установлен как
-  // git-clone. Делаем git pull + переустановку пакета БЕЗ перезапуска gateway
-  // (restart gateway убил бы текущий workspace-процесс и оборвал бы стрим).
-  // Безопасно: не трогаем зависимости (--no-deps), только пересобираем пакет.
-  const hermesDir = '/usr/local/lib/hermes-agent'
-  try {
-    const isRepo = exec('git', ['rev-parse', '--is-inside-work-tree'], {
-      cwd: hermesDir,
-      timeout: 8_000,
-    })
-    if (isRepo?.trim() === 'true') {
-      emit('hermes', 'Updating hermes-agent (git pull)…')
-      // сохраняем локальные правки, если есть
-      exec('git', ['stash', '--include-untracked'], {
-        cwd: hermesDir,
-        timeout: 20_000,
-      })
-      output.push(
-        execOrThrow('git', ['pull', '--rebase', '--autostash'], {
-          cwd: hermesDir,
-          timeout: 60_000,
-        }),
-      )
-      emit('hermes', 'Reinstalling hermes-agent (pip install -e --no-deps)…')
-      // hermes-agent is installed editable inside its own venv
-      // (/usr/local/lib/hermes-agent/venv/bin/pip), NOT system pip. If a venv
-      // pip exists, use it; otherwise fall back to system pip with
-      // --break-system-packages (PEP 668 externally-managed environments).
-      const venvPip = join(hermesDir, 'venv', 'bin', 'pip')
-      let pipCmd: string
-      let pipArgs: Array<string>
-      if (existsSync(venvPip)) {
-        pipCmd = venvPip
-        pipArgs = ['install', '-e', '.', '--no-deps', '--no-build-isolation']
-      } else {
-        pipCmd = 'pip'
-        pipArgs = [
-          'install',
-          '-e',
-          '.',
-          '--no-deps',
-          '--no-build-isolation',
-          '--break-system-packages',
-        ]
-      }
-      output.push(
-        execOrThrow(pipCmd, pipArgs, {
-          cwd: hermesDir,
-          timeout: 180_000,
-        }),
-      )
-    }
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    emit('hermes', `hermes-agent update skipped: ${msg.slice(0, 120)}`)
-    output.push(`hermes-agent update error: ${msg}`)
-  }
 
   // После обновления исходников workspace нужно перезапустить процесс,
   // иначе пользователь увидит старую сборку. Если workspace запущен как
