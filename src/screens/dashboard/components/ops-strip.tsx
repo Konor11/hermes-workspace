@@ -117,13 +117,35 @@ export function OpsStrip({
       return (await res.json()) as UpdateStatus
     },
     refetchInterval: 5 * 60 * 1000,
-    staleTime: 60 * 1000,
+    staleTime: 30 * 1000,
     retry: false,
   })
 
   const [updating, setUpdating] = useState(false)
   const [updateStage, setUpdateStage] = useState('')
   const [updateError, setUpdateError] = useState('')
+  const [checking, setChecking] = useState(false)
+
+  // Click behaviour:
+  //  - if an update is available → run it (pull/build/restart)
+  //  - otherwise → re-check for updates; button goes green when up to date
+  function handleUpdateClick() {
+    if (updating) return
+    const ws = updateStatus?.products?.workspace
+    const ag = updateStatus?.products?.agent
+    const target = ws?.repoPath ? ws : ag?.repoPath ? ag : ws
+    if (anyAvailable && target) {
+      runUpdate(target)
+    } else {
+      setChecking(true)
+      queryClient
+        .invalidateQueries({ queryKey: ['update-status-opsstrip'] })
+        .finally(() => {
+          // brief delay so the green "up to date" state is visible
+          window.setTimeout(() => setChecking(false), 800)
+        })
+    }
+  }
 
   if (!status) return null
 
@@ -439,31 +461,38 @@ export function OpsStrip({
           )
         })() : null}
 
-        {/* Update control: force-pull + rebuild + restart workspace on click. */}
+        {/* Update control: click checks for updates; green = up to date,
+            blue pulse = update available (click to apply), neutral = checking. */}
         <button
           type="button"
-          disabled={updating}
-          onClick={() => {
-            const target =
-              ws?.repoPath ? ws : ag?.repoPath ? ag : ws
-            if (target) runUpdate(target)
-          }}
+          disabled={updating || checking}
+          onClick={handleUpdateClick}
           className="inline-flex items-center gap-1.5 rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
           style={{
             borderColor: anyAvailable
               ? 'color-mix(in srgb, var(--theme-accent) 40%, transparent)'
-              : 'var(--theme-border)',
+              : checking
+                ? 'var(--theme-border)'
+                : 'color-mix(in srgb, var(--theme-success) 40%, transparent)',
             background: anyAvailable
               ? 'color-mix(in srgb, var(--theme-accent) 14%, transparent)'
-              : 'transparent',
-            color: anyAvailable ? 'var(--theme-accent)' : 'var(--theme-muted)',
+              : checking
+                ? 'transparent'
+                : 'color-mix(in srgb, var(--theme-success) 12%, transparent)',
+            color: anyAvailable
+              ? 'var(--theme-accent)'
+              : checking
+                ? 'var(--theme-muted)'
+                : 'var(--theme-success)',
           }}
           title={
             updating
               ? 'Updating…'
               : anyAvailable
                 ? 'Update available — click to pull, build, restart'
-                : 'Update workspace from GitHub (pull, build, restart)'
+                : checking
+                  ? 'Checking for updates…'
+                  : 'Up to date — click to re-check'
           }
         >
           {anyAvailable ? (
@@ -472,20 +501,28 @@ export function OpsStrip({
               style={{ background: 'var(--theme-accent)' }}
               aria-hidden
             />
-          ) : null}
+          ) : checking ? null : (
+            <span
+              className="inline-block size-1.5 rounded-full"
+              style={{ background: 'var(--theme-success)' }}
+              aria-hidden
+            />
+          )}
           <HugeiconsIcon
-            icon={updating ? Loading03Icon : ArrowUp02Icon}
+            icon={updating || checking ? Loading03Icon : ArrowUp02Icon}
             size={12}
             strokeWidth={2}
-            className={updating ? 'animate-spin' : undefined}
+            className={updating || checking ? 'animate-spin' : undefined}
           />
           {updating
             ? updateStage
               ? `updating: ${updateStage}`
               : 'updating'
-            : anyAvailable
-              ? 'update'
-              : 'updates'}
+            : checking
+              ? 'checking…'
+              : anyAvailable
+                ? 'update'
+                : 'up to date'}
         </button>
         {updateError ? (
           <span
