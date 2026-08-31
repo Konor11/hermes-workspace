@@ -172,6 +172,15 @@ export function OpsStrip({
           try {
             const d = JSON.parse(data) as { stage: string; message?: string }
             if (d.stage) setUpdateStage(stageLabels[d.stage] ?? d.stage)
+            // When the server signals done, the workspace process is about to
+            // be restarted. Reload the page shortly after so we pick up the
+            // freshly-built bundle (and never get stuck on "updating").
+            if (d.stage === 'done') {
+              setUpdateStage('restarting — reloading')
+              window.setTimeout(() => {
+                window.location.reload()
+              }, 2500)
+            }
           } catch {
             /* ignore */
           }

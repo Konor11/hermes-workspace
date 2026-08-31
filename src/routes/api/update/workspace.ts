@@ -69,13 +69,24 @@ export const Route = createFileRoute('/api/update/workspace')({
             } finally {
               controller.close()
             }
-            // Restart AFTER the stream is closed, so the client receives
-            // 'done' before this process is killed by systemctl restart.
+            // Restart via a detached setsid process with a short delay, so the
+            // SSE 'done' event is flushed to the client before this process is
+            // killed. Using setsid ensures the restart survives the death of
+            // the current workspace process.
             if (result?.restartRequired) {
-              spawn('systemctl', ['restart', 'hermes-workspace.service'], {
-                detached: true,
-                stdio: 'ignore',
-              }).unref()
+              try {
+                spawn(
+                  'setsid',
+                  [
+                    'bash',
+                    '-c',
+                    'sleep 2; systemctl restart hermes-workspace.service',
+                  ],
+                  { detached: true, stdio: 'ignore' },
+                ).unref()
+              } catch {
+                // ignore — client will reload manually
+              }
             }
           },
         })
